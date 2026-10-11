@@ -1,0 +1,6 @@
+{
+  "name": "POS El Pistón",
+  "description": "Punto de venta para repuestos, aceites y lubricantes con precios en US$ y Bs., IVA 16 %, IGTF 3 %, control de inventario y cierre de caja.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
