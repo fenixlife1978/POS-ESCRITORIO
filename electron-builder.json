@@ -1,0 +1,23 @@
+{
+  "appId": "com.elpiston.pos",
+  "productName": "POS El Pistón",
+  "directories": {
+    "output": "dist-exe"
+  },
+  "files": [
+    "dist/**/*",
+    "electron/**/*",
+    "package.json"
+  ],
+  "win": {
+    "target": [
+      {
+        "target": "portable",
+        "arch": ["x64"]
+      }
+    ]
+  },
+  "portable": {
+    "artifactName": "pos-el-piston-portable.exe"
+  }
+}

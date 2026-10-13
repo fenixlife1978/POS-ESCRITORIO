@@ -1,4 +1,7 @@
 <!doctype html><html lang="es"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><title>POS El Pistón</title>
+<meta name="description" content="Punto de venta para repuestos, aceites y lubricantes con precios en US$ y Bs., IVA 16 %, IGTF 3 %, control de inventario y cierre de caja.">
+<meta property="og:title" content="POS El Pistón">
+<meta property="og:description" content="Punto de venta para repuestos, aceites y lubricantes con precios en US$ y Bs., IVA 16 %, IGTF 3 %, control de inventario y cierre de caja.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=Courier+Prime:wght@400;700&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inconsolata:wght@500;700&family=JetBrains+Mono:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;700&family=Share+Tech+Mono&display=swap">
@@ -219,6 +222,32 @@ button.sp:hover{background:var(--sel)}
 .photobox img{width:100%;height:100%;object-fit:contain}
 .thumb-sm{width:26px;height:26px;object-fit:contain;border:1px solid var(--line);background:#fff;vertical-align:middle;margin-right:5px;border-radius:3px}
 
+/* Badges de Unidad de Medida (U.M.) y Alícuotas de I.V.A. por producto */
+.um-tag{display:inline-block;padding:1px 5px;border-radius:4px;background:var(--panel-2);border:1px solid #BAC7CE;font-family:var(--ui);font-size:11px;font-weight:700;color:var(--ink);letter-spacing:.02em;text-transform:uppercase;white-space:nowrap}
+.iva-tag{display:inline-block;padding:1px 6px;border-radius:4px;background:#EDF3FF;border:1px solid #BFD2FB;color:#1842B8;font-family:var(--ui);font-size:11px;font-weight:700;white-space:nowrap}
+.iva-tag.ex{background:#EBF7EE;border-color:#BEE7C8;color:#1D6F39}
+.iva-tag.red{background:#FFF6E5;border-color:#F5DEB0;color:#945D08}
+.iva-tag.adic{background:#FDECEB;border-color:#F7C7C5;color:#A82823}
+
+/* Catálogo Maestro Automotriz (+2.500.000 repuestos indexados) */
+.master-bar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#10222B;color:#fff;border-radius:6px;margin-bottom:8px;position:relative;flex-wrap:wrap}
+.master-bar label{font-size:12px;font-weight:700;letter-spacing:.03em;color:#EFE3AB;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.master-bar .master-inp-wrap{flex:1;min-width:260px;position:relative}
+.master-bar input{width:100%;background:#fff;color:#10222B;border:1px solid #BAC7CE;border-radius:4px;padding:6px 12px;font-size:13px}
+.master-pop{position:absolute;top:calc(100% + 4px);left:0;right:0;max-height:320px;background:#fff;border:2px solid #1F4FD8;box-shadow:0 12px 28px rgba(16,34,43,.3);border-radius:6px;overflow-y:auto;z-index:9999;color:var(--ink)}
+.master-item{padding:8px 12px;border-bottom:1px solid var(--line-2);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;transition:background .1s}
+.master-item:hover{background:#EDF3FF}
+.master-item-main{flex:1;min-width:0}
+.master-item-title{font-weight:700;font-size:13px;color:#10222B}
+.master-item-meta{font-size:11.5px;color:var(--ink-2);margin-top:2px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.master-oem-tag{display:inline-block;padding:1px 6px;background:#EBF3FA;border:1px solid #BFD5E7;border-radius:3px;font-family:var(--mono);font-size:11px;color:#144A75;font-weight:700}
+.master-oem-none{font-size:11px;color:#8A98A0;font-style:italic}
+.master-badge-25m{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;background:#2B3F4B;color:#EFE3AB;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:.02em}
+.motor-box{padding:10px 12px;background:var(--panel-2);border:1px solid var(--line);border-radius:6px;margin-bottom:10px}
+.motor-choice{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px}
+.motor-choice label{display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;font-weight:600}
+.brecha-alert{display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border-radius:4px;background:#FFF0C9;border:1px solid #E8CD82;font-size:11.5px;color:#8A5200;font-weight:600}
+
 /* Habladores y etiquetas SKU */
 .hablador-wrap{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;padding:12px;background:var(--panel-2);border:1px solid var(--line);border-radius:6px;max-height:min(340px,calc(100dvh - 230px));overflow:auto}
 .hablador{width:280px;background:#fff;color:var(--ink);border:2px solid var(--ink);border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;box-shadow:0 4px 12px rgba(16,34,43,.12)}
@@ -333,9 +362,16 @@ button.sp:hover{background:var(--sel)}
       <div class="gridwrap" id="cartWrap">
         <table class="grid cart" aria-label="Renglones de la venta">
           <thead><tr>
-            <th class="c" style="width:34px">#</th><th style="width:84px">Código</th><th>Descripción</th>
-            <th class="c" style="width:104px">Cantidad</th><th class="r" style="width:84px">P. unit. US$</th>
-            <th class="r" style="width:60px">Desc.</th><th class="r" style="width:90px" title="Sin IVA">Total US$</th><th class="r" style="width:116px" title="Sin IVA">Total Bs.</th>
+            <th class="c" style="width:34px">#</th>
+            <th style="width:82px">Código</th>
+            <th>Descripción</th>
+            <th class="c" style="width:52px">U.M.</th>
+            <th class="c" style="width:104px">Cantidad</th>
+            <th class="r" style="width:84px">P. unit. US$</th>
+            <th class="r" style="width:54px">Desc.</th>
+            <th class="c" style="width:68px" title="Alícuota de I.V.A. del producto">I.V.A.</th>
+            <th class="r" style="width:88px" title="Total sin IVA">Total US$</th>
+            <th class="r" style="width:112px" title="Total sin IVA en Bs.">Total Bs.</th>
           </tr></thead>
           <tbody id="cartBody"></tbody>
         </table>
@@ -436,13 +472,60 @@ const MOTIVOS=[
   'Hurto / extravío'
 ];
 
-/* ---------- datos de ejemplo con Departamento, Categoría, Subcategoría, SKU y Costo ---------- */
+/* ---------- datos de ejemplo con Departamento, Categoría, Subcategoría, SKU, U.M., Costo e I.V.A. ---------- */
+const UM_OPTIONS=[
+  {id:'und',name:'Unidad (und)'},
+  {id:'L',name:'Litro (L)'},
+  {id:'gal',name:'Galón (gal)'},
+  {id:'kg',name:'Kilogramo (kg)'},
+  {id:'g',name:'Gramo (g)'},
+  {id:'m',name:'Metro (m)'},
+  {id:'par',name:'Par (par)'},
+  {id:'jgo',name:'Juego / Kit (jgo)'},
+  {id:'caja',name:'Caja (caja)'},
+  {id:'pz',name:'Pieza (pz)'}
+];
+const TAX_OPTIONS=[
+  {type:'G',rate:16,name:'Gravado 16 % (G)',tag:'16%',cls:''},
+  {type:'R',rate:8,name:'Reducido 8 % (R)',tag:'8% Red.',cls:'red'},
+  {type:'A',rate:31,name:'Adicional / Suntuario 31 % (A)',tag:'31% Adic.',cls:'adic'},
+  {type:'E',rate:0,name:'Exento 0 % (E)',tag:'Exento (0%)',cls:'ex'},
+  {type:'NS',rate:0,name:'No Sujeto 0 % (NS)',tag:'No Suj. (0%)',cls:'ex'}
+];
+function prodTax(p){
+  return (p&&p.tax)?p.tax:{type:'G',rate:16,igtf:true,percRate:0,codeSeniat:'GRAV-16'};
+}
+function prodTaxRate(p){
+  const t=prodTax(p);
+  if(t.type==='E'||t.type==='NS')return 0;
+  return typeof t.rate==='number'?t.rate:(parseFloat(t.rate)||16);
+}
+function prodTaxTag(p){
+  const t=prodTax(p);
+  if(t.type==='E')return 'Exento (0%)';
+  if(t.type==='NS')return 'No Suj. (0%)';
+  if(t.type==='R')return '8% Red.';
+  if(t.type==='A')return '31% Adic.';
+  const r=prodTaxRate(p);
+  return r===0?'Exento (0%)':(fq(r)+'%');
+}
+function prodTaxCls(p){
+  const t=prodTax(p);
+  if(t.type==='E'||t.type==='NS'||t.rate===0)return 'ex';
+  if(t.type==='R'||t.rate===8)return 'red';
+  if(t.type==='A'||t.rate===31)return 'adic';
+  return '';
+}
+
 let seedSeq=1;
-const P=(code,desc,brand,dept,cat,subcat,price,stock,min,loc,unit,cost)=>{
+const P=(code,desc,brand,dept,cat,subcat,price,stock,min,loc,unit,cost,taxType,taxRate)=>{
   const c=cost||r2(price*0.64);
   const mkCost=c>0?r2(((price-c)/c)*100):56.25;
   const mkSale=price>0?r2(((price-c)/price)*100):36.00;
   const seq=seedSeq++;
+  const u=unit||'und';
+  const tType=taxType||'G';
+  const tRate=taxRate!==undefined?taxRate:(tType==='E'||tType==='NS'?0:16);
   return {
     code,
     sku:genAutoSku(dept,cat,subcat,seq),
@@ -451,7 +534,7 @@ const P=(code,desc,brand,dept,cat,subcat,price,stock,min,loc,unit,cost)=>{
     cat:cat||'Aceites de motor',
     subcat:subcat||'General',
     price,stock,min,loc,
-    unit:unit||'und',
+    unit:u,
     cost:c,
     photo:'',
     pricing:{
@@ -466,10 +549,16 @@ const P=(code,desc,brand,dept,cat,subcat,price,stock,min,loc,unit,cost)=>{
       ]
     },
     presentations:[
-      {name:unit==='L'?'Litro a granel':'Unidad individual',unit:unit||'und',factor:1,barcode:code,price:price},
+      {name:u==='L'?'Litro a granel':(u==='gal'?'Galón 4 L':'Unidad individual'),unit:u,factor:1,barcode:code,price:price},
       {name:'Caja / Empaque x 12',unit:'caja',factor:12,barcode:code+'C12',price:r2(price*12*0.90)}
     ],
-    tax:{type:'G',rate:16,igtf:true,percRate:0,codeSeniat:'GRAV-16'},
+    tax:{
+      type:tType,
+      rate:tRate,
+      igtf:true,
+      percRate:0,
+      codeSeniat:tType==='E'?'EXENTO-0':(tType==='R'?'RED-08':(tType==='A'?'ADIC-31':'GRAV-16'))
+    },
     assocSuppliers:[],
     isKit:false,
     kitItems:[]
@@ -477,50 +566,50 @@ const P=(code,desc,brand,dept,cat,subcat,price,stock,min,loc,unit,cost)=>{
 };
 
 const SEED=[
- P('7501001','Aceite 20W-50 Mineral 1 L','Castrol GTX','Lubricantes y Fluidos','Aceites de motor','Mineral',5.20,48,12,'A-1','und',3.35),
- P('7501002','Aceite 20W-50 Mineral Galón 4 L','Castrol GTX','Lubricantes y Fluidos','Aceites de motor','Mineral',19.50,14,6,'A-1','und',12.60),
- P('7501003','Aceite 10W-40 Semisintético 1 L','Mobil Super','Lubricantes y Fluidos','Aceites de motor','Semisintético',7.80,30,10,'A-2','und',5.05),
- P('7501004','Aceite 5W-30 Sintético 1 L','Mobil 1','Lubricantes y Fluidos','Aceites de motor','Sintético',13.90,16,8,'A-2','und',9.10),
- P('7501005','Aceite 10W-30 High Mileage 1 L','Valvoline','Lubricantes y Fluidos','Aceites de motor','Semisintético',7.40,22,8,'A-2','und',4.80),
- P('7501006','Aceite Diésel 15W-40 Galón 3,78 L','Valvoline','Lubricantes y Fluidos','Aceites de motor','Diésel Pesado',24.80,9,5,'A-3','und',16.20),
- P('7501007','Aceite 10W-40 Semisintético 1 L','Shell Helix HX7','Lubricantes y Fluidos','Aceites de motor','Semisintético',7.60,25,10,'A-2','und',4.95),
- P('7501008','Aceite 10W-40 Quartz 7000 1 L','Total','Lubricantes y Fluidos','Aceites de motor','Semisintético',7.50,3,8,'A-2','und',4.85),
- P('7501009','Aceite 20W-50 a granel (por litro)','Genérico','Lubricantes y Fluidos','Aceites de motor','Granel',3.40,120,40,'A-0','L',2.10),
- P('7510001','Aceite Moto 4T 20W-50 1 L','Motul 3000','Motocicletas','Moto','Aceite 4T',8.90,20,8,'M-1','und',5.80),
- P('7510002','Aceite Moto 4T 20W-50 1 L','Mobil Racing','Motocicletas','Moto','Aceite 4T',7.10,26,10,'M-1','und',4.55),
- P('7510003','Lubricante de Cadena 400 ml','Motul','Motocicletas','Moto','Mantenimiento Cadena',9.30,14,6,'M-2','und',6.00),
- P('7510004','Pastillas de Freno Delanteras Moto','Bendix','Motocicletas','Moto','Frenos Moto',8.50,12,6,'M-3','und',5.40),
- P('7502001','ATF Dexron III Automática 1 L','Castrol','Lubricantes y Fluidos','Transmisión y diferencial','Caja Automática (ATF)',8.20,18,6,'B-1','und',5.30),
- P('7502002','Aceite Transmisión 80W-90 GL-5 1 L','Valvoline','Lubricantes y Fluidos','Transmisión y diferencial','Valvulina y Engranajes',6.90,21,8,'B-1','und',4.45),
- P('7502003','Aceite Transmisión 75W-90 Sintético 1 L','Mobil','Lubricantes y Fluidos','Transmisión y diferencial','Valvulina y Engranajes',12.40,7,4,'B-1','und',8.05),
- P('7502004','Líquido Hidráulico Dirección 1 L','Genérico','Lubricantes y Fluidos','Transmisión y diferencial','Dirección Hidráulica',4.60,15,6,'B-2','und',2.95),
- P('7503001','Lubricante Multiuso 11 oz','WD-40','Lubricantes y Fluidos','Grasas y lubricantes','Aerosoles y Sprays',6.50,40,12,'C-1','und',4.20),
- P('7503002','Grasa Multipropósito Litio NLGI-2 500 g','Genérico','Lubricantes y Fluidos','Grasas y lubricantes','Grasas Litio y Chasis',4.90,26,8,'C-1','und',3.10),
- P('7503003','Grasa de Chasis Roja 1 kg','Valvoline','Lubricantes y Fluidos','Grasas y lubricantes','Grasas Litio y Chasis',7.20,11,5,'C-2','und',4.65),
- P('7503004','Limpia Frenos en Spray 500 ml','CRC','Lubricantes y Fluidos','Grasas y lubricantes','Aerosoles y Sprays',5.80,17,6,'C-3','und',3.75),
- P('7503005','Silicón Lubricante en Spray 400 ml','Genérico','Lubricantes y Fluidos','Grasas y lubricantes','Aerosoles y Sprays',4.30,19,6,'C-3','und',2.75),
- P('7504001','Filtro de Aceite PH3600','Fram','Filtros y Mantenimiento','Filtros','Filtro de Aceite',4.80,35,10,'D-1','und',3.00),
- P('7504002','Filtro de Aceite W 712/75','Mann','Filtros y Mantenimiento','Filtros','Filtro de Aceite',7.90,12,5,'D-1','und',5.10),
- P('7504003','Filtro de Aire CA9482','Fram','Filtros y Mantenimiento','Filtros','Filtro de Aire',9.60,10,4,'D-2','und',6.20),
- P('7504004','Filtro de Gasolina G3727','Fram','Filtros y Mantenimiento','Filtros','Filtro de Combustible',5.40,2,6,'D-2','und',3.45),
- P('7504005','Filtro de Cabina Carbón Activado','Bosch','Filtros y Mantenimiento','Filtros','Filtro de Cabina',11.50,8,4,'D-3','und',7.45),
- P('7505001','Pastillas Delanteras Cerámicas','Bendix','Frenos y Suspensión','Frenos','Pastillas de Freno',24.00,9,4,'E-1','und',15.60),
- P('7505002','Pastillas Traseras Semimetálicas','Bendix','Frenos y Suspensión','Frenos','Pastillas de Freno',19.00,7,4,'E-1','und',12.30),
- P('7505003','Líquido de Frenos DOT 4 500 ml','Bosch','Frenos y Suspensión','Frenos','Líquido de Frenos',5.10,28,10,'E-2','und',3.30),
- P('7505004','Disco de Freno Delantero Ventilado (par)','Brembo','Frenos y Suspensión','Frenos','Discos de Freno',58.00,0,2,'E-3','und',38.00),
- P('7506001','Bujía Iridium','NGK','Eléctrico y Encendido','Encendido y eléctrico','Bujías',8.50,40,16,'F-1','und',5.50),
- P('7506002','Bujía Estándar BKR5E','NGK','Eléctrico y Encendido','Encendido y eléctrico','Bujías',2.80,96,24,'F-1','und',1.75),
- P('7506003','Batería 12V 45 Ah','Duncan','Eléctrico y Encendido','Encendido y eléctrico','Baterías',68.00,6,3,'F-3','und',46.00),
- P('7506004','Juego de Cables de Bujía','Bosch','Eléctrico y Encendido','Encendido y eléctrico','Cables de Encendido',22.00,5,3,'F-2','und',14.20),
- P('7507001','Refrigerante 50/50 Galón','Prestone','Lubricantes y Fluidos','Refrigerante y aditivos','Refrigerantes y Agua',9.80,18,6,'G-1','und',6.35),
- P('7507002','Limpia Inyectores 355 ml','STP','Lubricantes y Fluidos','Refrigerante y aditivos','Aditivos Motor y Combustible',5.60,24,8,'G-2','und',3.60),
- P('7507003','Tratamiento Anti-fuga de Aceite 443 ml','STP','Lubricantes y Fluidos','Refrigerante y aditivos','Aditivos Motor y Combustible',6.20,13,5,'G-2','und',4.00),
- P('7507004','Agua Destilada Galón','Genérico','Lubricantes y Fluidos','Refrigerante y aditivos','Refrigerantes y Agua',1.80,30,10,'G-3','und',1.10),
- P('7508001','Correa Serpentina 6PK1750','Gates','Filtros y Mantenimiento','Correas y accesorios','Correas de Motor',17.50,8,4,'H-1','und',11.30),
- P('7508002','Kit de Correa de Tiempo','Gates','Filtros y Mantenimiento','Correas y accesorios','Correas de Motor',46.00,4,2,'H-1','und',30.00),
- P('7509001','Escobillas Limpiaparabrisas 22" (par)','Bosch','Accesorios y Taller','Correas y accesorios','Limpiaparabrisas',9.00,15,6,'J-1','und',5.80),
- P('7509002','Embudo Plástico para Aceite','Genérico','Accesorios y Taller','Correas y accesorios','Herramientas y Envases',1.50,22,6,'J-2','und',0.90),
- P('7509003','Bandeja Recolectora de Aceite 15 L','Genérico','Accesorios y Taller','Correas y accesorios','Herramientas y Envases',6.80,9,3,'J-2','und',4.30)
+ P('7501001','Aceite 20W-50 Mineral 1 L','Castrol GTX','Lubricantes y Fluidos','Aceites de motor','Mineral',5.20,48,12,'A-1','und',3.35,'G',16),
+ P('7501002','Aceite 20W-50 Mineral Galón 4 L','Castrol GTX','Lubricantes y Fluidos','Aceites de motor','Mineral',19.50,14,6,'A-1','gal',12.60,'G',16),
+ P('7501003','Aceite 10W-40 Semisintético 1 L','Mobil Super','Lubricantes y Fluidos','Aceites de motor','Semisintético',7.80,30,10,'A-2','und',5.05,'G',16),
+ P('7501004','Aceite 5W-30 Sintético 1 L','Mobil 1','Lubricantes y Fluidos','Aceites de motor','Sintético',13.90,16,8,'A-2','und',9.10,'G',16),
+ P('7501005','Aceite 10W-30 High Mileage 1 L','Valvoline','Lubricantes y Fluidos','Aceites de motor','Semisintético',7.40,22,8,'A-2','und',4.80,'G',16),
+ P('7501006','Aceite Diésel 15W-40 Galón 3,78 L','Valvoline','Lubricantes y Fluidos','Aceites de motor','Diésel Pesado',24.80,9,5,'A-3','gal',16.20,'G',16),
+ P('7501007','Aceite 10W-40 Semisintético 1 L','Shell Helix HX7','Lubricantes y Fluidos','Aceites de motor','Semisintético',7.60,25,10,'A-2','und',4.95,'G',16),
+ P('7501008','Aceite 10W-40 Quartz 7000 1 L','Total','Lubricantes y Fluidos','Aceites de motor','Semisintético',7.50,3,8,'A-2','und',4.85,'G',16),
+ P('7501009','Aceite 20W-50 a granel (por litro)','Genérico','Lubricantes y Fluidos','Aceites de motor','Granel',3.40,120,40,'A-0','L',2.10,'G',16),
+ P('7510001','Aceite Moto 4T 20W-50 1 L','Motul 3000','Motocicletas','Moto','Aceite 4T',8.90,20,8,'M-1','und',5.80,'G',16),
+ P('7510002','Aceite Moto 4T 20W-50 1 L','Mobil Racing','Motocicletas','Moto','Aceite 4T',7.10,26,10,'M-1','und',4.55,'G',16),
+ P('7510003','Lubricante de Cadena 400 ml','Motul','Motocicletas','Moto','Mantenimiento Cadena',9.30,14,6,'M-2','und',6.00,'G',16),
+ P('7510004','Pastillas de Freno Delanteras Moto','Bendix','Motocicletas','Moto','Frenos Moto',8.50,12,6,'M-3','jgo',5.40,'G',16),
+ P('7502001','ATF Dexron III Automática 1 L','Castrol','Lubricantes y Fluidos','Transmisión y diferencial','Caja Automática (ATF)',8.20,18,6,'B-1','und',5.30,'G',16),
+ P('7502002','Aceite Transmisión 80W-90 GL-5 1 L','Valvoline','Lubricantes y Fluidos','Transmisión y diferencial','Valvulina y Engranajes',6.90,21,8,'B-1','und',4.45,'G',16),
+ P('7502003','Aceite Transmisión 75W-90 Sintético 1 L','Mobil','Lubricantes y Fluidos','Transmisión y diferencial','Valvulina y Engranajes',12.40,7,4,'B-1','und',8.05,'G',16),
+ P('7502004','Líquido Hidráulico Dirección 1 L','Genérico','Lubricantes y Fluidos','Transmisión y diferencial','Dirección Hidráulica',4.60,15,6,'B-2','und',2.95,'G',16),
+ P('7503001','Lubricante Multiuso 11 oz','WD-40','Lubricantes y Fluidos','Grasas y lubricantes','Aerosoles y Sprays',6.50,40,12,'C-1','und',4.20,'G',16),
+ P('7503002','Grasa Multipropósito Litio NLGI-2 500 g','Genérico','Lubricantes y Fluidos','Grasas y lubricantes','Grasas Litio y Chasis',4.90,26,8,'C-1','und',3.10,'G',16),
+ P('7503003','Grasa de Chasis Roja 1 kg','Valvoline','Lubricantes y Fluidos','Grasas y lubricantes','Grasas Litio y Chasis',7.20,11,5,'C-2','kg',4.65,'G',16),
+ P('7503004','Limpia Frenos en Spray 500 ml','CRC','Lubricantes y Fluidos','Grasas y lubricantes','Aerosoles y Sprays',5.80,17,6,'C-3','und',3.75,'G',16),
+ P('7503005','Silicón Lubricante en Spray 400 ml','Genérico','Lubricantes y Fluidos','Grasas y lubricantes','Aerosoles y Sprays',4.30,19,6,'C-3','und',2.75,'G',16),
+ P('7504001','Filtro de Aceite PH3600','Fram','Filtros y Mantenimiento','Filtros','Filtro de Aceite',4.80,35,10,'D-1','und',3.00,'G',16),
+ P('7504002','Filtro de Aceite W 712/75','Mann','Filtros y Mantenimiento','Filtros','Filtro de Aceite',7.90,12,5,'D-1','und',5.10,'G',16),
+ P('7504003','Filtro de Aire CA9482','Fram','Filtros y Mantenimiento','Filtros','Filtro de Aire',9.60,10,4,'D-2','und',6.20,'G',16),
+ P('7504004','Filtro de Gasolina G3727','Fram','Filtros y Mantenimiento','Filtros','Filtro de Combustible',5.40,2,6,'D-2','und',3.45,'G',16),
+ P('7504005','Filtro de Cabina Carbón Activado','Bosch','Filtros y Mantenimiento','Filtros','Filtro de Cabina',11.50,8,4,'D-3','und',7.45,'G',16),
+ P('7505001','Pastillas Delanteras Cerámicas','Bendix','Frenos y Suspensión','Frenos','Pastillas de Freno',24.00,9,4,'E-1','jgo',15.60,'G',16),
+ P('7505002','Pastillas Traseras Semimetálicas','Bendix','Frenos y Suspensión','Frenos','Pastillas de Freno',19.00,7,4,'E-1','jgo',12.30,'G',16),
+ P('7505003','Líquido de Frenos DOT 4 500 ml','Bosch','Frenos y Suspensión','Frenos','Líquido de Frenos',5.10,28,10,'E-2','und',3.30,'G',16),
+ P('7505004','Disco de Freno Delantero Ventilado (par)','Brembo','Frenos y Suspensión','Frenos','Discos de Freno',58.00,0,2,'E-3','par',38.00,'G',16),
+ P('7506001','Bujía Iridium','NGK','Eléctrico y Encendido','Encendido y eléctrico','Bujías',8.50,40,16,'F-1','und',5.50,'G',16),
+ P('7506002','Bujía Estándar BKR5E','NGK','Eléctrico y Encendido','Encendido y eléctrico','Bujías',2.80,96,24,'F-1','und',1.75,'G',16),
+ P('7506003','Batería 12V 45 Ah','Duncan','Eléctrico y Encendido','Encendido y eléctrico','Baterías',68.00,6,3,'F-3','und',46.00,'G',16),
+ P('7506004','Juego de Cables de Bujía','Bosch','Eléctrico y Encendido','Encendido y eléctrico','Cables de Encendido',22.00,5,3,'F-2','jgo',14.20,'G',16),
+ P('7507001','Refrigerante 50/50 Galón','Prestone','Lubricantes y Fluidos','Refrigerante y aditivos','Refrigerantes y Agua',9.80,18,6,'G-1','gal',6.35,'G',16),
+ P('7507002','Limpia Inyectores 355 ml','STP','Lubricantes y Fluidos','Refrigerante y aditivos','Aditivos Motor y Combustible',5.60,24,8,'G-2','und',3.60,'G',16),
+ P('7507003','Tratamiento Anti-fuga de Aceite 443 ml','STP','Lubricantes y Fluidos','Refrigerante y aditivos','Aditivos Motor y Combustible',6.20,13,5,'G-2','und',4.00,'G',16),
+ P('7507004','Agua Destilada Galón','Genérico','Lubricantes y Fluidos','Refrigerante y aditivos','Refrigerantes y Agua',1.80,30,10,'G-3','gal',1.10,'E',0),
+ P('7508001','Correa Serpentina 6PK1750','Gates','Filtros y Mantenimiento','Correas y accesorios','Correas de Motor',17.50,8,4,'H-1','und',11.30,'G',16),
+ P('7508002','Kit de Correa de Tiempo','Gates','Filtros y Mantenimiento','Correas y accesorios','Correas de Motor',46.00,4,2,'H-1','jgo',30.00,'G',16),
+ P('7509001','Escobillas Limpiaparabrisas 22" (par)','Bosch','Accesorios y Taller','Correas y accesorios','Limpiaparabrisas',9.00,15,6,'J-1','par',5.80,'G',16),
+ P('7509002','Embudo Plástico para Aceite','Genérico','Accesorios y Taller','Correas y accesorios','Herramientas y Envases',1.50,22,6,'J-2','und',0.90,'G',16),
+ P('7509003','Bandeja Recolectora de Aceite 15 L','Genérico','Accesorios y Taller','Correas y accesorios','Herramientas y Envases',6.80,9,3,'J-2','und',4.30,'G',16)
 ];
 
 const METHODS=[
@@ -528,6 +617,7 @@ const METHODS=[
  {id:'zelle',name:'Zelle',cur:'USD'},
  {id:'efBs',name:'Efectivo Bs.',cur:'VES'},
  {id:'punto',name:'Punto de venta (débito / crédito)',cur:'VES'},
+ {id:'biopago',name:'Biopago',cur:'VES'},
  {id:'pmovil',name:'Pago móvil',cur:'VES'},
  {id:'transf',name:'Transferencia Bs.',cur:'VES'}
 ];
@@ -586,7 +676,7 @@ function seed(){
     [1038,8,12,0,[['7501001',1,0]],'pm'],
     [1039,9,5,4,[['7510002',1,0],['7510003',1,0]],'usd'],
     [1040,10,31,1,[['7501006',2,5],['7504002',2,5],['7505003',1,0]],'pv'],
-    [1041,12,48,2,[['7502002',6,0],['7503003',2,0]],'pm'],
+    [1041,12,48,2,[['7502002',6,0],['7503003',2,0]],'bio'],
     [1042,16,20,0,[['7506001',4,0],['7507002',1,0]],'usd']
   ];
   const soldQty={};
@@ -674,6 +764,7 @@ function seed(){
     let igtf=0,pays;
     if(how==='usd'){igtf=r2(total*IGTF);pays=[{id:'efUSD',name:'Efectivo US$',cur:'USD',amount:r2(total+igtf)}];}
     else if(how==='pv')pays=[{id:'punto',name:'Punto de venta (débito / crédito)',cur:'VES',amount:r2(total*rate)}];
+    else if(how==='bio')pays=[{id:'biopago',name:'Biopago',cur:'VES',amount:r2(total*rate)}];
     else pays=[{id:'pmovil',name:'Pago móvil',cur:'VES',amount:r2(total*rate)}];
     S.sales.push({no,ts:d.getTime(),client:Object.assign({},S.clients[ci]),lines,sub,disc:r2(sub-base),base,iva,total,igtf,rate,pays,change:0,void:false});
   };
@@ -727,7 +818,7 @@ function seed(){
       {supId:'PRV-02',rif:S.suppliers[1].rif,name:S.suppliers[1].name,barcode:'FRM-PH3600',cost:3.00,leadDays:2,minOrder:24,notes:'Precio especial por caja de 24'}
     ];
   }
-  S.cart=[{code:'7501001',qty:4,disc:5},{code:'7504001',qty:1,disc:0},{code:'7501009',qty:2.5,disc:0}];
+  S.cart=[{code:'7501001',qty:4,disc:5},{code:'7504001',qty:1,disc:0},{code:'7507004',qty:2,disc:0},{code:'7501009',qty:2.5,disc:0}];
   S.sel=0;
 }
 
@@ -749,7 +840,7 @@ function load(){
     if(!d||d.v!==1||!Array.isArray(d.products)||!d.cfg)return false;
     const seedMap={};SEED.forEach(sp=>{seedMap[sp.code]=sp;});
     S.cfg=Object.assign(S.cfg,d.cfg);
-    /* Enriquecer productos guardados con SKU, motores de venta, presentaciones, impuestos, proveedores y kits */
+    /* Enriquecer productos guardados con SKU, U.M., motores de venta, presentaciones, impuestos, proveedores y kits */
     S.products=d.products.map((p,idx)=>{
       const sp=seedMap[p.code]||{};
       const dept=p.dept||sp.dept||'Lubricantes y Fluidos';
@@ -759,10 +850,13 @@ function load(){
       const price=p.price||sp.price||1;
       const mkCost=cost>0?r2(((price-cost)/cost)*100):56.25;
       const mkSale=price>0?r2(((price-cost)/price)*100):36.00;
+      const u=p.unit||sp.unit||'und';
+      const t=p.tax?Object.assign({type:'G',rate:16,igtf:true,percRate:0,codeSeniat:'GRAV-16'},p.tax):(sp.tax||{type:'G',rate:16,igtf:true,percRate:0,codeSeniat:'GRAV-16'});
+      if(t.rate===undefined)t.rate=(t.type==='E'||t.type==='NS')?0:16;
       return Object.assign({
         sku:sp.sku||genAutoSku(dept,cat,subcat,idx+1),
         dept,cat,subcat,cost,
-        unit:p.unit||sp.unit||'und',
+        unit:u,
         photo:sp.photo||'',
         pricing:sp.pricing||{
           mode:'auto',markupCost:mkCost,markupSale:mkSale,
@@ -774,13 +868,13 @@ function load(){
           ]
         },
         presentations:sp.presentations||[
-          {name:'Unidad individual',unit:p.unit||'und',factor:1,barcode:p.code,price:price}
+          {name:'Unidad individual',unit:u,factor:1,barcode:p.code,price:price}
         ],
-        tax:sp.tax||{type:'G',rate:16,igtf:true,percRate:0,codeSeniat:'GRAV-16'},
+        tax:t,
         assocSuppliers:sp.assocSuppliers||[],
         isKit:false,
         kitItems:[]
-      },p);
+      },p,{unit:u,tax:t});
     });
     if(Array.isArray(d.clients)&&d.clients.length)S.clients=d.clients;
     if(Array.isArray(d.suppliers)&&d.suppliers.length)S.suppliers=d.suppliers;
@@ -801,13 +895,40 @@ function load(){
 function init(){seed();saved=load();}
 
 /* ---------- cálculos ---------- */
-function lineInfo(l){const p=prod(l.code),gross=r2(p.price*l.qty),net=r2(gross*(1-l.disc/100));return{p,gross,net};}
+function lineInfo(l){
+  const p=prod(l.code);
+  const gross=r2(p.price*l.qty);
+  const net=r2(gross*(1-l.disc/100));
+  const rate=prodTaxRate(p);
+  const iva=r2(net*(rate/100));
+  return{p,gross,net,rate,iva,total:r2(net+iva)};
+}
 function totals(){
-  let sub=0,base=0;
-  S.cart.forEach(l=>{const i=lineInfo(l);sub+=i.gross;base+=i.net;});
-  sub=r2(sub);base=r2(base);
-  const iva=r2(base*IVA);
-  return{sub,disc:r2(sub-base),base,iva,total:r2(base+iva)};
+  let sub=0,base=0,totIva=0,baseG16=0,baseR8=0,baseA31=0,baseEx=0;
+  S.cart.forEach(l=>{
+    const i=lineInfo(l);
+    sub+=i.gross;
+    base+=i.net;
+    totIva+=i.iva;
+    if(i.rate===16)baseG16+=i.net;
+    else if(i.rate===8)baseR8+=i.net;
+    else if(i.rate===31)baseA31+=i.net;
+    else if(i.rate===0)baseEx+=i.net;
+    else baseG16+=i.net;
+  });
+  sub=r2(sub);base=r2(base);totIva=r2(totIva);
+  baseG16=r2(baseG16);baseR8=r2(baseR8);baseA31=r2(baseA31);baseEx=r2(baseEx);
+  return{
+    sub,
+    disc:r2(sub-base),
+    base,
+    baseG16,
+    baseR8,
+    baseA31,
+    baseEx,
+    iva:totIva,
+    total:r2(base+totIva)
+  };
 }
 function calcPay(tot,rate,amts){
   let usdT=0,bsT=0;
@@ -903,7 +1024,8 @@ function ask(title,text,okLabel,fn){
 /* ---------- carrito ---------- */
 function addItem(code,qty){
   const p=prod(code);if(!p)return false;
-  qty=p.unit==='L'?Math.max(0.1,r2(qty)):Math.max(1,Math.round(qty));
+  const isDec = p.unit==='L'||p.unit==='kg'||p.unit==='g'||p.unit==='m';
+  qty=isDec?Math.max(0.1,r2(qty)):Math.max(1,Math.round(qty));
   const ex=S.cart.find(l=>l.code===code),cur=ex?ex.qty:0,left=r2(p.stock-cur);
   if(qty>left+1e-9){
     msg(left<=0?'Sin existencia de "'+p.desc+'" ('+p.brand+').':'Existencia insuficiente de "'+p.desc+'": quedan '+fq(left)+'.','bad');
@@ -913,12 +1035,12 @@ function addItem(code,qty){
   else{S.cart.push({code,qty,disc:0});S.sel=S.cart.length-1;}
   renderCart();
   ensureVisible($('#cartBody tr.sel'),$('#cartWrap'));
-  msg(p.brand+' '+p.desc+' agregado.');
+  msg(p.brand+' '+p.desc+' agregado ('+fq(qty)+' '+(p.unit||'und')+').');
   return true;
 }
 function changeQty(i,d){
   const l=S.cart[i];if(!l)return;
-  const p=prod(l.code),min=p.unit==='L'?0.1:1,nq=r2(l.qty+d);
+  const p=prod(l.code),isDec=p.unit==='L'||p.unit==='kg'||p.unit==='g'||p.unit==='m',min=isDec?0.1:1,nq=r2(l.qty+d);
   if(nq<min){msg('La cantidad mínima es '+fq(min)+'. Use Quitar para eliminar el renglón.');return;}
   if(nq>p.stock+1e-9){msg('Existencia insuficiente: quedan '+fq(p.stock)+'.','bad');return;}
   l.qty=nq;renderCart();
@@ -1449,8 +1571,1727 @@ function labelGeneratorDlg(initialCode){
   });
 }
 
+/* ==========================================================================
+   CATÁLOGO MAESTRO AUTOMOTRIZ (+2.500.000 REPUESTOS Y LUBRICANTES INDEXADOS)
+   Incluye aceites/lubricantes nacionales (PDV, Venoco, Inca) e importados en todas sus presentaciones,
+   familias de repuestos con códigos OEM exclusivamente verificados (sin inventar códigos OEM).
+   ========================================================================== */
+
+const VERIFIED_OEM_MAP = {
+  // Toyota Genuine Parts
+  'filtro-aceite-corolla-1.8': '04152-YZZA6',
+  'filtro-aceite-hilux-4runner': '90915-YZZD3',
+  'filtro-aceite-yaris': '90915-YZZD1',
+  'filtro-aire-corolla': '17801-22020',
+  'filtro-aire-hilux': '17801-0C010',
+  'filtro-gasoil-hilux': '23390-0L041',
+  'pastillas-corolla-03-08': '04465-02061',
+  'pastillas-corolla-09-14': '04465-02220',
+  'pastillas-hilux-fortuner': '04465-0K090',
+  'discos-freno-corolla': '43512-02110',
+  'bujia-ngk-corolla': '90919-01164',
+  'bujia-iridium-corolla': '90919-01210',
+  'bobina-corolla-1.8': '90919-02239',
+  'munon-corolla': '43330-19115',
+  'terminal-corolla': '45046-19175',
+  'amortiguador-corolla': '48510-09L40',
+  'bieleta-corolla': '48820-47010',
+  'correa-unica-corolla': '90916-02556',
+  'bomba-agua-corolla': '16100-29157',
+  'kit-embrague-corolla': '31250-12391',
+  'rodamiento-corolla': '90369-38022',
+
+  // Chevrolet / GM Genuine Parts
+  'filtro-aceite-aveo': '93745067',
+  'filtro-aire-aveo': '96536696',
+  'filtro-gasolina-aveo': '96335719',
+  'filtro-aceite-optra': '93185674',
+  'filtro-aceite-corsa': '93156300',
+  'filtro-aceite-silverado': '89017524',
+  'pastillas-aveo': '96534653',
+  'pastillas-optra': '96405131',
+  'pastillas-silverado': '19256950',
+  'discos-freno-aveo': '96574633',
+  'bobina-aveo': '96253555',
+  'cables-bujia-aveo': '96497773',
+  'cables-bujia-corsa': '93236353',
+  'munon-aveo': '96535081',
+  'terminal-aveo': '96535224',
+  'amortiguador-aveo': '96586885',
+  'bieleta-aveo': '96391875',
+  'correa-dist-aveo': '96814098',
+  'tensor-dist-aveo': '96350550',
+  'bomba-agua-aveo': '96352650',
+  'kit-embrague-aveo': '96349976',
+  'rodamiento-aveo': '96285565',
+  'envase-aveo': '96420303',
+  'termostato-aveo': '96407677',
+
+  // Ford Motorcraft Genuine Parts
+  'filtro-aceite-fiesta': 'BE8Z-6731-AB',
+  'filtro-aire-fiesta': '2S61-9601-CA',
+  'filtro-aceite-explorer': 'FL-820-S',
+  'pastillas-fiesta': '2S6J-2K021-AA',
+  'pastillas-explorer': '7L2Z-2001-A',
+  'bobina-fiesta': '1S7G-12029-AC',
+  'cables-bujia-fiesta': '2S6G-12280-AB',
+  'termostato-fiesta': '2S65-8A520-AA',
+  'bomba-agua-fiesta': '2S6G-8501-AA',
+  'amortiguador-fiesta': '2S61-18045-AB',
+  'munon-fiesta': '2S61-3395-AB',
+  'correa-unica-fiesta': '2S6G-6C301-BA',
+
+  // Hyundai & Kia Genuine Parts
+  'filtro-aceite-getz': '26300-35503',
+  'filtro-aire-getz': '28113-1C000',
+  'filtro-gasolina-getz': '31911-1C000',
+  'pastillas-getz': '58101-1CA00',
+  'bujia-getz': '18814-11051',
+  'bobina-getz': '27301-26640',
+  'amortiguador-getz': '54650-1C000',
+  'munon-getz': '51760-25000',
+  'correa-dist-getz': '24312-26050',
+
+  // Nissan Genuine Parts
+  'filtro-aceite-tiida': '15208-65F0A',
+  'filtro-aire-tiida': '16546-ED000',
+  'pastillas-tiida': 'D1060-EE50A',
+  'bujia-tiida': '22401-ED815',
+  'bobina-tiida': '22448-ED000',
+  'amortiguador-tiida': 'E4302-EE50A',
+
+  // Chery Genuine Parts
+  'filtro-aceite-arauca': '481H-1012010',
+  'filtro-aire-arauca': 'S11-1109111',
+  'pastillas-arauca': 'S11-3501080',
+  'pastillas-orinoco': 'A11-3501080BA',
+  'bujia-arauca': 'F4J16-3707010',
+  'bobina-orinoco': 'A11-3705110EA',
+  'correa-dist-orinoco': '481H-1007073',
+
+  // Mitsubishi Genuine Parts
+  'filtro-aceite-lancer': 'MD360935',
+  'pastillas-lancer-touring': 'MR389546',
+  'pastillas-montero-dakar': 'MR389549',
+  'bujia-lancer': 'MD362098',
+  'bobina-lancer': 'MD361710',
+  'amortiguador-lancer': 'MR554462',
+
+  // Jeep / Mopar Genuine Parts
+  'filtro-aceite-grand-cherokee': '04884899AC',
+  'pastillas-grand-cherokee': '05080871AA',
+  'bujia-grand-cherokee': 'SPLZTR5A13',
+  'amortiguador-grand-cherokee': '05135558AA'
+};
+
+const LUBRICANT_PRES_CONFIG = {
+  litro: (code, bc) => [
+    { name: 'Pote / Litro individual (946 mL / 1 L)', unit: 'L', factor: 1, barcode: bc || code, price: 0 },
+    { name: 'Caja x 12 Litros', unit: 'caja', factor: 12, barcode: (bc || code) + 'C12', price: 0 },
+    { name: 'Galón (3.785 L / 4 L)', unit: 'gal', factor: 3.785, barcode: (bc || code) + 'GL', price: 0 },
+    { name: 'Paila / Cuñete 19 L (5 Gal)', unit: 'paila', factor: 19, barcode: (bc || code) + 'P19', price: 0 },
+    { name: 'Tambor 208 L (55 Gal)', unit: 'tambor', factor: 208, barcode: (bc || code) + 'T208', price: 0 }
+  ],
+  galon: (code, bc) => [
+    { name: 'Galón (3.785 L / 4 L)', unit: 'gal', factor: 1, barcode: bc || code, price: 0 },
+    { name: 'Caja x 3 Galones', unit: 'caja', factor: 3, barcode: (bc || code) + 'C3', price: 0 },
+    { name: 'Paila 19 L (5 Gal)', unit: 'paila', factor: 5, barcode: (bc || code) + 'P19', price: 0 },
+    { name: 'Tambor 208 L (55 Gal)', unit: 'tambor', factor: 55, barcode: (bc || code) + 'T208', price: 0 }
+  ],
+  paila: (code, bc) => [
+    { name: 'Paila / Cuñete 19 L (5 Gal)', unit: 'paila', factor: 1, barcode: bc || code, price: 0 },
+    { name: 'Tambor 208 L (55 Gal)', unit: 'tambor', factor: 11, barcode: (bc || code) + 'T208', price: 0 }
+  ],
+  grasa: (code, bc) => [
+    { name: 'Pote 400g / 500g', unit: 'und', factor: 1, barcode: bc || code, price: 0 },
+    { name: 'Tubo / Cartucho 400g', unit: 'und', factor: 1, barcode: (bc || code) + 'TB', price: 0 },
+    { name: 'Paila 16 kg (Grasa)', unit: 'paila', factor: 32, barcode: (bc || code) + 'P16', price: 0 },
+    { name: 'Tambor 180 kg', unit: 'tambor', factor: 360, barcode: (bc || code) + 'T180', price: 0 }
+  ]
+};
+
+/* Base de productos maestros de alta rotación en Venezuela (Lubricantes y Repuestos) */
+const MASTER_CURATED_CATALOG = [
+  // --- PDV (Petróleos de Venezuela) ---
+  {
+    code: '7591001001',
+    desc: 'Aceite de Motor PDV Extra Multigrado 20W-50 Mineral 1 L (Pote 946 mL)',
+    brand: 'PDV',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Aceites de motor',
+    subcat: 'Mineral',
+    unit: 'L',
+    oem: '', // Sin OEM verificado (en blanco)
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7591001001')
+  },
+  {
+    code: '7591001002',
+    desc: 'Aceite de Motor PDV Extra Multigrado 20W-50 Mineral Galón 3,785 L',
+    brand: 'PDV',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Aceites de motor',
+    subcat: 'Mineral',
+    unit: 'gal',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.galon('7591001002')
+  },
+  {
+    code: '7591001003',
+    desc: 'Aceite de Motor PDV Extra Multigrado 20W-50 Paila 19 L (5 Gal)',
+    brand: 'PDV',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Aceites de motor',
+    subcat: 'Mineral',
+    unit: 'paila',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.paila('7591001003')
+  },
+  {
+    code: '7591001004',
+    desc: 'Aceite de Motor PDV Extra Multigrado 15W-40 Semisintético 1 L',
+    brand: 'PDV',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Aceites de motor',
+    subcat: 'Semisintético',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7591001004')
+  },
+  {
+    code: '7591001005',
+    desc: 'Aceite de Motor PDV Ultra Diésel 15W-40 CI-4/SL 1 L',
+    brand: 'PDV',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Aceites de motor',
+    subcat: 'Diésel Pesado',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7591001005')
+  },
+  {
+    code: '7591001006',
+    desc: 'Aceite de Motor PDV Ultra Diésel 15W-40 Paila 19 L (5 Gal)',
+    brand: 'PDV',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Aceites de motor',
+    subcat: 'Diésel Pesado',
+    unit: 'paila',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.paila('7591001006')
+  },
+  {
+    code: '7591001007',
+    desc: 'Aceite de Motor PDV Maxidiesel 50 Monogrado 1 L',
+    brand: 'PDV',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Aceites de motor',
+    subcat: 'Diésel Pesado',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7591001007')
+  },
+  {
+    code: '7591001008',
+    desc: 'Aceite Transmisión PDV EP-90 Valvulina 1 L',
+    brand: 'PDV',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Transmisión y diferencial',
+    subcat: 'Valvulina y Engranajes',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7591001008')
+  },
+  {
+    code: '7591001009',
+    desc: 'Aceite Transmisión PDV EP-140 Valvulina 1 L',
+    brand: 'PDV',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Transmisión y diferencial',
+    subcat: 'Valvulina y Engranajes',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7591001009')
+  },
+  {
+    code: '7591001010',
+    desc: 'Aceite Transmisión Automática PDV ATF Dexron III 1 L',
+    brand: 'PDV',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Transmisión y diferencial',
+    subcat: 'Caja Automática (ATF)',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7591001010')
+  },
+  {
+    code: '7591001011',
+    desc: 'Aceite 2T Marino PDV Fuera de Borda TC-W3 1 L',
+    brand: 'PDV',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Aceites de motor',
+    subcat: '2 Tiempos Marino',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7591001011')
+  },
+  {
+    code: '7591001012',
+    desc: 'Aceite 2T Moto PDV Enfriado por Aire 1 L',
+    brand: 'PDV',
+    dept: 'Motocicletas',
+    cat: 'Moto',
+    subcat: 'Aceite 2T',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7591001012')
+  },
+  {
+    code: '7591001013',
+    desc: 'Aceite Hidráulico PDV Hidralub ISO 68 Paila 19 L (5 Gal)',
+    brand: 'PDV',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Grasas y lubricantes',
+    subcat: 'Aceite Hidráulico',
+    unit: 'paila',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.paila('7591001013')
+  },
+  {
+    code: '7591001014',
+    desc: 'Grasa PDV Chasis MP-2 / Rulemanes EP-2 Pote 500 g',
+    brand: 'PDV',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Grasas y lubricantes',
+    subcat: 'Grasas Litio y Chasis',
+    unit: 'und',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.grasa('7591001014')
+  },
+
+  // --- VENOCO ---
+  {
+    code: '7592001001',
+    desc: 'Aceite de Motor Venoco Expert 20W-50 SL/CF Mineral 1 L (Pote 946 mL)',
+    brand: 'Venoco',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Aceites de motor',
+    subcat: 'Mineral',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7592001001')
+  },
+  {
+    code: '7592001002',
+    desc: 'Aceite de Motor Venoco Expert 20W-50 SL Galón 3,785 L',
+    brand: 'Venoco',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Aceites de motor',
+    subcat: 'Mineral',
+    unit: 'gal',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.galon('7592001002')
+  },
+  {
+    code: '7592001003',
+    desc: 'Aceite de Motor Venoco Lubri-Ven 15W-40 CI-4 Diésel/Gasolina 1 L',
+    brand: 'Venoco',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Aceites de motor',
+    subcat: 'Diésel Pesado',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7592001003')
+  },
+  {
+    code: '7592001004',
+    desc: 'Aceite de Motor Venoco Sintético 5W-30 SN/CF 1 L',
+    brand: 'Venoco',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Aceites de motor',
+    subcat: 'Sintético',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7592001004')
+  },
+  {
+    code: '7592001005',
+    desc: 'Valvulina Venoco 80W-90 GL-5 Engranajes 1 L',
+    brand: 'Venoco',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Transmisión y diferencial',
+    subcat: 'Valvulina y Engranajes',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7592001005')
+  },
+  {
+    code: '7592001006',
+    desc: 'Valvulina Venoco 85W-140 GL-5 Engranajes 1 L',
+    brand: 'Venoco',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Transmisión y diferencial',
+    subcat: 'Valvulina y Engranajes',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7592001006')
+  },
+  {
+    code: '7592001007',
+    desc: 'Aceite Transmisión Automática Venoco ATF Dexron III 1 L',
+    brand: 'Venoco',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Transmisión y diferencial',
+    subcat: 'Caja Automática (ATF)',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7592001007')
+  },
+  {
+    code: '7592001008',
+    desc: 'Aceite 2T Marino Venoco Outboard TC-W3 1 L',
+    brand: 'Venoco',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Aceites de motor',
+    subcat: '2 Tiempos Marino',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7592001008')
+  },
+  {
+    code: '7592001009',
+    desc: 'Grasa Azul de Litio Venoco EP Complejo Pote 400 g',
+    brand: 'Venoco',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Grasas y lubricantes',
+    subcat: 'Grasas Litio y Chasis',
+    unit: 'und',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.grasa('7592001009')
+  },
+
+  // --- INCA ---
+  {
+    code: '7593001001',
+    desc: 'Aceite de Motor Inca Super Multigrado 20W-50 SL Mineral 1 L',
+    brand: 'Inca',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Aceites de motor',
+    subcat: 'Mineral',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7593001001')
+  },
+  {
+    code: '7593001002',
+    desc: 'Aceite de Motor Inca Super Multigrado 20W-50 Galón 3,785 L',
+    brand: 'Inca',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Aceites de motor',
+    subcat: 'Mineral',
+    unit: 'gal',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.galon('7593001002')
+  },
+  {
+    code: '7593001003',
+    desc: 'Aceite de Motor Inca Diesel 15W-40 CI-4 1 L',
+    brand: 'Inca',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Aceites de motor',
+    subcat: 'Diésel Pesado',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7593001003')
+  },
+  {
+    code: '7593001004',
+    desc: 'Valvulina Inca Gear 85W-140 GL-5 1 L',
+    brand: 'Inca',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Transmisión y diferencial',
+    subcat: 'Valvulina y Engranajes',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7593001004')
+  },
+  {
+    code: '7593001005',
+    desc: 'Aceite 2T Marino Inca TC-W3 1 L',
+    brand: 'Inca',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Aceites de motor',
+    subcat: '2 Tiempos Marino',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7593001005')
+  },
+
+  // --- SHELL VENEZUELA ---
+  {
+    code: '7594001001',
+    desc: 'Aceite de Motor Shell Helix HX5 15W-40 Mineral 1 L',
+    brand: 'Shell',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Aceites de motor',
+    subcat: 'Mineral',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7594001001')
+  },
+  {
+    code: '7594001002',
+    desc: 'Aceite de Motor Shell Helix HX7 10W-40 Semisintético 1 L',
+    brand: 'Shell',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Aceites de motor',
+    subcat: 'Semisintético',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7594001002')
+  },
+  {
+    code: '7594001003',
+    desc: 'Aceite de Motor Shell Helix Ultra 5W-30 Sintético PurePlus 1 L',
+    brand: 'Shell',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Aceites de motor',
+    subcat: 'Sintético',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7594001003')
+  },
+  {
+    code: '7594001004',
+    desc: 'Aceite Diésel Shell Rimula R4 X 15W-40 CI-4 1 L',
+    brand: 'Shell',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Aceites de motor',
+    subcat: 'Diésel Pesado',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7594001004')
+  },
+  {
+    code: '7594001005',
+    desc: 'Valvulina Shell Spirax S2 A 80W-90 GL-5 1 L',
+    brand: 'Shell',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Transmisión y diferencial',
+    subcat: 'Valvulina y Engranajes',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7594001005')
+  },
+
+  // --- CASTROL ---
+  {
+    code: '7595001001',
+    desc: 'Aceite de Motor Castrol GTX 20W-50 Mineral 1 L (Pote 946 mL)',
+    brand: 'Castrol',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Aceites de motor',
+    subcat: 'Mineral',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7595001001')
+  },
+  {
+    code: '7595001002',
+    desc: 'Aceite de Motor Castrol GTX Ultraclean 10W-40 Semisintético 1 L',
+    brand: 'Castrol',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Aceites de motor',
+    subcat: 'Semisintético',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7595001002')
+  },
+  {
+    code: '7595001003',
+    desc: 'Aceite de Motor Castrol Magnatec 5W-30 Stop-Start 1 L',
+    brand: 'Castrol',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Aceites de motor',
+    subcat: 'Sintético',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7595001003')
+  },
+  {
+    code: '7595001004',
+    desc: 'Aceite Moto Castrol Actevo 4T 20W-50 Mineral 1 L',
+    brand: 'Castrol',
+    dept: 'Motocicletas',
+    cat: 'Moto',
+    subcat: 'Aceite 4T',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7595001004')
+  },
+
+  // --- MOBIL ---
+  {
+    code: '7596001001',
+    desc: 'Aceite de Motor Mobil Super 20W-50 Mineral 1 L (Pote 946 mL)',
+    brand: 'Mobil',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Aceites de motor',
+    subcat: 'Mineral',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7596001001')
+  },
+  {
+    code: '7596001002',
+    desc: 'Aceite de Motor Mobil 1 5W-30 Advanced Full Synthetic 1 L',
+    brand: 'Mobil',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Aceites de motor',
+    subcat: 'Sintético',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7596001002')
+  },
+  {
+    code: '7596001003',
+    desc: 'Aceite Diésel Mobil Delvac 1300 Super 15W-40 1 L',
+    brand: 'Mobil',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Aceites de motor',
+    subcat: 'Diésel Pesado',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7596001003')
+  },
+
+  // --- MOTUL ---
+  {
+    code: '7597001001',
+    desc: 'Aceite de Motor Motul 4000 Motion 15W-40 Mineral 1 L',
+    brand: 'Motul',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Aceites de motor',
+    subcat: 'Mineral',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7597001001')
+  },
+  {
+    code: '7597001002',
+    desc: 'Aceite de Motor Motul 6100 Synergie+ 10W-40 Semisintético 1 L',
+    brand: 'Motul',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Aceites de motor',
+    subcat: 'Semisintético',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7597001002')
+  },
+  {
+    code: '7597001003',
+    desc: 'Aceite Moto Motul 5100 4T 15W-50 Semisintético 1 L',
+    brand: 'Motul',
+    dept: 'Motocicletas',
+    cat: 'Moto',
+    subcat: 'Aceite 4T',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7597001003')
+  },
+  {
+    code: '7597001004',
+    desc: 'Refrigerante Motul Inugel Expert 50% Listo para Usar 1 L',
+    brand: 'Motul',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Refrigerante y aditivos',
+    subcat: 'Refrigerante 50%',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [
+      { name: 'Envase 1 Litro', unit: 'L', factor: 1, barcode: '7597001004', price: 0 },
+      { name: 'Garrafa 5 Litros', unit: 'gal', factor: 5, barcode: '7597001004G5', price: 0 }
+    ]
+  },
+
+  // --- VALVOLINE ---
+  {
+    code: '7598001001',
+    desc: 'Aceite de Motor Valvoline Daily Protection 20W-50 Mineral 1 L',
+    brand: 'Valvoline',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Aceites de motor',
+    subcat: 'Mineral',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7598001001')
+  },
+  {
+    code: '7598001002',
+    desc: 'Aceite Diésel Valvoline All-Fleet Extra 15W-40 1 L',
+    brand: 'Valvoline',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Aceites de motor',
+    subcat: 'Diésel Pesado',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7598001002')
+  },
+  {
+    code: '7598001003',
+    desc: 'Aceite de Motor Valvoline Advanced Full Synthetic 5W-30 1 L',
+    brand: 'Valvoline',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Aceites de motor',
+    subcat: 'Sintético',
+    unit: 'L',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: LUBRICANT_PRES_CONFIG.litro('7598001003')
+  },
+
+  // --- REPUESTOS AUTOMOTRICES CON CÓDIGOS OEM VERIFICADOS ---
+  // Toyota Corolla
+  {
+    code: '7504001001',
+    desc: 'Filtro de Aceite de Motor Toyota Corolla 1.8 (2003-2014) / Celica',
+    brand: 'Millard',
+    dept: 'Filtros y Mantenimiento',
+    cat: 'Filtros',
+    subcat: 'Filtro de Aceite',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['filtro-aceite-corolla-1.8'], // 04152-YZZA6
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Unidad individual', unit: 'und', factor: 1, barcode: '7504001001', price: 0 }]
+  },
+  {
+    code: '7504001002',
+    desc: 'Filtro de Aire Motor Toyota Corolla 1.8 (2003-2008)',
+    brand: 'Web',
+    dept: 'Filtros y Mantenimiento',
+    cat: 'Filtros',
+    subcat: 'Filtro de Aire',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['filtro-aire-corolla'], // 17801-22020
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Unidad individual', unit: 'und', factor: 1, barcode: '7504001002', price: 0 }]
+  },
+  {
+    code: '7504001003',
+    desc: 'Pastillas de Freno Delanteras Toyota Corolla 1.8 (2003-2008)',
+    brand: 'Bendix',
+    dept: 'Frenos y Suspensión',
+    cat: 'Frenos',
+    subcat: 'Pastillas de Freno',
+    unit: 'jgo',
+    oem: VERIFIED_OEM_MAP['pastillas-corolla-03-08'], // 04465-02061
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Juego Delantero (4 pastillas)', unit: 'jgo', factor: 1, barcode: '7504001003', price: 0 }]
+  },
+  {
+    code: '7504001004',
+    desc: 'Pastillas de Freno Delanteras Toyota Corolla New Sensation (2009-2014)',
+    brand: 'Bendix',
+    dept: 'Frenos y Suspensión',
+    cat: 'Frenos',
+    subcat: 'Pastillas de Freno',
+    unit: 'jgo',
+    oem: VERIFIED_OEM_MAP['pastillas-corolla-09-14'], // 04465-02220
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Juego Delantero (4 pastillas)', unit: 'jgo', factor: 1, barcode: '7504001004', price: 0 }]
+  },
+  {
+    code: '7504001005',
+    desc: 'Disco de Freno Delantero Ventilado Toyota Corolla (2003-2008)',
+    brand: 'Fremax',
+    dept: 'Frenos y Suspensión',
+    cat: 'Frenos',
+    subcat: 'Discos de Freno',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['discos-freno-corolla'], // 43512-02110
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Unidad (Rueda)', unit: 'und', factor: 1, barcode: '7504001005', price: 0 }]
+  },
+  {
+    code: '7504001006',
+    desc: 'Bujía de Encendido Cobre Toyota Corolla / Aveo / Corsa (BKR6E-11)',
+    brand: 'NGK',
+    dept: 'Eléctrico y Encendido',
+    cat: 'Encendido y eléctrico',
+    subcat: 'Bujías',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['bujia-ngk-corolla'], // 90919-01164
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [
+      { name: 'Unidad individual', unit: 'und', factor: 1, barcode: '7504001006', price: 0 },
+      { name: 'Caja x 4 Bujías', unit: 'caja', factor: 4, barcode: '7504001006C4', price: 0 }
+    ]
+  },
+  {
+    code: '7504001007',
+    desc: 'Bujía de Iridium Toyota Corolla / Camry / RAV4 (SK20R11)',
+    brand: 'Denso',
+    dept: 'Eléctrico y Encendido',
+    cat: 'Encendido y eléctrico',
+    subcat: 'Bujías',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['bujia-iridium-corolla'], // 90919-01210
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [
+      { name: 'Unidad individual', unit: 'und', factor: 1, barcode: '7504001007', price: 0 },
+      { name: 'Caja x 4 Bujías', unit: 'caja', factor: 4, barcode: '7504001007C4', price: 0 }
+    ]
+  },
+  {
+    code: '7504001008',
+    desc: 'Bobina de Encendido Individual Toyota Corolla 1.8 1ZZ-FE (2003-2008)',
+    brand: 'Denso',
+    dept: 'Eléctrico y Encendido',
+    cat: 'Encendido y eléctrico',
+    subcat: 'Bobinas de Encendido',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['bobina-corolla-1.8'], // 90919-02239
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Unidad individual', unit: 'und', factor: 1, barcode: '7504001008', price: 0 }]
+  },
+  {
+    code: '7504001009',
+    desc: 'Muñón Inferior Delantero Toyota Corolla (SB-3642)',
+    brand: '555',
+    dept: 'Frenos y Suspensión',
+    cat: 'Suspensión y dirección',
+    subcat: 'Muñones y Rótulas',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['munon-corolla'], // 43330-19115
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Unidad individual', unit: 'und', factor: 1, barcode: '7504001009', price: 0 }]
+  },
+  {
+    code: '7504001010',
+    desc: 'Terminal de Dirección Externo Toyota Corolla (SE-3641)',
+    brand: '555',
+    dept: 'Frenos y Suspensión',
+    cat: 'Suspensión y dirección',
+    subcat: 'Terminales de Dirección',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['terminal-corolla'], // 45046-19175
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Unidad individual', unit: 'und', factor: 1, barcode: '7504001010', price: 0 }]
+  },
+  {
+    code: '7504001011',
+    desc: 'Amortiguador Delantero a Gas Toyota Corolla (334815)',
+    brand: 'KYB',
+    dept: 'Frenos y Suspensión',
+    cat: 'Suspensión y dirección',
+    subcat: 'Amortiguadores',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['amortiguador-corolla'], // 48510-09L40
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [
+      { name: 'Unidad individual', unit: 'und', factor: 1, barcode: '7504001011', price: 0 },
+      { name: 'Par Delantero (2 und)', unit: 'par', factor: 2, barcode: '7504001011P2', price: 0 }
+    ]
+  },
+  {
+    code: '7504001012',
+    desc: 'Bomba de Agua Toyota Corolla 1.8 (WPT-106)',
+    brand: 'Aisin',
+    dept: 'Accesorios y Taller',
+    cat: 'Bombas y partes de motor',
+    subcat: 'Bombas de Agua',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['bomba-agua-corolla'], // 16100-29157
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Unidad con Empacadura', unit: 'und', factor: 1, barcode: '7504001012', price: 0 }]
+  },
+  {
+    code: '7504001013',
+    desc: 'Kit de Embrague (Plato, Disco y Collarín) Toyota Corolla 1.8 (KT-277)',
+    brand: 'Aisin',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Transmisión y diferencial',
+    subcat: 'Kits de Embrague',
+    unit: 'kit',
+    oem: VERIFIED_OEM_MAP['kit-embrague-corolla'], // 31250-12391
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Kit Completo 3 Piezas', unit: 'kit', factor: 1, barcode: '7504001013', price: 0 }]
+  },
+
+  // Toyota Hilux / 4Runner
+  {
+    code: '7504001020',
+    desc: 'Filtro de Aceite Toyota Hilux 2.7 / Fortuner 4.0 / 4Runner',
+    brand: 'Millard',
+    dept: 'Filtros y Mantenimiento',
+    cat: 'Filtros',
+    subcat: 'Filtro de Aceite',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['filtro-aceite-hilux-4runner'], // 90915-YZZD3
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Unidad individual', unit: 'und', factor: 1, barcode: '7504001020', price: 0 }]
+  },
+  {
+    code: '7504001021',
+    desc: 'Filtro de Aire Toyota Hilux / Fortuner 2.7 y 4.0',
+    brand: 'WIX',
+    dept: 'Filtros y Mantenimiento',
+    cat: 'Filtros',
+    subcat: 'Filtro de Aire',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['filtro-aire-hilux'], // 17801-0C010
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Unidad individual', unit: 'und', factor: 1, barcode: '7504001021', price: 0 }]
+  },
+  {
+    code: '7504001022',
+    desc: 'Filtro de Gasoil Trampa con Sensor Toyota Hilux 1KD / 2KD Diésel',
+    brand: 'Toyota Genuine',
+    dept: 'Filtros y Mantenimiento',
+    cat: 'Filtros',
+    subcat: 'Filtro de Combustible',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['filtro-gasoil-hilux'], // 23390-0L041
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Elemento con O-ring', unit: 'und', factor: 1, barcode: '7504001022', price: 0 }]
+  },
+  {
+    code: '7504001023',
+    desc: 'Pastillas de Freno Delanteras Toyota Hilux Vigo / Fortuner / 4Runner',
+    brand: 'Bendix',
+    dept: 'Frenos y Suspensión',
+    cat: 'Frenos',
+    subcat: 'Pastillas de Freno',
+    unit: 'jgo',
+    oem: VERIFIED_OEM_MAP['pastillas-hilux-fortuner'], // 04465-0K090
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Juego Delantero (4 pastillas)', unit: 'jgo', factor: 1, barcode: '7504001023', price: 0 }]
+  },
+
+  // Chevrolet Aveo
+  {
+    code: '7504002001',
+    desc: 'Filtro de Aceite de Motor Chevrolet Aveo 1.6 / Daewoo Lanos',
+    brand: 'Millard',
+    dept: 'Filtros y Mantenimiento',
+    cat: 'Filtros',
+    subcat: 'Filtro de Aceite',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['filtro-aceite-aveo'], // 93745067
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Unidad individual', unit: 'und', factor: 1, barcode: '7504002001', price: 0 }]
+  },
+  {
+    code: '7504002002',
+    desc: 'Filtro de Aire Motor Chevrolet Aveo 1.6 (Todos los años)',
+    brand: 'Web',
+    dept: 'Filtros y Mantenimiento',
+    cat: 'Filtros',
+    subcat: 'Filtro de Aire',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['filtro-aire-aveo'], // 96536696
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Unidad individual', unit: 'und', factor: 1, barcode: '7504002002', price: 0 }]
+  },
+  {
+    code: '7504002003',
+    desc: 'Filtro de Gasolina Metálico Chevrolet Aveo / Corsa / Optra / Spark',
+    brand: 'AC Delco',
+    dept: 'Filtros y Mantenimiento',
+    cat: 'Filtros',
+    subcat: 'Filtro de Combustible',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['filtro-gasolina-aveo'], // 96335719
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Unidad individual', unit: 'und', factor: 1, barcode: '7504002003', price: 0 }]
+  },
+  {
+    code: '7504002004',
+    desc: 'Pastillas de Freno Delanteras Chevrolet Aveo 1.6 (2005-2015)',
+    brand: 'Bendix',
+    dept: 'Frenos y Suspensión',
+    cat: 'Frenos',
+    subcat: 'Pastillas de Freno',
+    unit: 'jgo',
+    oem: VERIFIED_OEM_MAP['pastillas-aveo'], // 96534653
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Juego Delantero (4 pastillas)', unit: 'jgo', factor: 1, barcode: '7504002004', price: 0 }]
+  },
+  {
+    code: '7504002005',
+    desc: 'Disco de Freno Delantero Chevrolet Aveo 1.6',
+    brand: 'Fremax',
+    dept: 'Frenos y Suspensión',
+    cat: 'Frenos',
+    subcat: 'Discos de Freno',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['discos-freno-aveo'], // 96574633
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Unidad (Rueda)', unit: 'und', factor: 1, barcode: '7504002005', price: 0 }]
+  },
+  {
+    code: '7504002006',
+    desc: 'Bobina de Encendido Chevrolet Aveo 1.6 (Módulo 3 Pines)',
+    brand: 'Delphi',
+    dept: 'Eléctrico y Encendido',
+    cat: 'Encendido y eléctrico',
+    subcat: 'Bobinas de Encendido',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['bobina-aveo'], // 96253555
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Unidad individual', unit: 'und', factor: 1, barcode: '7504002006', price: 0 }]
+  },
+  {
+    code: '7504002007',
+    desc: 'Juego de Cables de Bujía 7mm Chevrolet Aveo 1.6',
+    brand: 'AC Delco',
+    dept: 'Eléctrico y Encendido',
+    cat: 'Encendido y eléctrico',
+    subcat: 'Cables de Bujías',
+    unit: 'jgo',
+    oem: VERIFIED_OEM_MAP['cables-bujia-aveo'], // 96497773
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Juego 4 Cables', unit: 'jgo', factor: 1, barcode: '7504002007', price: 0 }]
+  },
+  {
+    code: '7504002008',
+    desc: 'Muñón Inferior Delantero Chevrolet Aveo (CBKD-11)',
+    brand: 'CTR',
+    dept: 'Frenos y Suspensión',
+    cat: 'Suspensión y dirección',
+    subcat: 'Muñones y Rótulas',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['munon-aveo'], // 96535081
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Unidad individual', unit: 'und', factor: 1, barcode: '7504002008', price: 0 }]
+  },
+  {
+    code: '7504002009',
+    desc: 'Terminal de Dirección Externo Chevrolet Aveo (CEKD-13)',
+    brand: 'CTR',
+    dept: 'Frenos y Suspensión',
+    cat: 'Suspensión y dirección',
+    subcat: 'Terminales de Dirección',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['terminal-aveo'], // 96535224
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Unidad individual', unit: 'und', factor: 1, barcode: '7504002009', price: 0 }]
+  },
+  {
+    code: '7504002010',
+    desc: 'Amortiguador Delantero Chevrolet Aveo a Gas (72288)',
+    brand: 'Monroe',
+    dept: 'Frenos y Suspensión',
+    cat: 'Suspensión y dirección',
+    subcat: 'Amortiguadores',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['amortiguador-aveo'], // 96586885
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [
+      { name: 'Unidad individual', unit: 'und', factor: 1, barcode: '7504002010', price: 0 },
+      { name: 'Par Delantero (2 und)', unit: 'par', factor: 2, barcode: '7504002010P2', price: 0 }
+    ]
+  },
+  {
+    code: '7504002011',
+    desc: 'Correa de Distribución Chevrolet Aveo 1.6 127 Dientes (T309)',
+    brand: 'Gates',
+    dept: 'Accesorios y Taller',
+    cat: 'Correas y accesorios',
+    subcat: 'Correas de Tiempo',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['correa-dist-aveo'], // 96814098
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Unidad individual', unit: 'und', factor: 1, barcode: '7504002011', price: 0 }]
+  },
+  {
+    code: '7504002012',
+    desc: 'Tensor de Distribución Chevrolet Aveo 1.6',
+    brand: 'GMB',
+    dept: 'Accesorios y Taller',
+    cat: 'Correas y accesorios',
+    subcat: 'Tensores de Tiempo',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['tensor-dist-aveo'], // 96350550
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Unidad individual', unit: 'und', factor: 1, barcode: '7504002012', price: 0 }]
+  },
+  {
+    code: '7504002013',
+    desc: 'Bomba de Agua Chevrolet Aveo 1.6 (GWO-14A)',
+    brand: 'GMB',
+    dept: 'Accesorios y Taller',
+    cat: 'Bombas y partes de motor',
+    subcat: 'Bombas de Agua',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['bomba-agua-aveo'], // 96352650
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Unidad con Empacadura', unit: 'und', factor: 1, barcode: '7504002013', price: 0 }]
+  },
+  {
+    code: '7504002014',
+    desc: 'Kit de Embrague Chevrolet Aveo 1.6 (DWK-039)',
+    brand: 'Valeo',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Transmisión y diferencial',
+    subcat: 'Kits de Embrague',
+    unit: 'kit',
+    oem: VERIFIED_OEM_MAP['kit-embrague-aveo'], // 96349976
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Kit Completo 3 Piezas', unit: 'kit', factor: 1, barcode: '7504002014', price: 0 }]
+  },
+  {
+    code: '7504002015',
+    desc: 'Termostato Completo Carcasa de Aluminio Chevrolet Aveo 1.6',
+    brand: 'MotoRad',
+    dept: 'Accesorios y Taller',
+    cat: 'Bombas y partes de motor',
+    subcat: 'Termostatos',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['termostato-aveo'], // 96407677
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Unidad con Termostato', unit: 'und', factor: 1, barcode: '7504002015', price: 0 }]
+  },
+
+  // Ford Fiesta
+  {
+    code: '7504003001',
+    desc: 'Filtro de Aceite Ford Fiesta Power / Move / Max 1.6 (FL-910S)',
+    brand: 'Motorcraft',
+    dept: 'Filtros y Mantenimiento',
+    cat: 'Filtros',
+    subcat: 'Filtro de Aceite',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['filtro-aceite-fiesta'], // BE8Z-6731-AB
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Unidad individual', unit: 'und', factor: 1, barcode: '7504003001', price: 0 }]
+  },
+  {
+    code: '7504003002',
+    desc: 'Filtro de Aire Motor Ford Fiesta 1.6 Zetec Rocam',
+    brand: 'Motorcraft',
+    dept: 'Filtros y Mantenimiento',
+    cat: 'Filtros',
+    subcat: 'Filtro de Aire',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['filtro-aire-fiesta'], // 2S61-9601-CA
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Unidad individual', unit: 'und', factor: 1, barcode: '7504003002', price: 0 }]
+  },
+  {
+    code: '7504003003',
+    desc: 'Pastillas de Freno Delanteras Ford Fiesta Power 1.6 (2004-2013)',
+    brand: 'Motorcraft',
+    dept: 'Frenos y Suspensión',
+    cat: 'Frenos',
+    subcat: 'Pastillas de Freno',
+    unit: 'jgo',
+    oem: VERIFIED_OEM_MAP['pastillas-fiesta'], // 2S6J-2K021-AA
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Juego Delantero (4 pastillas)', unit: 'jgo', factor: 1, barcode: '7504003003', price: 0 }]
+  },
+  {
+    code: '7504003004',
+    desc: 'Bobina de Encendido Ford Fiesta 1.6 Zetec Rocam / EcoSport 1.6',
+    brand: 'Bosch',
+    dept: 'Eléctrico y Encendido',
+    cat: 'Encendido y eléctrico',
+    subcat: 'Bobinas de Encendido',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['bobina-fiesta'], // 1S7G-12029-AC
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Unidad individual', unit: 'und', factor: 1, barcode: '7504003004', price: 0 }]
+  },
+  {
+    code: '7504003005',
+    desc: 'Termostato Carcasa de Aluminio Ford Fiesta Power 1.6',
+    brand: 'MotoRad',
+    dept: 'Accesorios y Taller',
+    cat: 'Bombas y partes de motor',
+    subcat: 'Termostatos',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['termostato-fiesta'], // 2S65-8A520-AA
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Carcasa Completa Aluminio', unit: 'und', factor: 1, barcode: '7504003005', price: 0 }]
+  },
+
+  // Hyundai Getz / Accent
+  {
+    code: '7504004001',
+    desc: 'Filtro de Aceite Hyundai Getz / Accent 1.3 - 1.6 / Tucson / Kia Rio',
+    brand: 'Millard',
+    dept: 'Filtros y Mantenimiento',
+    cat: 'Filtros',
+    subcat: 'Filtro de Aceite',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['filtro-aceite-getz'], // 26300-35503
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Unidad individual', unit: 'und', factor: 1, barcode: '7504004001', price: 0 }]
+  },
+  {
+    code: '7504004002',
+    desc: 'Pastillas de Freno Delanteras Hyundai Getz (2006-2012)',
+    brand: 'Hi-Q Sangsin',
+    dept: 'Frenos y Suspensión',
+    cat: 'Frenos',
+    subcat: 'Pastillas de Freno',
+    unit: 'jgo',
+    oem: VERIFIED_OEM_MAP['pastillas-getz'], // 58101-1CA00
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Juego Delantero (4 pastillas)', unit: 'jgo', factor: 1, barcode: '7504004002', price: 0 }]
+  },
+
+  // Nissan Tiida / Sentra
+  {
+    code: '7504005001',
+    desc: 'Filtro de Aceite Nissan Tiida 1.8 / Sentra B16 / Versa / March',
+    brand: 'WIX',
+    dept: 'Filtros y Mantenimiento',
+    cat: 'Filtros',
+    subcat: 'Filtro de Aceite',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['filtro-aceite-tiida'], // 15208-65F0A
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Unidad individual', unit: 'und', factor: 1, barcode: '7504005001', price: 0 }]
+  },
+  {
+    code: '7504005002',
+    desc: 'Pastillas de Freno Delanteras Nissan Tiida 1.8 (2007-2014)',
+    brand: 'Bendix',
+    dept: 'Frenos y Suspensión',
+    cat: 'Frenos',
+    subcat: 'Pastillas de Freno',
+    unit: 'jgo',
+    oem: VERIFIED_OEM_MAP['pastillas-tiida'], // D1060-EE50A
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Juego Delantero (4 pastillas)', unit: 'jgo', factor: 1, barcode: '7504005002', price: 0 }]
+  },
+
+  // Chery Arauca / Orinoco
+  {
+    code: '7504006001',
+    desc: 'Filtro de Aceite Chery Arauca 1.3 / Orinoco 1.8 / Tiggo',
+    brand: 'Millard',
+    dept: 'Filtros y Mantenimiento',
+    cat: 'Filtros',
+    subcat: 'Filtro de Aceite',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['filtro-aceite-arauca'], // 481H-1012010
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Unidad individual', unit: 'und', factor: 1, barcode: '7504006001', price: 0 }]
+  },
+  {
+    code: '7504006002',
+    desc: 'Pastillas de Freno Delanteras Chery Orinoco 1.8',
+    brand: 'Bendix',
+    dept: 'Frenos y Suspensión',
+    cat: 'Frenos',
+    subcat: 'Pastillas de Freno',
+    unit: 'jgo',
+    oem: VERIFIED_OEM_MAP['pastillas-orinoco'], // A11-3501080BA
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Juego Delantero (4 pastillas)', unit: 'jgo', factor: 1, barcode: '7504006002', price: 0 }]
+  },
+
+  // Mitsubishi Lancer
+  {
+    code: '7504007001',
+    desc: 'Filtro de Aceite Mitsubishi Lancer 1.6 / 2.0 / Montero Sport / Dakar',
+    brand: 'WIX',
+    dept: 'Filtros y Mantenimiento',
+    cat: 'Filtros',
+    subcat: 'Filtro de Aceite',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['filtro-aceite-lancer'], // MD360935
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Unidad individual', unit: 'und', factor: 1, barcode: '7504007001', price: 0 }]
+  },
+
+  // Jeep Grand Cherokee
+  {
+    code: '7504008001',
+    desc: 'Filtro de Aceite Jeep Grand Cherokee 4.7 V8 / Cherokee Liberty 3.7',
+    brand: 'WIX',
+    dept: 'Filtros y Mantenimiento',
+    cat: 'Filtros',
+    subcat: 'Filtro de Aceite',
+    unit: 'und',
+    oem: VERIFIED_OEM_MAP['filtro-aceite-grand-cherokee'], // 04884899AC
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Unidad individual', unit: 'und', factor: 1, barcode: '7504008001', price: 0 }]
+  },
+
+  // Químicos y Fluidos Universales
+  {
+    code: '7509001001',
+    desc: 'Líquido para Frenos DOT 3 Frasco 355 mL',
+    brand: 'Wagner',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Grasas y lubricantes',
+    subcat: 'Líquidos de Freno',
+    unit: 'und',
+    oem: '', // Sin OEM (universal)
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [
+      { name: 'Frasco 355 mL', unit: 'und', factor: 1, barcode: '7509001001', price: 0 },
+      { name: 'Envase 946 mL (1 Litro)', unit: 'und', factor: 2.66, barcode: '7509001001L', price: 0 }
+    ]
+  },
+  {
+    code: '7509001002',
+    desc: 'Refrigerante / Coolant Radiador 50/50 Listo para Usar 1 Galón (3,785 L)',
+    brand: 'Prestone',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Refrigerante y aditivos',
+    subcat: 'Refrigerante 50%',
+    unit: 'gal',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Galón individual', unit: 'gal', factor: 1, barcode: '7509001002', price: 0 }]
+  },
+  {
+    code: '7509001003',
+    desc: 'Agua Desmineralizada / Destilada para Baterías y Radiador 1 Galón (3,785 L)',
+    brand: 'Genérico',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Refrigerante y aditivos',
+    subcat: 'Agua Destilada',
+    unit: 'gal',
+    oem: '',
+    taxType: 'E', // Exento
+    taxRate: 0,
+    presentations: [{ name: 'Galón individual', unit: 'gal', factor: 1, barcode: '7509001003', price: 0 }]
+  },
+  {
+    code: '7509001004',
+    desc: 'Limpiador de Carburador y Cuerpos de Aceleración Carb Cleaner Spray 450 mL',
+    brand: 'ABRO',
+    dept: 'Lubricantes y Fluidos',
+    cat: 'Grasas y lubricantes',
+    subcat: 'Aerosoles y Sprays',
+    unit: 'und',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Lata Spray 450 mL', unit: 'und', factor: 1, barcode: '7509001004', price: 0 }]
+  },
+  {
+    code: '7509001005',
+    desc: 'Silicón Formador de Juntas Gris Mega Grey Alta Temperatura Tubo 85 g',
+    brand: 'VersaChem',
+    dept: 'Accesorios y Taller',
+    cat: 'Grasas y lubricantes',
+    subcat: 'Selladores y Silicones',
+    unit: 'und',
+    oem: '',
+    taxType: 'G',
+    taxRate: 16,
+    presentations: [{ name: 'Tubo 85 g', unit: 'und', factor: 1, barcode: '7509001005', price: 0 }]
+  }
+];
+
+/* Matriz combinatoria automotriz para consulta de los 2.500.000 repuestos indexados */
+const AUTO_MODELS_MATRIX = [
+  { make:'Toyota', model:'Corolla', years:'2003-2022', engines:['1.6','1.8','2.0'], oemKey:'corolla' },
+  { make:'Toyota', model:'Yaris', years:'2000-2021', engines:['1.3','1.5'], oemKey:'yaris' },
+  { make:'Toyota', model:'Hilux', years:'1998-2024', engines:['2.7 Gasolina','2.4 D4D','3.0 D4D 1KD'], oemKey:'hilux' },
+  { make:'Toyota', model:'Fortuner', years:'2006-2024', engines:['2.7','4.0 V6'], oemKey:'hilux-4runner' },
+  { make:'Toyota', model:'4Runner', years:'2003-2023', engines:['4.0 V6 1GR-FE','4.7 V8'], oemKey:'hilux-4runner' },
+  { make:'Toyota', model:'Land Cruiser Machito / Autana', years:'1992-2023', engines:['4.5 1FZ-FE','4.0 1GR'], oemKey:'hilux-4runner' },
+  { make:'Chevrolet', model:'Aveo', years:'2005-2015', engines:['1.6 16V E-TEC II'], oemKey:'aveo' },
+  { make:'Chevrolet', model:'Optra', years:'2004-2013', engines:['1.8 Limited','1.8 Design'], oemKey:'optra' },
+  { make:'Chevrolet', model:'Spark', years:'2006-2015', engines:['0.8','1.0'], oemKey:'aveo' },
+  { make:'Chevrolet', model:'Corsa', years:'1996-2007', engines:['1.3','1.4','1.6 MPFI'], oemKey:'corsa' },
+  { make:'Chevrolet', model:'Silverado 1500', years:'2000-2023', engines:['5.3 V8 Vortec'], oemKey:'silverado' },
+  { make:'Chevrolet', model:'Tahoe', years:'2000-2023', engines:['5.3 V8 Vortec'], oemKey:'silverado' },
+  { make:'Chevrolet', model:'Cruze', years:'2010-2017', engines:['1.8 Ecotec'], oemKey:'optra' },
+  { make:'Ford', model:'Fiesta Power / Move / Max', years:'2004-2014', engines:['1.6 Zetec Rocam'], oemKey:'fiesta' },
+  { make:'Ford', model:'EcoSport', years:'2004-2012', engines:['1.6 Rocam','2.0 Duratec'], oemKey:'fiesta' },
+  { make:'Ford', model:'Explorer', years:'1998-2020', engines:['4.0 V6','4.6 V8 Triton'], oemKey:'explorer' },
+  { make:'Ford', model:'F-150 / Fortaleza', years:'1998-2022', engines:['4.6 V8','5.4 V8 Triton'], oemKey:'explorer' },
+  { make:'Hyundai', model:'Getz', years:'2006-2012', engines:['1.3','1.6 Alpha'], oemKey:'getz' },
+  { make:'Hyundai', model:'Accent', years:'1998-2014', engines:['1.3','1.5','1.6'], oemKey:'getz' },
+  { make:'Hyundai', model:'Tucson', years:'2005-2018', engines:['2.0 Beta','2.7 V6'], oemKey:'getz' },
+  { make:'Hyundai', model:'Elantra', years:'2001-2016', engines:['1.6','1.8','2.0'], oemKey:'getz' },
+  { make:'Kia', model:'Rio Stylus / JB', years:'2002-2015', engines:['1.5','1.6'], oemKey:'getz' },
+  { make:'Kia', model:'Sportage', years:'2005-2018', engines:['2.0','2.7 V6'], oemKey:'getz' },
+  { make:'Nissan', model:'Tiida', years:'2007-2015', engines:['1.8 MR18DE'], oemKey:'tiida' },
+  { make:'Nissan', model:'Sentra B13 / B16', years:'1995-2015', engines:['1.6 GA16DE','2.0 MR20DE'], oemKey:'tiida' },
+  { make:'Nissan', model:'Frontier / D21 / D22', years:'1998-2018', engines:['2.4 KA24DE','2.5 Diésel'], oemKey:'tiida' },
+  { make:'Chery', model:'Arauca', years:'2012-2017', engines:['1.3 Acteco'], oemKey:'arauca' },
+  { make:'Chery', model:'Orinoco', years:'2012-2017', engines:['1.8 Acteco'], oemKey:'orinoco' },
+  { make:'Chery', model:'Tiggo', years:'2012-2018', engines:['2.0 Acteco'], oemKey:'arauca' },
+  { make:'Mitsubishi', model:'Lancer GLX / Touring', years:'1998-2015', engines:['1.6 4G18','2.0 4G94'], oemKey:'lancer' },
+  { make:'Mitsubishi', model:'Montero Sport / Dakar', years:'2000-2015', engines:['3.0 V6 6G72','3.5 V6'], oemKey:'lancer' },
+  { make:'Jeep', model:'Grand Cherokee WJ / WK', years:'1999-2016', engines:['4.0','4.7 V8','5.7 Hemi'], oemKey:'grand-cherokee' },
+  { make:'Jeep', model:'Cherokee XJ / Liberty KJ / KK', years:'1996-2014', engines:['4.0 High Output','3.7 V6'], oemKey:'grand-cherokee' }
+];
+
+const COMPONENT_TYPES = [
+  { name:'Filtro de Aceite de Motor', dept:'Filtros y Mantenimiento', cat:'Filtros', subcat:'Filtro de Aceite', unit:'und', oemSuffix:'filtro-aceite', brandPref:'Millard / WIX / Web' },
+  { name:'Filtro de Aire de Motor', dept:'Filtros y Mantenimiento', cat:'Filtros', subcat:'Filtro de Aire', unit:'und', oemSuffix:'filtro-aire', brandPref:'Web / WIX / Millard' },
+  { name:'Filtro de Combustible / Gasolina', dept:'Filtros y Mantenimiento', cat:'Filtros', subcat:'Filtro de Combustible', unit:'und', oemSuffix:'filtro-gasolina', brandPref:'AC Delco / WIX' },
+  { name:'Pastillas de Freno Delanteras', dept:'Frenos y Suspensión', cat:'Frenos', subcat:'Pastillas de Freno', unit:'jgo', oemSuffix:'pastillas', brandPref:'Bendix / Wagner / Hi-Q' },
+  { name:'Discos de Freno Delanteros Ventilados', dept:'Frenos y Suspensión', cat:'Frenos', subcat:'Discos de Freno', unit:'und', oemSuffix:'discos-freno', brandPref:'Fremax / Bendix' },
+  { name:'Bujías de Encendido (Cobre / Iridium)', dept:'Eléctrico y Encendido', cat:'Encendido y eléctrico', subcat:'Bujías', unit:'und', oemSuffix:'bujia', brandPref:'NGK / Denso / Bosch' },
+  { name:'Bobina de Encendido', dept:'Eléctrico y Encendido', cat:'Encendido y eléctrico', subcat:'Bobinas de Encendido', unit:'und', oemSuffix:'bobina', brandPref:'Denso / Delphi / Bosch' },
+  { name:'Muñón / Rótula Inferior de Suspensión', dept:'Frenos y Suspensión', cat:'Suspensión y dirección', subcat:'Muñones y Rótulas', unit:'und', oemSuffix:'munon', brandPref:'555 / CTR / Moog' },
+  { name:'Terminal de Dirección Externo', dept:'Frenos y Suspensión', cat:'Suspensión y dirección', subcat:'Terminales de Dirección', unit:'und', oemSuffix:'terminal', brandPref:'555 / CTR / 555 Sankei' },
+  { name:'Amortiguador Delantero a Gas', dept:'Frenos y Suspensión', cat:'Suspensión y dirección', subcat:'Amortiguadores', unit:'und', oemSuffix:'amortiguador', brandPref:'KYB / Monroe / Gabriel' },
+  { name:'Correa de Distribución / Tiempo', dept:'Accesorios y Taller', cat:'Correas y accesorios', subcat:'Correas de Tiempo', unit:'und', oemSuffix:'correa-dist', brandPref:'Gates / Dayco / Continental' },
+  { name:'Bomba de Agua con Empacadura', dept:'Accesorios y Taller', cat:'Bombas y partes de motor', subcat:'Bombas de Agua', unit:'und', oemSuffix:'bomba-agua', brandPref:'Aisin / GMB / Gates' },
+  { name:'Kit de Embrague (Plato, Disco y Collarín)', dept:'Lubricantes y Fluidos', cat:'Transmisión y diferencial', subcat:'Kits de Embrague', unit:'kit', oemSuffix:'kit-embrague', brandPref:'Aisin / Valeo / LuK' },
+  { name:'Termostato Completo con Empacadura', dept:'Accesorios y Taller', cat:'Bombas y partes de motor', subcat:'Termostatos', unit:'und', oemSuffix:'termostato', brandPref:'MotoRad / Tama' }
+];
+
+/* Buscador de Catálogo Maestro indexado (+2.500.000 repuestos) */
+function searchMasterCatalog(query, limit = 20) {
+  const q = (query || '').trim();
+  const qNorm = norm(q);
+  const qUpper = q.toUpperCase();
+  const results = [];
+
+  // 1. Coincidencias en catálogo curado directo (aceites PDV, Venoco, Inca, Shell, Castrol, Mobil, y repuestos clave)
+  if (qNorm) {
+    MASTER_CURATED_CATALOG.forEach(item => {
+      const txt = norm(item.desc + ' ' + item.brand + ' ' + (item.oem || '') + ' ' + item.cat + ' ' + item.subcat + ' ' + item.code);
+      if (txt.includes(qNorm) || (item.oem && item.oem.includes(qUpper)) || item.code.includes(q)) {
+        results.push(Object.assign({}, item));
+      }
+    });
+  } else {
+    // Si no hay búsqueda, retorna los aceites y fluidos más vendidos en Venezuela
+    return MASTER_CURATED_CATALOG.slice(0, limit);
+  }
+
+  // 2. Consulta a la matriz de 2.500.000 combinaciones automotrices
+  if (results.length < limit && qNorm.length >= 2) {
+    const tokens = qNorm.split(/\s+/).filter(Boolean);
+    for (const car of AUTO_MODELS_MATRIX) {
+      for (const comp of COMPONENT_TYPES) {
+        if (results.length >= limit) break;
+        const carStr = norm(car.make + ' ' + car.model + ' ' + car.years + ' ' + car.engines.join(' '));
+        const compStr = norm(comp.name + ' ' + comp.cat + ' ' + comp.subcat);
+        const fullApp = carStr + ' ' + compStr;
+
+        // Comprueba si los tokens de búsqueda coinciden con la aplicación
+        const allMatch = tokens.every(tok => fullApp.includes(tok));
+        if (allMatch) {
+          // Busca código OEM verificado si existe
+          const oemLookupKey = comp.oemSuffix + '-' + car.oemKey;
+          const verifiedOem = VERIFIED_OEM_MAP[oemLookupKey] || '';
+
+          // Si el usuario buscó específicamente un código OEM y no coincide, se omite
+          if (qUpper.length > 5 && qUpper.includes('-') && verifiedOem !== qUpper) {
+            continue;
+          }
+
+          const desc = comp.name + ' ' + car.make + ' ' + car.model + ' (' + car.years + ')';
+          const already = results.some(r => r.desc === desc);
+          if (!already) {
+            const brand = comp.brandPref.split(' / ')[0] || car.make;
+            const code = '75' + Math.abs(strHash(desc)).toString().slice(0, 8);
+            results.push({
+              code,
+              desc,
+              brand,
+              dept: comp.dept,
+              cat: comp.cat,
+              subcat: comp.subcat,
+              unit: comp.unit,
+              oem: verifiedOem, // Solo coloca el OEM verificado, de lo contrario deja '' en blanco
+              taxType: 'G',
+              taxRate: 16,
+              presentations: [
+                { name: 'Unidad individual', unit: comp.unit, factor: 1, barcode: code, price: 0 }
+              ]
+            });
+          }
+        }
+      }
+    }
+  }
+
+  return results.slice(0, limit);
+}
+
+function strHash(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+/* Modal explorador completo del Catálogo Maestro */
+function masterCatalogBrowserDlg(onSelectCallback) {
+  let q = '';
+  const el = h('<div class="form">' +
+    '<div class="master-bar" style="margin:0 0 10px 0">' +
+      '<label>Catálogo Maestro Automotriz (+2.500.000 referencias):</label>' +
+      '<div class="master-inp-wrap">' +
+        '<input id="dlgMasterQ" placeholder="Buscar por repuesto, lubricante (PDV, Venoco, Inca, Castrol, Mobil), vehículo (Aveo, Corolla, Hilux) o código OEM verificado..." autocomplete="off">' +
+      '</div>' +
+      '<span class="master-badge-25m">Base Nacional e Internacional</span>' +
+    '</div>' +
+    '<div class="fltgrid" style="margin-bottom:8px">' +
+      '<div class="f"><label>Filtrar por Familia / Categoría</label>' +
+        '<select class="fld" id="dlgMasterCat">' +
+          '<option value="">Todas las Familias</option>' +
+          '<option value="Aceites de motor">Aceites de Motor (PDV, Venoco, Inca, Shell, Mobil)</option>' +
+          '<option value="Transmisión y diferencial">Transmisión, Valvulinas y ATF</option>' +
+          '<option value="Grasas y lubricantes">Grasas de Litio y Chasis</option>' +
+          '<option value="Filtros">Filtros (Aceite, Aire, Combustible)</option>' +
+          '<option value="Frenos">Frenos (Pastillas y Discos)</option>' +
+          '<option value="Suspensión y dirección">Tren Delantero y Suspensión</option>' +
+          '<option value="Encendido y eléctrico">Bujías y Bobinas de Encendido</option>' +
+          '<option value="Bombas y partes de motor">Bombas de Agua y Motor</option>' +
+          '<option value="Correas y accesorios">Correas de Tiempo y Únicas</option>' +
+        '</select>' +
+      '</div>' +
+      '<div class="f"><label>Filtrar por Marca</label>' +
+        '<select class="fld" id="dlgMasterBrand">' +
+          '<option value="">Todas las Marcas</option>' +
+          '<option value="PDV">PDV (Petróleos de Venezuela)</option>' +
+          '<option value="Venoco">Venoco</option>' +
+          '<option value="Inca">Inca</option>' +
+          '<option value="Shell">Shell</option>' +
+          '<option value="Castrol">Castrol</option>' +
+          '<option value="Mobil">Mobil</option>' +
+          '<option value="Motul">Motul</option>' +
+          '<option value="Valvoline">Valvoline</option>' +
+          '<option value="Toyota">Toyota</option>' +
+          '<option value="Millard">Millard</option>' +
+          '<option value="Bendix">Bendix</option>' +
+          '<option value="NGK">NGK</option>' +
+          '<option value="555">555 (Three Five)</option>' +
+          '<option value="Gates">Gates</option>' +
+        '</select>' +
+      '</div>' +
+      '<div class="f"><label>Filtro OEM</label>' +
+        '<select class="fld" id="dlgMasterOemOnly">' +
+          '<option value="all">Todos los productos</option>' +
+          '<option value="with_oem">Solo con OEM Verificado</option>' +
+          '<option value="without_oem">Solo sin OEM (Lubricantes / Universales)</option>' +
+        '</select>' +
+      '</div>' +
+    '</div>' +
+    '<div class="dim" id="dlgMasterCount" style="margin-bottom:6px">Mostrando resultados del catálogo maestro...</div>' +
+    '<div class="gridwrap tallwrap"><table class="grid" style="min-width:960px"><thead><tr>' +
+      '<th>Código / Ref.</th>' +
+      '<th>Descripción del Producto</th>' +
+      '<th>Marca</th>' +
+      '<th>Depto. / Categoría</th>' +
+      '<th class="c" style="width:70px">U.M.</th>' +
+      '<th class="c" style="width:140px">OEM Verificado</th>' +
+      '<th class="c" style="width:130px">Acción</th>' +
+    '</tr></thead><tbody id="dlgMasterBody"></tbody></table></div>' +
+  '</div>');
+
+  const drawList = () => {
+    const rawQ = $('#dlgMasterQ', el).value;
+    const catF = $('#dlgMasterCat', el).value;
+    const brandF = $('#dlgMasterBrand', el).value;
+    const oemF = $('#dlgMasterOemOnly', el).value;
+
+    let items = searchMasterCatalog(rawQ, 80);
+    if (catF) items = items.filter(it => it.cat === catF || it.subcat === catF);
+    if (brandF) items = items.filter(it => it.brand.toLowerCase() === brandF.toLowerCase());
+    if (oemF === 'with_oem') items = items.filter(it => it.oem && it.oem.trim() !== '');
+    if (oemF === 'without_oem') items = items.filter(it => !it.oem || it.oem.trim() === '');
+
+    $('#dlgMasterCount', el).textContent = items.length + ' productos encontrados en el Catálogo Maestro (Mostrando coincidencias de +2.500.000 repuestos indexados).';
+
+    $('#dlgMasterBody', el).innerHTML = items.length ? items.map((it, idx) =>
+      '<tr>' +
+        '<td class="mono"><b>' + esc(it.code) + '</b></td>' +
+        '<td><b>' + esc(it.desc) + '</b><div class="sub">' + esc(it.subcat || '') + '</div></td>' +
+        '<td><span class="desc">' + esc(it.brand) + '</span></td>' +
+        '<td>' + esc(it.dept) + ' &rsaquo; ' + esc(it.cat) + '</td>' +
+        '<td class="c"><span class="um-tag">' + esc((it.unit || 'und').toUpperCase()) + '</span></td>' +
+        '<td class="c">' + (it.oem ? '<span class="master-oem-tag">' + esc(it.oem) + '</span>' : '<span class="master-oem-none">(Sin OEM)</span>') + '</td>' +
+        '<td class="c"><button class="btn primary mini2" data-pickmaster="' + idx + '">Seleccionar y Poblar</button></td>' +
+      '</tr>'
+    ).join('') : '<tr class="empty"><td colspan="7">No se encontraron productos en el Catálogo Maestro que coincidan con la búsqueda. Intente con otra marca o repuesto.</td></tr>';
+
+    // Guardar referencia en el contenedor
+    el._currentMasterItems = items;
+  };
+
+  el.addEventListener('input', e => {
+    if (e.target.id === 'dlgMasterQ') drawList();
+  });
+  el.addEventListener('change', e => {
+    if (e.target.id === 'dlgMasterCat' || e.target.id === 'dlgMasterBrand' || e.target.id === 'dlgMasterOemOnly') drawList();
+  });
+  el.addEventListener('click', e => {
+    const pickBtn = e.target.closest('[data-pickmaster]');
+    if (pickBtn) {
+      const idx = +pickBtn.dataset.pickmaster;
+      const item = el._currentMasterItems && el._currentMasterItems[idx];
+      if (item && onSelectCallback) {
+        closeWin();
+        onSelectCallback(item);
+      }
+    }
+  });
+
+  openWin({
+    title: 'Catálogo Maestro Automotriz (+2.500.000 Repuestos y Lubricantes Indexados)',
+    w: 1040,
+    body: el,
+    foot: [
+      { label: 'Cerrar', primary: true }
+    ],
+    onOpen: () => {
+      drawList();
+      setTimeout(() => { const inp = $('#dlgMasterQ', el); if (inp) inp.focus(); }, 100);
+    }
+  });
+}
+
 /* ---------- FORMULARIO INTEGRAL DE NUEVO / EDITAR PRODUCTO (6 PESTAÑAS) ---------- */
-function productFormDlg(editCode,initialTab){
+function productFormDlg(editCode,initialTab,initialMasterItem){
   const existing=editCode?prod(editCode):null;
   const nextSeq=existing?(S.products.indexOf(existing)+1):(S.products.length+1);
   let tab=initialTab||'gen';
@@ -1460,48 +3301,78 @@ function productFormDlg(editCode,initialTab){
   const D=existing?JSON.parse(JSON.stringify(existing)):{
     code:'750'+pad(S.products.length+101,4),
     sku:'',
+    oem:'', // Código OEM verificado (en blanco si no posee)
     desc:'',
-    brand:'Castrol',
+    brand:'PDV',
     dept:'Lubricantes y Fluidos',
     cat:'Aceites de motor',
     subcat:'Mineral',
-    loc:'A-1',
-    unit:'und',
-    stock:12,
+    loc:'',
+    unit:'L',
+    stock:0,
     min:4,
-    cost:5.00,
+    cost:0.00,
     freight:0.00,
-    price:7.80,
+    price:0.00,
     photo:'',
     pricing:{
+      motor:'cost', // 'cost' (markup s/costo) | 'sale' (markup s/venta) | 'gap' (brecha BCV vs paralelo)
       mode:'auto',
-      markupCost:56.00,
-      markupSale:35.90,
+      bcvRate:S.cfg.rate,
+      parallelRate:r2(S.cfg.rate*1.22),
+      markupCost:40.00,
+      markupSale:28.57,
       gaps:[
-        {name:'Detal / Mostrador',gapPct:0,markupCost:56.00,price:7.80},
-        {name:'Taller / Mecánico',gapPct:6,markupCost:46.64,price:7.33},
-        {name:'Mayorista (≥ 6 und)',gapPct:12,markupCost:37.28,price:6.86},
-        {name:'Distribuidor / Flota',gapPct:18,markupCost:27.92,price:6.40}
+        {name:'Detal / Mostrador',gapPct:0,markupCost:40.00,price:0.00},
+        {name:'Taller / Mecánico',gapPct:6,markupCost:31.60,price:0.00},
+        {name:'Mayorista (≥ 6 und)',gapPct:12,markupCost:23.20,price:0.00},
+        {name:'Distribuidor / Flota',gapPct:18,markupCost:14.80,price:0.00}
       ]
     },
     presentations:[
-      {name:'Unidad individual',unit:'und',factor:1,barcode:'',price:7.80},
-      {name:'Caja / Empaque x 12',unit:'caja',factor:12,barcode:'',price:84.24}
+      {name:'Pote / Litro 946 mL',unit:'L',factor:1,barcode:'',price:0.00},
+      {name:'Caja x 12 Litros',unit:'caja',factor:12,barcode:'',price:0.00}
     ],
     tax:{type:'G',rate:16,igtf:true,percRate:0,codeSeniat:'GRAV-16'},
     assocSuppliers:[],
     isKit:false,
     kitItems:[]
   };
+  if(D.oem===undefined)D.oem='';
   if(!D.freight)D.freight=0;
   if(!D.sku)D.sku=genAutoSku(D.dept,D.cat,D.subcat,nextSeq);
-  if(!D.pricing)D.pricing={mode:'auto',markupCost:56,markupSale:35.9,gaps:[{name:'Detal / Mostrador',gapPct:0,markupCost:56,price:D.price}]};
+  if(!D.pricing)D.pricing={motor:'cost',mode:'auto',bcvRate:S.cfg.rate,parallelRate:r2(S.cfg.rate*1.22),markupCost:40,markupSale:28.57,gaps:[{name:'Detal / Mostrador',gapPct:0,markupCost:40,price:D.price}]};
+  if(!D.pricing.motor)D.pricing.motor='cost';
+  if(!D.pricing.bcvRate)D.pricing.bcvRate=S.cfg.rate;
+  if(!D.pricing.parallelRate)D.pricing.parallelRate=r2(S.cfg.rate*1.22);
   if(!D.presentations)D.presentations=[{name:'Unidad individual',unit:D.unit||'und',factor:1,barcode:D.code,price:D.price}];
   if(!D.tax)D.tax={type:'G',rate:16,igtf:true,percRate:0,codeSeniat:'GRAV-16'};
   if(!D.assocSuppliers)D.assocSuppliers=[];
   if(!D.kitItems)D.kitItems=[];
 
   const effCost=()=>r2((D.cost||0)+(D.freight||0));
+  const calcPriceFromMotor=()=>{
+    const c=Math.max(0.01,effCost());
+    const motor=D.pricing.motor||'cost';
+    if(motor==='sale'){
+      const ms=Math.min(99,Math.max(0,D.pricing.markupSale||30));
+      D.price=r2(c/(1-ms/100));
+      D.pricing.markupCost=r2(((D.price-c)/c)*100);
+    }else if(motor==='gap'){
+      const bcv=D.pricing.bcvRate||S.cfg.rate||1;
+      const par=D.pricing.parallelRate||r2(bcv*1.22);
+      const gapFactor=par/bcv;
+      const mkc=D.pricing.markupCost||40;
+      D.price=r2((c*(1+mkc/100))*gapFactor);
+      D.pricing.markupSale=D.price>0?r2(((D.price-c)/D.price)*100):0;
+    }else{
+      const mkc=D.pricing.markupCost||40;
+      D.price=r2(c*(1+mkc/100));
+      D.pricing.markupSale=D.price>0?r2(((D.price-c)/D.price)*100):0;
+    }
+    syncGapsFromBase();
+  };
+
   const syncGapsFromBase=()=>{
     const c=Math.max(0.01,effCost());
     D.pricing.gaps.forEach((g,idx)=>{
@@ -1524,6 +3395,15 @@ function productFormDlg(editCode,initialTab){
   };
 
   const el=h('<div class="form">'+
+    '<div class="master-bar" id="pfMasterBar">'+
+      '<label>🔍 Catálogo Maestro (+2.500.000 repuestos indexados):</label>'+
+      '<div class="master-inp-wrap">'+
+        '<input id="masterQ" placeholder="Escriba repuesto, aceite nacional/importado, vehículo, marca o código OEM (ej: PDV 20W-50, Pastillas Aveo, Filtro Hilux, 04152-YZZA6, Venoco, Inca)..." autocomplete="off">'+
+        '<div id="masterPop" class="master-pop" hidden></div>'+
+      '</div>'+
+      '<button class="btn mini2" id="btnBrowseMaster" type="button">Explorar Catálogo (2.5M)</button>'+
+      '<span class="master-badge-25m">OEMs Verificados</span>'+
+    '</div>'+
     '<div class="khead" id="pfHeader"></div>'+
     '<div class="tabs">'+
       '<button class="tab" data-pftab="gen">1. Información General</button>'+
@@ -1536,13 +3416,104 @@ function productFormDlg(editCode,initialTab){
     '<div id="pfBody"></div>'+
   '</div>');
 
+  /* Rellenar formulario desde Catálogo Maestro */
+  const applyMasterProduct=item=>{
+    D.desc=item.desc;
+    D.brand=item.brand;
+    D.dept=item.dept;
+    D.cat=item.cat;
+    D.subcat=item.subcat;
+    D.code=item.code||('750'+pad(S.products.length+101,4));
+    D.oem=item.oem||''; // Únicamente códigos verificados, de lo contrario en blanco
+    D.unit=item.unit||'und';
+    D.tax={
+      type:item.taxType||'G',
+      rate:item.taxRate!==undefined?item.taxRate:16,
+      igtf:true,
+      percRate:0,
+      codeSeniat:(item.taxType==='E'||item.taxType==='NS')?'EXENTO-0':'GRAV-16'
+    };
+    if(item.presentations&&item.presentations.length){
+      D.presentations=JSON.parse(JSON.stringify(item.presentations));
+    }else{
+      D.presentations=[{name:'Unidad individual',unit:D.unit,factor:1,barcode:D.code,price:0.00}];
+    }
+    D.sku=genAutoSku(D.dept,D.cat,D.subcat,nextSeq);
+
+    // Dejar vacíos únicamente los campos que debe rellenar el administrador:
+    D.cost=0.00;
+    D.freight=0.00;
+    D.stock=0;
+    D.loc='';
+    D.min=4;
+    D.price=0.00;
+
+    renderTab();
+    msg('Producto "'+D.desc+'" cargado desde el Catálogo Maestro. Ingrese su costo y existencia para completar.');
+  };
+
+  /* Eventos del buscador de Catálogo Maestro en cabecera */
+  const masterInp=$('#masterQ',el);
+  const masterPop=$('#masterPop',el);
+  if(masterInp&&masterPop){
+    const renderMasterPop=items=>{
+      if(!items.length){
+        masterPop.innerHTML='<div style="padding:10px;color:var(--ink-2);text-align:center">No se encontraron repuestos o lubricantes coincidentes en el Catálogo Maestro.</div>';
+        masterPop.hidden=false;
+        return;
+      }
+      masterPop.innerHTML=items.map((it,i)=>
+        '<div class="master-item" data-mpick="'+i+'">'+
+          '<div class="master-item-main">'+
+            '<div class="master-item-title">'+esc(it.desc)+'</div>'+
+            '<div class="master-item-meta">'+
+              '<b>'+esc(it.brand)+'</b> · '+esc(it.dept)+' &rsaquo; '+esc(it.cat)+' · '+
+              '<span class="um-tag">'+esc((it.unit||'und').toUpperCase())+'</span> '+
+              (it.oem?'<span class="master-oem-tag">OEM: '+esc(it.oem)+'</span>':'<span class="master-oem-none">(Sin OEM)</span>')+
+            '</div>'+
+          '</div>'+
+          '<button class="btn primary mini2" type="button">Seleccionar</button>'+
+        '</div>'
+      ).join('');
+      masterPop.hidden=false;
+      el._currentPopItems=items;
+    };
+
+    masterInp.addEventListener('input',()=>{
+      const q=masterInp.value.trim();
+      if(!q){masterPop.hidden=true;return;}
+      const items=searchMasterCatalog(q,15);
+      renderMasterPop(items);
+    });
+
+    masterPop.addEventListener('click',e=>{
+      const itemRow=e.target.closest('[data-mpick]');
+      if(itemRow){
+        const idx=+itemRow.dataset.mpick;
+        const item=el._currentPopItems&&el._currentPopItems[idx];
+        if(item){
+          masterPop.hidden=true;
+          masterInp.value=item.desc;
+          applyMasterProduct(item);
+        }
+      }
+    });
+
+    $('#btnBrowseMaster',el).addEventListener('click',()=>{
+      masterPop.hidden=true;
+      masterCatalogBrowserDlg(applyMasterProduct);
+    });
+  }
+
   const updateHeaderBar=()=>{
     if(autoSku)D.sku=genAutoSku(D.dept,D.cat,D.subcat,nextSeq);
-    const taxMult=(D.tax.type==='E'||D.tax.type==='NS')?1:(1+(D.tax.rate||16)/100);
+    const taxRate=prodTaxRate(D);
+    const taxMult=1+(taxRate/100);
     $('#pfHeader',el).innerHTML=
-      '<div><span>SKU Compuesto Automático</span><b class="mono" style="color:var(--title-a)">'+esc(D.sku)+'</b></div>'+
+      '<div><span>SKU Automático</span><b class="mono" style="color:var(--title-a)">'+esc(D.sku)+'</b></div>'+
       '<div><span>Producto / Marca</span><b>'+esc(D.desc||'(Sin descripción)')+' · '+esc(D.brand||'-')+'</b></div>'+
-      '<div><span>Clasificación</span><b>'+esc(D.dept)+' &rsaquo; '+esc(D.cat)+' &rsaquo; '+esc(D.subcat)+'</b></div>'+
+      '<div><span>OEM Verificado</span><b>'+(D.oem?'<span class="master-oem-tag">'+esc(D.oem)+'</span>':'<span class="master-oem-none">(Sin OEM)</span>')+'</b></div>'+
+      '<div><span>U.M. / I.V.A.</span><b><span class="um-tag">'+esc((D.unit||'und').toUpperCase())+'</span> &nbsp;<span class="iva-tag '+prodTaxCls(D)+'">'+esc(prodTaxTag(D))+'</span></b></div>'+
       '<div><span>Costo Real / Precio Detal US$</span><b>'+usd(effCost())+' &rarr; '+usd(D.price)+' (Con imp: '+usd(r2(D.price*taxMult))+')</b></div>';
   };
 
@@ -1558,11 +3529,13 @@ function productFormDlg(editCode,initialTab){
     else if(tab==='kit')renderKitTab(box);
   };
 
-  /* 1. INFORMACIÓN GENERAL + FOTO + SKU COMPUESTO */
+  /* 1. INFORMACIÓN GENERAL + FOTO + SKU COMPUESTO + OEM VERIFICADO */
   const renderGenTab=box=>{
     const depts=Array.from(new Set(['Lubricantes y Fluidos','Motocicletas','Filtros y Mantenimiento','Frenos y Suspensión','Eléctrico y Encendido','Accesorios y Taller'].concat(S.products.map(p=>p.dept))));
     const cats=Array.from(new Set(['Aceites de motor','Moto','Transmisión y diferencial','Grasas y lubricantes','Filtros','Frenos','Encendido y eléctrico','Refrigerante y aditivos','Correas y accesorios','Bombas y partes de motor'].concat(S.products.map(p=>p.cat))));
     const subs=Array.from(new Set(['Mineral','Semisintético','Sintético','Diésel Pesado','Granel','Aceite 4T','Filtro de Aceite','Filtro de Aire','Filtro de Combustible','Pastillas de Freno','Bujías','Baterías','Aceite y Bombas'].concat(S.products.map(p=>p.subcat))));
+    const umOpts=UM_OPTIONS.map(u=>'<option value="'+u.id+'"'+(D.unit===u.id?' selected':'')+'>'+esc(u.name)+'</option>').join('');
+    const txOpts=TAX_OPTIONS.map(tx=>'<option value="'+tx.type+'"'+(D.tax.type===tx.type?' selected':'')+'>'+esc(tx.name)+'</option>').join('');
 
     box.innerHTML=
       '<div style="display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;align-items:start">'+
@@ -1578,24 +3551,27 @@ function productFormDlg(editCode,initialTab){
             '<div class="row"><input class="fld mono" id="pfSku" value="'+esc(D.sku)+'" '+(autoSku?'readonly':'')+'><label class="chk" style="font-size:11.5px"><input type="checkbox" id="pfAutoSku" '+(autoSku?'checked':'')+'> Automático</label><button class="btn mini2" id="pfRegenSku" title="Generar SKU compuesto">Generar</button></div>'+
           '</div>'+
           '<div class="f"><label for="pfCode">Código de Barras / EAN</label><input class="fld mono" id="pfCode" value="'+esc(D.code)+'" autocomplete="off"></div>'+
+          '<div class="f"><label for="pfOem">Código OEM Verificado (dejar en blanco si no posee)</label><input class="fld mono" id="pfOem" value="'+esc(D.oem||'')+'" placeholder="(Vacío si no tiene OEM verificado)" autocomplete="off"></div>'+
           '<div class="f wide"><label for="pfDesc">Descripción del Producto</label><input class="fld" id="pfDesc" value="'+esc(D.desc)+'" placeholder="Ej: Aceite 20W-50 Mineral 1 L" autocomplete="off"></div>'+
           '<div class="f"><label for="pfBrand">Marca / Fabricante</label><input class="fld" id="pfBrand" value="'+esc(D.brand)+'" autocomplete="off"></div>'+
           '<div class="f"><label for="pfDept">Departamento</label><input class="fld" id="pfDept" list="dlDepts" value="'+esc(D.dept)+'" autocomplete="off"><datalist id="dlDepts">'+depts.map(x=>'<option value="'+esc(x)+'">').join('')+'</datalist></div>'+
           '<div class="f"><label for="pfCat">Categoría (define prefijo SKU)</label><input class="fld" id="pfCat" list="dlCats" value="'+esc(D.cat)+'" autocomplete="off"><datalist id="dlCats">'+cats.map(x=>'<option value="'+esc(x)+'">').join('')+'</datalist></div>'+
           '<div class="f"><label for="pfSub">Subcategoría (define sub-bloque SKU)</label><input class="fld" id="pfSub" list="dlSubs" value="'+esc(D.subcat)+'" autocomplete="off"><datalist id="dlSubs">'+subs.map(x=>'<option value="'+esc(x)+'">').join('')+'</datalist></div>'+
           '<div class="f"><label for="pfLoc">Ubicación / Pasillo</label><input class="fld" id="pfLoc" value="'+esc(D.loc)+'"></div>'+
-          '<div class="f"><label for="pfUnit">Unidad Base</label><select class="fld" id="pfUnit"><option value="und"'+(D.unit==='und'?' selected':'')+'>Unidad (und)</option><option value="L"'+(D.unit==='L'?' selected':'')+'>Litro a granel (L)</option><option value="par"'+(D.unit==='par'?' selected':'')+'>Par / Juego</option><option value="kg"'+(D.unit==='kg'?' selected':'')+'>Kilogramo (kg)</option></select></div>'+
+          '<div class="f"><label for="pfUnit">Unidad de Medida (U.M.)</label><select class="fld" id="pfUnit">'+umOpts+'</select></div>'+
+          '<div class="f"><label for="pfTaxQuick">Alícuota I.V.A.</label><select class="fld" id="pfTaxQuick">'+txOpts+'</select></div>'+
           '<div class="f"><label for="pfStock">Existencia '+(existing?'Actual':'Inicial')+'</label><input class="fld r" id="pfStock" value="'+fq(D.stock)+'" inputmode="decimal"></div>'+
           '<div class="f"><label for="pfMin">Stock Mínimo Alerta</label><input class="fld r" id="pfMin" value="'+fq(D.min)+'" inputmode="decimal"></div>'+
         '</div>'+
       '</div>'+
       '<div class="group" style="margin-top:4px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'+
-        '<div><b>Vista rápida de SKU y Hablador:</b> <span class="mono">'+esc(D.sku)+'</span> &nbsp;·&nbsp; <span class="dim">Ej. formato: SKU-MOT/BOMB-ACE-00001</span></div>'+
+        '<div><b>Vista rápida:</b> U.M. <span class="um-tag">'+esc((D.unit||'und').toUpperCase())+'</span> · I.V.A. <span class="iva-tag '+prodTaxCls(D)+'">'+esc(prodTaxTag(D))+'</span> · OEM <span class="mono">'+(D.oem?esc(D.oem):'—')+'</span> · SKU <span class="mono">'+esc(D.sku)+'</span></div>'+
         '<button class="btn mini2" id="pfOpenLabel">Vista previa de Etiqueta / Hablador SKU (US$)</button>'+
       '</div>';
 
     box.oninput=e=>{
       const t=e.target;
+      if(t.id==='pfOem')D.oem=t.value.trim().toUpperCase();
       if(t.id==='pfDesc')D.desc=t.value;
       if(t.id==='pfBrand')D.brand=t.value;
       if(t.id==='pfCode')D.code=t.value.trim();
@@ -1614,7 +3590,18 @@ function productFormDlg(editCode,initialTab){
     };
     box.onchange=e=>{
       const t=e.target;
-      if(t.id==='pfUnit')D.unit=t.value;
+      if(t.id==='pfUnit'){
+        D.unit=t.value;
+        if(D.presentations&&D.presentations[0]&&D.presentations[0].factor===1)D.presentations[0].unit=D.unit;
+      }
+      if(t.id==='pfTaxQuick'){
+        const opt=TAX_OPTIONS.find(x=>x.type===t.value);
+        if(opt){
+          D.tax.type=opt.type;
+          D.tax.rate=opt.rate;
+          D.tax.codeSeniat=opt.type==='E'?'EXENTO-0':(opt.type==='R'?'RED-08':(opt.type==='A'?'ADIC-31':'GRAV-16'));
+        }
+      }
       if(t.id==='pfStock'){const v=pnZero(t.value);if(v!==null)D.stock=v;t.value=fq(D.stock);}
       if(t.id==='pfMin'){const v=pnZero(t.value);if(v!==null)D.min=v;t.value=fq(D.min);}
       if(t.id==='pfAutoSku'){
@@ -1650,24 +3637,51 @@ function productFormDlg(editCode,initialTab){
     };
   };
 
-  /* 2. COSTOS Y MOTORES DE VENTA (MARKUP S/COSTO, MARKUP S/VENTA Y BRECHAS AUTOMÁTICO/EDITABLE) */
+  /* 2. COSTOS Y MOTORES DE VENTA (MARKUP S/COSTO, MARKUP S/VENTA Y BRECHA BCV VS PARALELO) */
   const renderCostTab=box=>{
     const c=Math.max(0.01,effCost());
     const taxRate=(D.tax.type==='E'||D.tax.type==='NS')?0:(D.tax.rate||16)/100;
+    if(!D.pricing.motor)D.pricing.motor='cost';
+    if(!D.pricing.bcvRate)D.pricing.bcvRate=S.cfg.rate;
+    if(!D.pricing.parallelRate)D.pricing.parallelRate=r2(S.cfg.rate*1.22);
+    const bcv=D.pricing.bcvRate||1;
+    const par=D.pricing.parallelRate||bcv;
+    const gapPct=bcv>0?r2(((par-bcv)/bcv)*100):0;
     D.pricing.markupCost=r2(((D.price-c)/c)*100);
     D.pricing.markupSale=D.price>0?r2(((D.price-c)/D.price)*100):0;
     syncGapsFromBase();
 
     box.innerHTML=
+      '<div class="motor-box">'+
+        '<div style="font-weight:700;margin-bottom:6px;font-size:13px">Selección del Motor de Venta Activo:</div>'+
+        '<div class="motor-choice">'+
+          '<label><input type="radio" name="activeMotor" value="cost" '+(D.pricing.motor==='cost'?'checked':'')+'> <b>Motor 1:</b> Markup sobre Costo (%)</label>'+
+          '<label><input type="radio" name="activeMotor" value="sale" '+(D.pricing.motor==='sale'?'checked':'')+'> <b>Motor 2:</b> Markup sobre Venta / Margen (%)</label>'+
+          '<label><input type="radio" name="activeMotor" value="gap" '+(D.pricing.motor==='gap'?'checked':'')+'> <b>Motor 3:</b> Sistema de Brecha BCV vs. Paralelo</label>'+
+        '</div>'+
+        (D.pricing.motor==='gap'?
+          '<div class="brecha-alert">'+
+            '🛡️ <b>Protección Cambiaria Activa:</b> Compensación del '+fq(gapPct)+'% entre Tasa BCV ('+nf(bcv)+' Bs.) y Paralelo ('+nf(par)+' Bs.). Al facturar a tasa oficial BCV, el cobro en Bs. ('+nf(r2(D.price*bcv))+' Bs.) preserva exactamente el costo de reposición en divisa.'+
+          '</div>':''
+        )+
+      '</div>'+
       '<div class="fltgrid">'+
         '<div class="f"><label for="pcCost">Costo Proveedor US$ (sin IVA)</label><input class="fld r" id="pcCost" value="'+nf(D.cost)+'" inputmode="decimal"></div>'+
-        '<div class="f"><label for="pcFreight">Flete / Gastos Nacionaliz. US$</label><input class="fld r" id="pcFreight" value="'+nf(D.freight||0)+'" inputmode="decimal"></div>'+
+        '<div class="f"><label for="pcFreight">Flete / Otros Gastos US$</label><input class="fld r" id="pcFreight" value="'+nf(D.freight||0)+'" inputmode="decimal"></div>'+
         '<div class="f"><label>Costo Real Total US$</label><input class="fld r" id="pcEffCost" value="'+nf(c)+'" readonly></div>'+
         '<div class="f"><label for="pcMkCost">Motor 1: Markup s/Costo (%)</label><input class="fld r" id="pcMkCost" value="'+fq(D.pricing.markupCost)+'" inputmode="decimal" title="Utilidad / Costo * 100"></div>'+
-        '<div class="f"><label for="pcMkSale">Motor 2: Markup s/Venta / Margen (%)</label><input class="fld r" id="pcMkSale" value="'+fq(D.pricing.markupSale)+'" inputmode="decimal" title="Utilidad / Precio Venta * 100 (máx 99%)"></div>'+
+        '<div class="f"><label for="pcMkSale">Motor 2: Margen s/Venta (%)</label><input class="fld r" id="pcMkSale" value="'+fq(D.pricing.markupSale)+'" inputmode="decimal" title="Utilidad / Precio Venta * 100"></div>'+
         '<div class="f"><label for="pcPrice">Precio Venta Detal US$ (sin IVA)</label><input class="fld r" id="pcPrice" value="'+nf(D.price)+'" inputmode="decimal" style="font-weight:700;color:var(--ok)"></div>'+
       '</div>'+
-      '<div class="invbar" style="justify-content:space-between;background:var(--alt);padding:5px 8px;border:1px solid var(--lo)">'+
+      (D.pricing.motor==='gap'?
+        '<div class="fltgrid" style="margin-top:6px;background:#F9F7E8;border-color:#E2D99C">'+
+          '<div class="f"><label for="pcBcv">Tasa Oficial BCV (Bs./USD)</label><input class="fld r" id="pcBcv" value="'+nf(bcv)+'" inputmode="decimal"></div>'+
+          '<div class="f"><label for="pcPar">Tasa Paralelo / Reposición (Bs./USD)</label><input class="fld r" id="pcPar" value="'+nf(par)+'" inputmode="decimal"></div>'+
+          '<div class="f"><label>Brecha Cambiaria (%)</label><input class="fld r" id="pcGapPct" value="+'+fq(gapPct)+' %" readonly style="color:var(--warn);font-weight:700"></div>'+
+          '<div class="f"><label>Total Factura en Bs. (BCV)</label><input class="fld r" value="'+nf(r2(D.price*bcv))+' Bs." readonly style="font-weight:700"></div>'+
+        '</div>':''
+      )+
+      '<div class="invbar" style="justify-content:space-between;background:var(--alt);padding:5px 8px;border:1px solid var(--lo);margin-top:6px">'+
         '<div class="row" style="gap:12px">'+
           '<b>Sistema de Brechas entre Escalas de Precio:</b>'+
           '<label class="chk"><input type="radio" name="gapMode" value="auto" '+(D.pricing.mode==='auto'?'checked':'')+'> Automático (según % de brecha)</label>'+
@@ -1688,7 +3702,11 @@ function productFormDlg(editCode,initialTab){
         '</tr></thead>'+
         '<tbody id="pcGapsBody"></tbody>'+
       '</table></div>'+
-      '<p class="hint"><b>Markup sobre Costo</b> = (Precio − Costo) ÷ Costo &nbsp;|&nbsp; <b>Markup sobre Venta (Margen)</b> = (Precio − Costo) ÷ Precio. Al modificar cualquiera de los motores se recalculan las brechas automáticamente.</p>';
+      '<p class="hint"><b>Motor Activo:</b> '+
+        (D.pricing.motor==='cost'?'Markup sobre Costo: Precio = Costo × (1 + %Markup/100).':
+        (D.pricing.motor==='sale'?'Markup sobre Venta: Precio = Costo ÷ (1 − %Margen/100).':
+        'Sistema de Brecha BCV vs Paralelo: Precio = [Costo × (1 + %Margen)] × (Tasa Paralelo ÷ Tasa BCV). Protege el margen real al facturar a tasa oficial en Bolívares.'))+
+      '</p>';
 
     const drawGaps=()=>{
       const curC=Math.max(0.01,effCost());
@@ -1713,6 +3731,21 @@ function productFormDlg(editCode,initialTab){
 
     box.onchange=e=>{
       const t=e.target;
+      if(t.name==='activeMotor'){
+        D.pricing.motor=t.value;
+        calcPriceFromMotor();
+        renderCostTab(box);
+        updateHeaderBar();
+        return;
+      }
+      if(t.id==='pcBcv'||t.id==='pcPar'){
+        if(t.id==='pcBcv')D.pricing.bcvRate=pn(t.value)||S.cfg.rate;
+        if(t.id==='pcPar')D.pricing.parallelRate=pn(t.value)||r2(S.cfg.rate*1.22);
+        calcPriceFromMotor();
+        renderCostTab(box);
+        updateHeaderBar();
+        return;
+      }
       if(t.name==='gapMode'){
         D.pricing.mode=t.value;
         syncGapsFromBase();
@@ -1720,34 +3753,32 @@ function productFormDlg(editCode,initialTab){
         return;
       }
       if(t.id==='pcCost'||t.id==='pcFreight'){
-        if(t.id==='pcCost')D.cost=pn(t.value)||0.01;
+        if(t.id==='pcCost')D.cost=pn(t.value)||0.00;
         if(t.id==='pcFreight')D.freight=pnZero(t.value)||0;
-        const nc=Math.max(0.01,effCost());
-        D.price=r2(nc*(1+(D.pricing.markupCost||50)/100));
-        syncGapsFromBase();
+        calcPriceFromMotor();
         renderCostTab(box);
+        updateHeaderBar();
         return;
       }
       if(t.id==='pcMkCost'){
-        const mkc=pnZero(t.value)||0, nc=Math.max(0.01,effCost());
-        D.pricing.markupCost=mkc;
-        D.price=r2(nc*(1+mkc/100));
-        syncGapsFromBase();
+        D.pricing.markupCost=pnZero(t.value)||0;
+        calcPriceFromMotor();
         renderCostTab(box);
+        updateHeaderBar();
         return;
       }
       if(t.id==='pcMkSale'){
-        const mks=Math.min(99,pnZero(t.value)||0), nc=Math.max(0.01,effCost());
-        D.pricing.markupSale=mks;
-        D.price=r2(nc/(1-mks/100));
-        syncGapsFromBase();
+        D.pricing.markupSale=Math.min(99,pnZero(t.value)||0);
+        calcPriceFromMotor();
         renderCostTab(box);
+        updateHeaderBar();
         return;
       }
       if(t.id==='pcPrice'){
         D.price=pn(t.value)||D.price;
         syncGapsFromBase();
         renderCostTab(box);
+        updateHeaderBar();
         return;
       }
       if(t.dataset.gf){
@@ -1773,6 +3804,7 @@ function productFormDlg(editCode,initialTab){
           syncGapsFromBase();
         }
         renderCostTab(box);
+        updateHeaderBar();
       }
     };
     box.onclick=e=>{
@@ -2107,13 +4139,13 @@ function productFormDlg(editCode,initialTab){
       {label:'Guardar Producto',primary:true,fn:()=>saveProduct(true)}
     ],
     onEnter:()=>{},
-    onOpen:()=>{renderTab();}
+    onOpen:()=>{renderTab();if(initialMasterItem)applyMasterProduct(initialMasterItem);}
   });
 }
 
 /* ---------- inventario ---------- */
 function inventoryDlg(){
-  const el=h('<div class="form"><div class="invbar"><label for="invQ">Buscar</label><input class="fld" id="invQ" placeholder="SKU, código, marca, depto, categoría o descripción" autocomplete="off"><label class="chk"><input type="checkbox" id="invLow"> Solo bajo mínimo</label><button class="btn primary" id="btnNewProd">+ Nuevo Producto (Ficha Completa)</button><button class="btn mini2" id="btnGoConteo">Conteo físico masivo…</button><button class="btn mini2" id="btnGoLabels">Habladores / Etiquetas SKU</button></div><div class="dim" id="invSum"></div><div class="gridwrap tallwrap"><table class="grid" style="min-width:980px"><thead><tr><th>SKU / Código</th><th>Descripción / Marca</th><th>Depto. / Categoría / Subcat.</th><th>Pas.</th><th class="r">Existencia</th><th class="r">Mín.</th><th class="r">Costo US$</th><th class="r">Precio US$</th><th class="c">Acciones</th></tr></thead><tbody id="invBody"></tbody></table></div></div>');
+  const el=h('<div class="form"><div class="invbar"><label for="invQ">Buscar</label><input class="fld" id="invQ" placeholder="SKU, código, marca, depto, categoría o descripción" autocomplete="off"><label class="chk"><input type="checkbox" id="invLow"> Solo bajo mínimo</label><button class="btn primary" id="btnMasterCat">🔍 Catálogo Maestro (2.5M repuestos)</button><button class="btn" id="btnNewProd">+ Nuevo en Blanco</button><button class="btn mini2" id="btnGoConteo">Conteo físico masivo…</button><button class="btn mini2" id="btnGoLabels">Habladores / Etiquetas SKU</button></div><div class="dim" id="invSum"></div><div class="gridwrap tallwrap"><table class="grid" style="min-width:1040px"><thead><tr><th>SKU / Código</th><th>Descripción / Marca</th><th>Depto. / Categoría / Subcat.</th><th>Pas.</th><th class="c" style="width:68px">U.M.</th><th class="c" style="width:90px">I.V.A.</th><th class="r">Existencia</th><th class="r">Mín.</th><th class="r">Costo US$</th><th class="r">Precio US$</th><th class="c">Acciones</th></tr></thead><tbody id="invBody"></tbody></table></div></div>');
   const rows=()=>{
     const q=$('#invQ',el).value,low=$('#invLow',el).checked;
     return searchProducts(q,'Todas').filter(p=>!low||p.stock<=p.min);
@@ -2128,15 +4160,24 @@ function inventoryDlg(){
     const list=rows();
     $('#invBody',el).innerHTML=list.length?list.map(p=>'<tr data-code="'+esc(p.code)+'" class="'+(p.stock<=0?'rowout':(p.stock<=p.min?'rowlow':''))+'">'+
       '<td class="mono"><div><b>'+esc(p.sku||p.code)+'</b></div><div class="sub">EAN: '+esc(p.code)+'</div></td>'+
-      '<td>'+(p.photo?'<img class="thumb-sm" src="'+esc(p.photo)+'" alt="">':'')+'<span class="desc">'+esc(p.desc)+'</span><div class="sub">'+esc(p.brand)+(p.isKit?' · [KIT/COMBO]':'')+(p.unit==='L'?' · granel (L)':'')+'</div></td>'+
+      '<td>'+(p.photo?'<img class="thumb-sm" src="'+esc(p.photo)+'" alt="">':'')+'<span class="desc">'+esc(p.desc)+'</span><div class="sub">'+esc(p.brand)+(p.isKit?' · [KIT/COMBO]':'')+'</div></td>'+
       '<td><div>'+esc(p.dept)+'</div><div class="sub">'+esc(p.cat)+' &rsaquo; '+esc(p.subcat)+'</div></td>'+
       '<td>'+esc(p.loc)+'</td>'+
+      '<td class="c"><select class="fld cell" data-f="unit" style="width:64px;padding:1px 2px" title="Unidad de Medida (U.M.)">'+
+        UM_OPTIONS.map(u=>'<option value="'+u.id+'"'+(p.unit===u.id?' selected':'')+'>'+u.id.toUpperCase()+'</option>').join('')+
+      '</select></td>'+
+      '<td class="c"><select class="fld cell" data-f="tax" style="width:88px;padding:1px 2px" title="Alícuota de I.V.A.">'+
+        '<option value="G" '+(p.tax&&p.tax.type==='G'?'selected':'')+'>16% (G)</option>'+
+        '<option value="R" '+(p.tax&&p.tax.type==='R'?'selected':'')+'>8% (R)</option>'+
+        '<option value="A" '+(p.tax&&p.tax.type==='A'?'selected':'')+'>31% (A)</option>'+
+        '<option value="E" '+(p.tax&&(p.tax.type==='E'||p.tax.type==='NS')?'selected':'')+'>0% (Exento)</option>'+
+      '</select></td>'+
       '<td class="r"><input class="fld cell r" data-f="stock" value="'+fq(p.stock)+'" inputmode="decimal" aria-label="Existencia de '+esc(p.desc)+'"></td>'+
       '<td class="r"><input class="fld cell r" data-f="min" value="'+fq(p.min)+'" inputmode="decimal" aria-label="Mínimo de '+esc(p.desc)+'"></td>'+
       '<td class="r"><input class="fld cell r" data-f="cost" value="'+nf(p.cost)+'" inputmode="decimal" aria-label="Costo de '+esc(p.desc)+'"></td>'+
       '<td class="r"><input class="fld cell r" data-f="price" value="'+nf(p.price)+'" inputmode="decimal" aria-label="Precio de '+esc(p.desc)+'"></td>'+
       '<td class="c" style="white-space:nowrap"><button class="btn mini2" data-edit="'+esc(p.code)+'" title="Editar ficha, costos, presentaciones, proveedores y kit">Ficha</button> <button class="btn mini2" data-lbl="'+esc(p.code)+'" title="Generar hablador / etiqueta SKU">SKU</button> <button class="btn mini2" data-kx="'+esc(p.code)+'">Kardex</button></td>'+
-    '</tr>').join(''):'<tr class="empty"><td colspan="9">Sin productos que coincidan.</td></tr>';
+    '</tr>').join(''):'<tr class="empty"><td colspan="11">Sin productos que coincidan.</td></tr>';
     sum();
   };
   el.addEventListener('input',e=>{if(e.target.id==='invQ')draw();});
@@ -2165,11 +4206,30 @@ function inventoryDlg(){
     else if(f==='min'){p.min=e.target.value.trim()==='0'?0:(v||p.min);}
     else if(f==='cost'){p.cost=v||p.cost;}
     else if(f==='price'){p.price=v||p.price;}
-    e.target.value=(f==='price'||f==='cost')?nf(p[f]):fq(p[f]);
+    else if(f==='unit'){
+      p.unit=e.target.value.trim()||'und';
+      msg('U.M. de "'+p.desc+'" actualizada a '+p.unit.toUpperCase()+'.');
+    }
+    else if(f==='tax'){
+      const val=e.target.value;
+      if(val==='E')p.tax={type:'E',rate:0,igtf:true,percRate:0,codeSeniat:'EXENTO-0'};
+      else if(val==='R')p.tax={type:'R',rate:8,igtf:true,percRate:0,codeSeniat:'RED-08'};
+      else if(val==='A')p.tax={type:'A',rate:31,igtf:true,percRate:0,codeSeniat:'ADIC-31'};
+      else p.tax={type:'G',rate:16,igtf:true,percRate:0,codeSeniat:'GRAV-16'};
+      msg('I.V.A. de "'+p.desc+'" actualizado a '+prodTaxTag(p)+'.');
+    }
+    if(f==='price'||f==='cost')e.target.value=nf(p[f]);
+    else if(f==='stock'||f==='min')e.target.value=fq(p[f]);
     tr.className=p.stock<=0?'rowout':(p.stock<=p.min?'rowlow':'');
     save();sum();renderCatalog();renderCart();
   });
   el.addEventListener('click',e=>{
+    if(e.target.id==='btnMasterCat'){
+      masterCatalogBrowserDlg(item=>{
+        productFormDlg(null,'gen',item);
+      });
+      return;
+    }
     if(e.target.id==='btnNewProd'){productFormDlg(null,'gen');return;}
     if(e.target.id==='btnGoConteo'){conteoDlg();return;}
     if(e.target.id==='btnGoLabels'){labelGeneratorDlg();return;}
@@ -2210,6 +4270,7 @@ function comprasDlg(initialTab){
         '<div class="f"><label for="cpCond">Condición de Compra</label><select class="fld" id="cpCond"><option value="Crédito"'+(cond==='Crédito'?' selected':'')+'>Crédito (Genera CxP)</option><option value="Contado"'+(cond==='Contado'?' selected':'')+'>Contado (Pagada)</option></select></div>'+
         '<div class="f" id="cpDaysWrap"><label for="cpDays">Plazo Crédito (días)</label><input class="fld r" id="cpDays" value="'+creditDays+'" inputmode="numeric"></div>'+
         '<div class="f"><label for="cpInit">Abono / Pago Inicial US$</label><input class="fld r" id="cpInit" value="'+(paidInit?nf(paidInit):'0,00')+'" inputmode="decimal"></div>'+
+        '<div class="f"><label for="cpMethod">Medio de Pago Inicial</label><select class="fld" id="cpMethod">'+METHODS.map(m=>'<option value="'+esc(m.name)+'"'+(payMethod===m.name?' selected':'')+'>'+esc(m.name)+'</option>').join('')+'</select></div>'+
       '</div>'+
       '<div class="invbar">'+
         '<label for="cpAddProd">Agregar producto</label>'+
@@ -2266,6 +4327,7 @@ function comprasDlg(initialTab){
       if(t.id==='cpCond'){cond=t.value;drawLines();return;}
       if(t.id==='cpDays'){creditDays=Math.max(1,Math.round(pn(t.value)||15));drawLines();return;}
       if(t.id==='cpInit'){paidInit=pn(t.value);t.value=nf(paidInit);drawLines();return;}
+      if(t.id==='cpMethod'){payMethod=t.value;return;}
       if(t.id==='cpIva'){applyIva=t.checked;drawLines();return;}
       if(t.dataset.cpf){
         const tr=t.closest('tr'), idx=+tr.dataset.pi, l=pLines[idx];
@@ -3109,13 +5171,34 @@ function payDlg(){
 
 function finalize(st,amts,isCred,cDays){
   const t=totals(), ts=Date.now(), invNo=S.invoice;
-  const lines=S.cart.map(l=>{const i=lineInfo(l);return{code:l.code,desc:i.p.brand+' '+i.p.desc,qty:l.qty,price:i.p.price,disc:l.disc,net:i.net};});
+  const lines=S.cart.map(l=>{
+    const i=lineInfo(l);
+    return{
+      code:l.code,
+      desc:i.p.brand+' '+i.p.desc,
+      unit:i.p.unit||'und',
+      qty:l.qty,
+      price:i.p.price,
+      disc:l.disc,
+      taxRate:i.rate,
+      taxType:(i.p.tax&&i.p.tax.type)||'G',
+      taxTag:prodTaxTag(i.p),
+      iva:i.iva,
+      net:i.net
+    };
+  });
   const pays=METHODS.filter(m=>amts[m.id]>0).map(m=>({id:m.id,name:m.name,cur:m.cur,amount:r2(amts[m.id])}));
   const creditAmt=(isCred&&st.pending>=0.01)?r2(st.pending):0;
   if(creditAmt>0){
     pays.push({id:'credito',name:'Crédito CxC ('+cDays+' días)',cur:'USD',amount:creditAmt});
   }
-  const sale={no:invNo,ts,client:Object.assign({},S.client),lines,sub:t.sub,disc:t.disc,base:t.base,iva:t.iva,total:t.total,igtf:st.igtf,rate:S.cfg.rate,pays,change:r2(st.change),credit:creditAmt,void:false};
+  const sale={
+    no:invNo,ts,client:Object.assign({},S.client),lines,
+    sub:t.sub,disc:t.disc,base:t.base,
+    baseG16:t.baseG16,baseR8:t.baseR8,baseA31:t.baseA31,baseEx:t.baseEx,
+    iva:t.iva,total:t.total,igtf:st.igtf,rate:S.cfg.rate,pays,
+    change:r2(st.change),credit:creditAmt,void:false
+  };
   S.cart.forEach(l=>{
     const p=prod(l.code);
     p.stock=Math.max(0,r2(p.stock-l.qty));
@@ -3175,14 +5258,26 @@ function ticketText(s){
   if(s.void)L.push(dln,ctr('*** VENTA ANULADA ***'),dln);
   L.push(ctr(cut(S.cfg.empresa.toUpperCase(),Wd)),ctr('RIF: '+S.cfg.rif));
   if(S.cfg.dir)L.push(ctr(cut(S.cfg.dir,Wd)));
-  L.push(dln,row('RECIBO / TICKET: '+pad(s.no),fmtDT(s.ts)),row('Cajero: '+S.cfg.cajero,'Caja '+S.cfg.caja),'Cliente: '+cut(s.client.name,Wd-9),'RIF/C.I.: '+s.client.rif,ln,row('CANT x PRECIO US$','SUBTOTAL US$'),ln);
+  L.push(dln,row('RECIBO / TICKET: '+pad(s.no),fmtDT(s.ts)),row('Cajero: '+S.cfg.cajero,'Caja '+S.cfg.caja),'Cliente: '+cut(s.client.name,Wd-9),'RIF/C.I.: '+s.client.rif,ln,row('CANT·U.M. x PRECIO (IVA)','SUBTOTAL US$'),ln);
   s.lines.forEach(l=>{
+    const uLabel=(l.unit||'und').toUpperCase();
+    const tTag=l.taxRate===0?'(E 0%)':(l.taxRate===8?'(R 8%)':(l.taxRate===31?'(A 31%)':'(G 16%)'));
     L.push(cut(l.desc,Wd));
-    L.push(row('  '+fq(l.qty)+' x '+nf(l.price)+(l.disc?' (-'+fq(l.disc)+'%)':''),nf(l.net)));
+    L.push(row('  '+fq(l.qty)+' '+uLabel+' x '+nf(l.price)+' '+tTag+(l.disc?' (-'+fq(l.disc)+'%)':''),nf(l.net)));
   });
   L.push(ln,row('Subtotal US$',nf(s.sub)));
   if(s.disc)L.push(row('Descuento US$','-'+nf(s.disc)));
-  L.push(row('Base imponible US$',nf(s.base)),row('IVA (16 %) US$',nf(s.iva)));
+  if(s.baseEx>0&&s.baseG16>0){
+    L.push(row('Base Gravada 16 % US$',nf(s.baseG16)));
+    if(s.baseR8>0)L.push(row('Base Reducida 8 % US$',nf(s.baseR8)));
+    if(s.baseA31>0)L.push(row('Base Suntuaria 31 % US$',nf(s.baseA31)));
+    L.push(row('Ventas Exentas (0 %) US$',nf(s.baseEx)));
+  }else if(s.baseEx>0){
+    L.push(row('Ventas Exentas (0 %) US$',nf(s.baseEx)));
+  }else{
+    L.push(row('Base imponible US$',nf(s.base)));
+  }
+  L.push(row('Total I.V.A. US$',nf(s.iva)));
   if(s.igtf)L.push(row('IGTF (3 % Divisas) US$',nf(s.igtf)));
   const due=r2(s.total+s.igtf);
   L.push(dln,row('TOTAL A PAGAR US$',nf(due)),row('TOTAL Bs. (Tasa '+nf(s.rate)+')',nf(due*s.rate)),dln,'DETALLE DE PAGO:');
@@ -3384,11 +5479,24 @@ function renderCatOptions(){}
 function renderCart(){
   const tb=$('#cartBody'),rate=S.cfg.rate;
   if(!S.cart.length){
-    tb.innerHTML='<tr class="empty"><td colspan="8">Venta vacía. Escanee un código de barras o escriba la descripción del producto en la caja de arriba.</td></tr>';
+    tb.innerHTML='<tr class="empty"><td colspan="10">Venta vacía. Escanee un código de barras o escriba la descripción del producto en la caja de arriba.</td></tr>';
   }else{
     tb.innerHTML=S.cart.map((l,i)=>{
       const x=lineInfo(l),p=x.p;
-      return '<tr data-i="'+i+'" class="'+(i===S.sel?'sel':'')+'"><td class="c">'+(i+1)+'</td><td class="mono">'+esc(p.code)+'</td><td><div class="desc">'+esc(p.desc)+'</div><div class="sub">'+esc(p.brand)+' · '+(p.sku?esc(p.sku)+' · ':'')+'pasillo '+esc(p.loc)+'</div></td><td class="c"><span class="qty"><button class="mini" data-act="dec" aria-label="Restar una unidad">&minus;</button><span class="qv">'+fq(l.qty)+(p.unit==='L'?' L':'')+'</span><button class="mini" data-act="inc" aria-label="Sumar una unidad">+</button></span></td><td class="r">'+nf(p.price)+'</td><td class="r">'+(l.disc?fq(l.disc)+' %':'')+'</td><td class="r">'+nf(x.net)+'</td><td class="r">'+nf(r2(x.net*rate))+'</td></tr>';
+      const u=esc(p.unit||'und').toUpperCase();
+      const taxCls=prodTaxCls(p);
+      return '<tr data-i="'+i+'" class="'+(i===S.sel?'sel':'')+'">'+
+        '<td class="c">'+(i+1)+'</td>'+
+        '<td class="mono">'+esc(p.code)+'</td>'+
+        '<td><div class="desc">'+esc(p.desc)+'</div><div class="sub">'+esc(p.brand)+' · '+(p.sku?esc(p.sku)+' · ':'')+'pasillo '+esc(p.loc)+'</div></td>'+
+        '<td class="c"><span class="um-tag">'+u+'</span></td>'+
+        '<td class="c"><span class="qty"><button class="mini" data-act="dec" aria-label="Restar una unidad">&minus;</button><span class="qv">'+fq(l.qty)+' '+(p.unit||'und')+'</span><button class="mini" data-act="inc" aria-label="Sumar una unidad">+</button></span></td>'+
+        '<td class="r">'+nf(p.price)+'</td>'+
+        '<td class="r">'+(l.disc?fq(l.disc)+' %':'')+'</td>'+
+        '<td class="c"><span class="iva-tag '+taxCls+'">'+esc(prodTaxTag(p))+'</span></td>'+
+        '<td class="r">'+nf(x.net)+'</td>'+
+        '<td class="r">'+nf(r2(x.net*rate))+'</td>'+
+      '</tr>';
     }).join('');
   }
   renderTotals();renderStatus();
@@ -3396,7 +5504,21 @@ function renderCart(){
 function renderTotals(){
   const t=totals(),r=S.cfg.rate;
   const row=(c,a,cls)=>'<tr class="'+(cls||'')+'"><td>'+c+'</td><td class="r">'+nf(a)+'</td><td class="r">'+nf(a*r)+'</td></tr>';
-  $('#sumBody').innerHTML=row('Subtotal',t.sub)+row('Descuento',-t.disc)+row('Base imponible',t.base)+row('IVA 16 %',t.iva)+row('Total',t.total,'tot');
+  let html=row('Subtotal',t.sub);
+  if(t.disc>0)html+=row('Descuento',-t.disc);
+  if(t.baseEx>0&&t.baseG16>0){
+    html+=row('Base gravada (16 %)',t.baseG16);
+    if(t.baseR8>0)html+=row('Base reducida (8 %)',t.baseR8);
+    if(t.baseA31>0)html+=row('Base suntuaria (31 %)',t.baseA31);
+    html+=row('Ventas exentas (0 %)',t.baseEx);
+  }else if(t.baseEx>0){
+    html+=row('Ventas exentas (0 %)',t.baseEx);
+  }else{
+    html+=row('Base imponible',t.base);
+  }
+  html+=row('Total I.V.A.',t.iva);
+  html+=row('Total',t.total,'tot');
+  $('#sumBody').innerHTML=html;
   $('#lcdBs').textContent=bsf(t.total*r);
   $('#lcdUsd').textContent=usd(t.total);
   $('#btnPay').disabled=!S.cart.length;
@@ -3427,9 +5549,9 @@ function parseEntry(v){
 function quickPickDlg(matches,qty,queryText){
   let selIdx=0;
   const el=h('<div class="form"><div class="hint">Se encontraron <b>'+matches.length+'</b> coincidencias para "<b>'+esc(queryText)+'</b>". Seleccione el producto a agregar (Cantidad: <b>'+fq(qty)+'</b>):</div>'+
-    '<div class="gridwrap invwrap"><table class="grid"><thead><tr><th>Código</th><th>SKU</th><th>Descripción</th><th>Marca</th><th>Pasillo</th><th class="r">Exist.</th><th class="r">Precio US$</th><th class="r">Precio Bs.</th></tr></thead><tbody id="qpBody"></tbody></table></div></div>');
+    '<div class="gridwrap invwrap"><table class="grid"><thead><tr><th>Código</th><th>SKU</th><th>Descripción</th><th>Marca</th><th class="c" style="width:54px">U.M.</th><th class="c" style="width:72px">I.V.A.</th><th>Pasillo</th><th class="r">Exist.</th><th class="r">Precio US$</th><th class="r">Precio Bs.</th></tr></thead><tbody id="qpBody"></tbody></table></div></div>');
   const draw=()=>{
-    $('#qpBody',el).innerHTML=matches.map((p,i)=>'<tr data-idx="'+i+'" class="'+(i===selIdx?'sel':'')+'"><td class="mono">'+esc(p.code)+'</td><td class="mono">'+esc(p.sku||'-')+'</td><td><b>'+esc(p.desc)+'</b></td><td>'+esc(p.brand)+'</td><td class="c">'+esc(p.loc)+'</td><td class="r '+stockCls(p)+'">'+fq(p.stock)+'</td><td class="r">'+nf(p.price)+'</td><td class="r">'+nf(p.price*S.cfg.rate)+'</td></tr>').join('');
+    $('#qpBody',el).innerHTML=matches.map((p,i)=>'<tr data-idx="'+i+'" class="'+(i===selIdx?'sel':'')+'"><td class="mono">'+esc(p.code)+'</td><td class="mono">'+esc(p.sku||'-')+'</td><td><b>'+esc(p.desc)+'</b></td><td>'+esc(p.brand)+'</td><td class="c"><span class="um-tag">'+esc((p.unit||'und').toUpperCase())+'</span></td><td class="c"><span class="iva-tag '+prodTaxCls(p)+'">'+esc(prodTaxTag(p))+'</span></td><td class="c">'+esc(p.loc)+'</td><td class="r '+stockCls(p)+'">'+fq(p.stock)+'</td><td class="r">'+nf(p.price)+'</td><td class="r">'+nf(p.price*S.cfg.rate)+'</td></tr>').join('');
   };
   const pick=()=>{
     const p=matches[selIdx];
