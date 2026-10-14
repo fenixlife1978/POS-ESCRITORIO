@@ -6394,6 +6394,7 @@ function seniatSudebanDlg(initialTab){
       '<button class="tab '+(activeTab==='auditoria'?'active':'')+'" data-tab="auditoria">Auditoría Ventas & Tasa BCV</button>'+
       '<button class="tab '+(activeTab==='sudeban'?'active':'')+'" data-tab="sudeban">Conciliación POS / SUDEBAN</button>'+
       '<button class="tab '+(activeTab==='retenciones'?'active':'')+'" data-tab="retenciones">Retenciones IVA & TXT</button>'+
+      '<button class="tab '+(activeTab==='pagoSeniat'?'active':'')+'" data-tab="pagoSeniat">Preparar Pago SENIAT</button>'+
       '<button class="tab '+(activeTab==='config'?'active':'')+'" data-tab="config">Parámetros Fiscales</button>'+
     '</div>'+
     '<div class="invbar" id="snFilterBar" style="background:var(--panel-2);padding:6px 10px;border:1px solid var(--line);border-radius:6px">'+
@@ -6800,6 +6801,43 @@ function seniatSudebanDlg(initialTab){
     '</table></div>';
   };
 
+  const drawPagoSeniat=()=>{
+    const sales=getFilteredSales().filter(x=>!x.void);
+    const purchases=getFilteredPurchases().filter(x=>!x.void);
+    const retenciones=(S.retencionesIva||[]).filter(r=>filterPeriod(r.ts));
+    const debito=r2(sales.reduce((a,x)=>a+(x.iva||0)*(x.rate||S.cfg.rate),0));
+    const credito=r2(purchases.reduce((a,x)=>a+(x.iva||0)*(x.rate||S.cfg.rate),0));
+    const retenido=r2(retenciones.reduce((a,r)=>a+(r.retainedBs!==undefined?r.retainedBs:r2((r.iva||0)*(r.pct||S.cfg.retIvaPct||75)/100*(r.rate||S.cfg.rate))),0));
+    const saldo=r2(debito-credito-retenido);
+    const fecha=new Date();
+    const periodo=curPeriod==='todo'?'Todo el historial':curPeriod==='quincena1'?'Días 1 al 15 del mes actual':curPeriod==='quincena2'?'Día 16 al cierre del mes actual':'Mes calendario actual';
+    const warnings=[];
+    if(!S.cfg.empresa||!S.cfg.rif||!S.cfg.dir)warnings.push('Completar razón social, RIF y domicilio fiscal en Parámetros Fiscales.');
+    if(!sales.length&&!purchases.length)warnings.push('No hay ventas ni compras registradas para el período seleccionado.');
+    if(sales.some(x=>!x.client||!x.client.rif||!x.no))warnings.push('Hay ventas con datos fiscales incompletos; revisar documentos fuente.');
+    if(purchases.some(x=>!x.supplier||!x.supplier.rif||!x.docProv))warnings.push('Hay compras con datos de proveedor incompletos; revisar facturas originales.');
+    if(S.cfg.empresa==='Autopartes El Pistón, C.A.'&&S.cfg.rif==='J-40123456-8')warnings.push('El perfil coincide con los datos iniciales de ejemplo. Confirme y sustituya por los datos reales del contribuyente antes de usar el informe.');
+    return '<div class="semaforo-bar" style="background:#FFF6E5;border-color:#F5DEB0">'+
+      '<div class="semaforo-dot" style="background:#945D08;box-shadow:0 0 0 3px rgba(148,93,8,.2)"></div>'+
+      '<div class="semaforo-text" style="color:#744600"><b>PREPARACIÓN PRELIMINAR — NO ES UNA PLANILLA OFICIAL DE PAGO.</b> El compromiso/planilla oficial se genera en el portal del SENIAT después de registrar la declaración. Este módulo no se conecta al SENIAT ni registra declaraciones ni pagos.</div>'+
+    '</div>'+
+    '<div class="khead"><div><span>Contribuyente registrado en el POS</span><b>'+esc(S.cfg.empresa||'Falta razón social')+'</b></div><div><span>RIF configurado</span><b>'+esc(S.cfg.rif||'Falta RIF')+'</b></div><div><span>Período seleccionado</span><b>'+esc(periodo)+'</b></div><div><span>Generado</span><b>'+esc(fmtDT(fecha.getTime()))+'</b></div></div>'+
+    (warnings.length?'<div class="group" style="border-color:#E7B85C;background:#FFF9E9"><div class="gtitle">Verificaciones pendientes</div><ul style="margin:0;padding-left:20px">'+warnings.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul></div>':'')+
+    '<div class="cierre"><table class="sumt"><thead><tr><th>Resumen de cifras registradas en el POS</th><th class="r">Monto (Bs.)</th></tr></thead><tbody>'+
+      '<tr><td>Débito fiscal calculado desde ventas no anuladas</td><td class="r">'+nf(debito)+'</td></tr>'+
+      '<tr><td>Crédito fiscal registrado en compras no anuladas</td><td class="r">'+nf(credito)+'</td></tr>'+
+      '<tr><td>Retenciones de IVA registradas en el período</td><td class="r">'+nf(retenido)+'</td></tr>'+
+      '<tr class="tot"><td>Saldo aritmético preliminar (no liquidación oficial)</td><td class="r">'+nf(saldo)+'</td></tr>'+
+    '</tbody></table><table class="sumt"><thead><tr><th>Documentos de soporte</th><th class="r">Cantidad</th></tr></thead><tbody>'+
+      '<tr><td>Ventas no anuladas</td><td class="r">'+sales.length+'</td></tr>'+
+      '<tr><td>Compras no anuladas</td><td class="r">'+purchases.length+'</td></tr>'+
+      '<tr><td>Comprobantes de retención registrados</td><td class="r">'+retenciones.length+'</td></tr>'+
+      '<tr><td>IGTF percibido registrado en ventas (referencial)</td><td class="r">'+nf(r2(sales.reduce((a,x)=>a+(x.igtf||0)*(x.rate||S.cfg.rate),0)))+'</td></tr>'+
+    '</tbody></table></div>'+
+    '<div class="group"><div class="gtitle">Antes de declarar y pagar</div><ol style="margin:0;padding-left:20px"><li>Verifique que el RIF, la condición tributaria y el período sean correctos.</li><li>Concilie cada cifra con los libros fiscales, facturas, notas de crédito y comprobantes de retención originales.</li><li>Ingrese al portal oficial, presente la declaración y revise los importes calculados por el SENIAT.</li><li>Después de registrar la declaración, descargue desde el portal la planilla/compromiso de pago oficial que corresponda. No use este borrador como comprobante de pago.</li></ol><p class="hint" style="margin-top:8px">Las cifras anteriores son sumas de los registros disponibles en este POS. No sustituyen el Formulario/Declaración del SENIAT, la determinación profesional del tributo ni la validación de obligaciones vigentes.</p></div>'+
+    '<div class="row" style="flex-wrap:wrap"><button class="btn primary" id="btnPreviewPagoSeniat">Vista previa / Guardar borrador PDF</button><button class="btn" id="btnOpenSeniatPortal">Abrir portal oficial del SENIAT</button></div>';
+  };
+
   const drawConfig=()=>{
     const c=S.cfg;
     return '<div class="newgrid">'+
@@ -6829,6 +6867,7 @@ function seniatSudebanDlg(initialTab){
     else if(activeTab==='auditoria')content.innerHTML=drawAuditoria();
     else if(activeTab==='sudeban')content.innerHTML=drawSudeban();
     else if(activeTab==='retenciones')content.innerHTML=drawRetenciones();
+    else if(activeTab==='pagoSeniat')content.innerHTML=drawPagoSeniat();
     else if(activeTab==='config')content.innerHTML=drawConfig();
     updateFoot();
   };
@@ -6849,6 +6888,8 @@ function seniatSudebanDlg(initialTab){
       footL.innerHTML='<button class="btn mini2 primary" id="btnQuickLote">+ Cierre de Lote POS</button>';
     }else if(activeTab==='retenciones'){
       footL.innerHTML='<button class="btn mini2 primary" id="btnTxtSeniat">Descargar TXT para SENIAT</button>';
+    }else if(activeTab==='pagoSeniat'){
+      footL.innerHTML='<span class="hint">Borrador informativo; la planilla oficial se obtiene en el SENIAT.</span>';
     }else if(activeTab==='config'){
       footL.innerHTML='<button class="btn mini2 primary" id="btnSaveF">Guardar Parámetros Fiscales</button>';
     }else{
@@ -6940,6 +6981,25 @@ function seniatSudebanDlg(initialTab){
         if(ev.target.id==='btnExpIgtf')exportIgtfCsv(getFilteredSales());
         if(ev.target.id==='btnPrintActaBcv')printActaBcv(getFilteredSales());
         if(ev.target.id==='btnTxtSeniat')exportSeniatTxt('202610');
+        if(ev.target.id==='btnPreviewPagoSeniat'){
+          const sales=getFilteredSales().filter(x=>!x.void);
+          const purchases=getFilteredPurchases().filter(x=>!x.void);
+          const retenciones=(S.retencionesIva||[]).filter(r=>filterPeriod(r.ts));
+          const debito=r2(sales.reduce((a,x)=>a+(x.iva||0)*(x.rate||S.cfg.rate),0));
+          const credito=r2(purchases.reduce((a,x)=>a+(x.iva||0)*(x.rate||S.cfg.rate),0));
+          const retenido=r2(retenciones.reduce((a,r)=>a+(r.retainedBs!==undefined?r.retainedBs:r2((r.iva||0)*(r.pct||S.cfg.retIvaPct||75)/100*(r.rate||S.cfg.rate))),0));
+          const saldo=r2(debito-credito-retenido);
+          const periodo=curPeriod==='todo'?'Todo el historial':curPeriod==='quincena1'?'Días 1 al 15 del mes actual':curPeriod==='quincena2'?'Día 16 al cierre del mes actual':'Mes calendario actual';
+          const html='<div style="border:2px solid #945D08;padding:10px;margin-bottom:12px;text-align:center"><b>DOCUMENTO PRELIMINAR — NO ES PLANILLA OFICIAL SENIAT NI COMPROBANTE DE PAGO</b></div>'+
+            '<h3>Preparación de declaración tributaria</h3><p><b>Contribuyente:</b> '+esc(S.cfg.empresa)+' &nbsp; <b>RIF:</b> '+esc(S.cfg.rif)+'</p><p><b>Domicilio fiscal:</b> '+esc(S.cfg.dir||'No especificado')+'</p><p><b>Período seleccionado:</b> '+esc(periodo)+' &nbsp; <b>Fecha de emisión:</b> '+esc(fmtDT(Date.now()))+'</p>'+
+            '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th style="text-align:left;border-bottom:1px solid #777;padding:6px">Concepto calculado desde registros POS</th><th style="text-align:right;border-bottom:1px solid #777;padding:6px">Monto Bs.</th></tr></thead><tbody>'+
+            [['Débito fiscal de ventas no anuladas',debito],['Crédito fiscal de compras no anuladas',credito],['Retenciones de IVA registradas',retenido],['Saldo aritmético preliminar; requiere conciliación',saldo]].map(r=>'<tr><td style="padding:6px;border-bottom:1px solid #ddd">'+esc(r[0])+'</td><td style="padding:6px;text-align:right;border-bottom:1px solid #ddd">'+nf(r[1])+'</td></tr>').join('')+
+            '</tbody></table><p><b>Soporte:</b> '+sales.length+' ventas no anuladas, '+purchases.length+' compras no anuladas y '+retenciones.length+' comprobantes de retención.</p>'+
+            '<p>Este informe no reproduce la planilla oficial 99030 ni genera un compromiso de pago. La declaración debe revisarse y registrarse en el portal oficial del SENIAT; el compromiso/planilla de pago oficial se descarga allí después de registrar la declaración cuando corresponda.</p>'+
+            '<p><b>Validación:</b> Confirmar datos del contribuyente, período, documentos originales, alícuotas, créditos, retenciones y reglas tributarias vigentes antes de declarar.</p>';
+          printFiscalReport('BORRADOR NO OFICIAL — Preparación de Pago SENIAT',html);
+        }
+        if(ev.target.id==='btnOpenSeniatPortal')window.open('https://seniat.gob.ve/','_blank','noopener');
         if(ev.target.id==='btnQuickLote')registerLoteSudebanDlg(()=>{seniatSudebanDlg('sudeban');});
         if(ev.target.id==='btnGotoVentas'){activeTab='ventas';$('.tab[data-tab="ventas"]',el)?.click();}
         if(ev.target.id==='btnGotoIgtf'){activeTab='igtf';$('.tab[data-tab="igtf"]',el)?.click();}
