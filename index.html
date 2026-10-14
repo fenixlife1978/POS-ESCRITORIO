@@ -7448,17 +7448,29 @@ async function prepareDatabaseBeforeStartup(){
       const local=await window.posDesktop.loadState();state=local.state;
       if(!state){try{const legacy=localStorage.getItem(KEY);if(legacy)state=JSON.parse(legacy);}catch{}}
     }else{
-      try{const remote=await remoteRequest('/api/state',{method:'GET'});state=remote.state;window.__POS_DB_REVISION=Number(remote.revision||0);}catch(e){console.warn('Turso no disponible al iniciar:',e.message);}
+      try{const remote=await remoteRequest('/api/state',{method:'GET'});state=remote.state;window.__POS_DB_REVISION=Number(remote.revision||0);}catch(e){window.__POS_DB_BROKEN=true;window.__POS_DB_START_ERROR=e.message;console.warn('Turso no disponible al iniciar:',e.message);}
     }
   }else{
     const cfg=dbConnection();mode=cfg.mode||'turso';
-    if(mode==='turso'){try{const remote=await remoteRequest('/api/state',{method:'GET'});state=remote.state;window.__POS_DB_REVISION=Number(remote.revision||0);}catch(e){console.warn('Turso no disponible al iniciar:',e.message);}}
+    if(mode==='turso'){try{const remote=await remoteRequest('/api/state',{method:'GET'});state=remote.state;window.__POS_DB_REVISION=Number(remote.revision||0);}catch(e){window.__POS_DB_BROKEN=true;window.__POS_DB_START_ERROR=e.message;console.warn('Turso no disponible al iniciar:',e.message);}}
     else {try{const legacy=localStorage.getItem(KEY);if(legacy)state=JSON.parse(legacy);}catch{}}
   }
   window.__POS_DB_MODE=mode;
   window.__POS_BOOT_STATE=state;
 }
 
+function showDatabaseFailureOverlay(){
+  if(!window.__POS_DB_BROKEN||document.getElementById('posDbFailureOverlay'))return;
+  const overlay=document.createElement('div');overlay.id='posDbFailureOverlay';
+  overlay.style.cssText='position:fixed;inset:0;z-index:2147483000;background:rgba(12,18,28,.94);display:flex;align-items:center;justify-content:center;padding:20px;color:#f8fafc;font-family:system-ui,sans-serif';
+  const local=!!window.posDesktop;
+  overlay.innerHTML='<div style="max-width:620px;width:100%;background:#182232;border:1px solid #526174;border-radius:12px;padding:24px;box-shadow:0 20px 70px #0008"><h2 style="margin:0 0 12px">Base de datos no disponible</h2><p style="line-height:1.55">El POS está configurado para usar Turso, pero no pudo leer la base de datos. Por seguridad, no se habilitan operaciones ni se guardan datos en una base alternativa.</p><p style="color:#fbbf24;overflow-wrap:anywhere">'+esc(String(window.__POS_DB_START_ERROR||'Revise la conexión y las credenciales.'))+'</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button id="posDbRetry" style="padding:10px 14px;cursor:pointer">Reintentar conexión</button><button id="posDbConfig" style="padding:10px 14px;cursor:pointer">Configurar conexión</button>'+(local?'<button id="posDbLocal" style="padding:10px 14px;cursor:pointer">Usar SQLite solo en este equipo</button>':'')+'</div></div>';
+  document.body.appendChild(overlay);
+  overlay.querySelector('#posDbRetry').onclick=()=>location.reload();
+  overlay.querySelector('#posDbConfig').onclick=()=>{overlay.remove();databaseSettingsDlg();};
+  const localBtn=overlay.querySelector('#posDbLocal');
+  if(localBtn)localBtn.onclick=async()=>{try{await window.posDesktop.setDatabaseMode('sqlite');location.reload();}catch(e){alert('No se pudo cambiar a SQLite: '+e.message);}};
+}
 /* ---------- arranque ---------- */
 prepareDatabaseBeforeStartup().catch(e=>console.error('No se pudo inicializar la base de datos:',e)).finally(()=>{
   init();
@@ -7470,6 +7482,7 @@ prepareDatabaseBeforeStartup().catch(e=>console.error('No se pudo inicializar la
   renderCatOptions();
   renderAll();
   wire();
+  showDatabaseFailureOverlay();
   if(window.posDesktop&&window.__POS_DB_MODE==='sqlite'){save();try{localStorage.removeItem(KEY);}catch{}}
   else if(window.__POS_DB_MODE==='turso'&&window.__POS_BOOT_STATE){/* Remote state loaded; next change writes to Turso. */}
   msg(saved?'Datos guardados cargados desde la base seleccionada. Módulos fiscales y administrativos activos.':'Base de datos preparada. Verifique la conexión y registre operaciones reales.');
