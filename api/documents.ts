@@ -62,7 +62,7 @@ export default async function handler(req: any, res: any) {
     }
     const d = req.body;
     if (!d?.id || !['sale','purchase'].includes(d.transactionType) || !d.transactionId || typeof d.dataUrl !== 'string') return res.status(400).json({ error: 'Documento incompleto.' });
-    if (d.dataUrl.length > 4_000_000) return res.status(413).json({ error: 'El documento supera el límite de 3 MB.' });
+    if (d.dataUrl.length > 4_300_000) return res.status(413).json({ error: 'El documento supera el límite de 3 MB.' });
     await db.execute({ sql: 'INSERT OR REPLACE INTO pos_fiscal_documents(id,transaction_type,transaction_id,file_name,mime_type,file_size,sha256,data_url,created_at,notes) VALUES(?,?,?,?,?,?,?,?,?,?)', args: [String(d.id), d.transactionType, String(d.transactionId), String(d.fileName || 'documento'), String(d.mimeType || 'application/octet-stream'), Number(d.fileSize || 0), String(d.sha256 || ''), d.dataUrl, String(d.createdAt || new Date().toISOString()), String(d.notes || '')] });
     return res.status(200).json({ ok: true });
   } catch (e: any) {
