@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: pos-el-piston-windows-${{ github.ref }}
@@ -35,12 +35,13 @@ jobs:
 
       - name: Construir instalador y ejecutable portátil de Windows (.exe)
         run: npx --yes electron-builder --win nsis portable --config electron-builder.json
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Publicar instalador y ejecutable portátil (.exe)
-        uses: actions/upload-artifact@v4
+      - name: Publicar instalador y ejecutable portátil en GitHub Releases
+        if: github.event_name != 'pull_request'
+        uses: softprops/action-gh-release@v2
         with:
-          name: pos-el-piston-windows-installer-and-portable
-          path: dist-exe/*.exe
-          if-no-files-found: error
+          tag_name: windows-build-${{ github.run_number }}
+          name: POS El Pistón — Windows build ${{ github.run_number }}
+          body: Instalador de Windows y versión portátil generados automáticamente por GitHub Actions.
+          prerelease: true
+          files: dist-exe/*.exe
+          fail_on_unmatched_files: true
