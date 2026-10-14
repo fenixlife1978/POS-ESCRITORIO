@@ -42,6 +42,11 @@ export default async function handler(req: any, res: any) {
     )`);
     await db.execute('CREATE INDEX IF NOT EXISTS idx_pos_fiscal_documents_tx ON pos_fiscal_documents(transaction_type, transaction_id)');
     if (req.method === 'GET') {
+      const id = String(req.query?.id || '');
+      if (id) {
+        const one = await db.execute({ sql: 'SELECT id,transaction_type AS transactionType,transaction_id AS transactionId,file_name AS fileName,mime_type AS mimeType,file_size AS fileSize,sha256,data_url AS dataUrl,created_at AS createdAt,notes FROM pos_fiscal_documents WHERE id=?', args: [id] });
+        return res.status(200).json({ document: one.rows[0] || null });
+      }
       const type = String(req.query?.type || '');
       const tx = String(req.query?.transactionId || '');
       const rows = type && tx
