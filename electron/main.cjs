@@ -13,8 +13,11 @@ function userDbPath() {
 }
 function persistDb() {
   if (!db) return;
+  const target = userDbPath();
+  const temporary = target + '.tmp';
   const bytes = db.export();
-  fs.writeFileSync(userDbPath(), Buffer.from(bytes));
+  fs.writeFileSync(temporary, Buffer.from(bytes));
+  fs.renameSync(temporary, target);
 }
 function run(sql, params = []) {
   const stmt = db.prepare(sql);
@@ -66,7 +69,9 @@ async function initializeDatabase() {
   const file = userDbPath();
   if (fs.existsSync(file)) {
     try { db = new SQL.Database(new Uint8Array(fs.readFileSync(file))); }
-    catch { db = new SQL.Database(); }
+    catch (error) {
+      throw new Error('No se pudo abrir la base SQLite existente. El archivo original se conserva sin sobrescribir. Copie el archivo de respaldo desde: ' + file + '. Verifique el disco antes de volver a intentar. Detalle: ' + (error && error.message ? error.message : String(error)));
+    }
   } else db = new SQL.Database();
   initializeSchema();
   dbConfigPath = path.join(app.getPath('userData'), 'database-mode.json');
@@ -169,6 +174,9 @@ app.whenReady().then(async () => {
     win.webContents.once('did-finish-load', () => chooseMode(win));
   }
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
+}).catch(error => {
+  dialog.showErrorBox('No se pudo iniciar POS El Pistón', error && error.message ? error.message : String(error));
+  app.quit();
 });
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('before-quit', () => { clearTimeout(saveTimer); persistDb(); });
