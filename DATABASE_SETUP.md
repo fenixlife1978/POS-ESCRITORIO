@@ -27,4 +27,4 @@ El almacenamiento y la asociación del documento no equivalen a una validación 
 
 ## Artefactos de Windows
 
-GitHub Actions compila el instalador de Windows y la versión portátil .exe en cada push a main. Los archivos se publican como artefactos del workflow de Actions; una ejecución debe terminar en éxito para que el artefacto esté disponible.
+GitHub Actions compila el instalador de Windows y la versión portátil .exe en cada push a main. Los archivos se publican como activos de una versión preliminar en GitHub Releases (etiqueta windows-build-N); abre la versión más reciente y descarga POS-El-Piston-Setup-*.exe para instalar o POS-El-Piston-Portable.exe para ejecutar sin instalación. La ejecución debe terminar en éxito para que aparezca la publicación.
