@@ -7,7 +7,6 @@ Configure en **Vercel → Project → Settings → Environment Variables**, al m
 - TURSO_DATABASE_URL: URL libsql://... de la base de datos.
 - TURSO_AUTH_TOKEN: token de acceso a Turso.
 - POS_API_KEY: clave aleatoria larga para proteger las rutas API del POS.
-- APP_URL: URL pública de producción (opcional, usada como valor inicial en el escritorio).
 
 No use prefijos VITE_ para estos secretos. No los coloque en index.html, el repositorio ni el instalador. Después de cambiar variables de entorno, vuelva a desplegar Production.
 
