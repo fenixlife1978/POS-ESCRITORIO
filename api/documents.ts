@@ -19,7 +19,12 @@ export default async function handler(req: any, res: any) {
   res.setHeader('Vary', 'Origin');
   const origin = req.headers.origin;
   const host = String(req.headers.host || '');
-  if (origin) {
+  if (origin === 'null') {
+    /* Electron file:// desktop build; writes still require POS_API_KEY. */
+    res.setHeader('Access-Control-Allow-Origin', 'null');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-POS-API-Key');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+  } else if (origin) {
     try {
       const u = new URL(origin);
       if (u.host !== host) return res.status(403).json({ error: 'Origen no permitido.' });
