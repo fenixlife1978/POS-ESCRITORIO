@@ -914,20 +914,53 @@ function seed(){
   S.sel=0;
 }
 
+function stateSnapshot(){
+  return {
+    v:1,cfg:S.cfg,products:S.products,clients:S.clients,suppliers:S.suppliers,
+    sales:S.sales,held:S.held,purchases:S.purchases,cxc:S.cxc,cxp:S.cxp,
+    kardex:S.kardex,counts:S.counts,lotesSudeban:S.lotesSudeban,retencionesIva:S.retencionesIva,cambiosDivisas:S.cambiosDivisas,
+    invoice:S.invoice,purchaseSeq:S.purchaseSeq,countSeq:S.countSeq
+  };
+}
+function persistenceError(err){
+  const detail=(err&&err.message)||String(err||'Error desconocido');
+  console.error('[POS database]',detail);
+  const node=$('#sbMsg')||$('#sbStatus')||$('.sp.msg');
+  if(node){node.textContent='ERROR DE BASE DE DATOS: '+detail;node.classList.add('bad');}
+}
+function dbConnection(){
+  try{return JSON.parse(localStorage.getItem('pos-db-connection-v1')||'{}');}catch{return{};}
+}
+function remoteApi(path){
+  const c=dbConnection();
+  const base=(c.apiUrl||(location.protocol==='file:'?'https://integral-six-steel.vercel.app':location.origin)).replace(/\\/+$/,'');
+  return base+path;
+}
+async function remoteRequest(path,options={}){
+  const c=dbConnection();
+  if(!c.apiKey)throw new Error('Falta la clave POS_API_KEY. Abra Base de datos y configure la conexión Turso.');
+  const response=await fetch(remoteApi(path),{...options,headers:{'Content-Type':'application/json','X-POS-API-Key':c.apiKey,...(options.headers||{})},cache:'no-store'});
+  const payload=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(payload.error||('HTTP '+response.status));
+  return payload;
+}
 function save(){
-  try{
-    localStorage.setItem(KEY,JSON.stringify({
-      v:1,cfg:S.cfg,products:S.products,clients:S.clients,suppliers:S.suppliers,
-      sales:S.sales,held:S.held,purchases:S.purchases,cxc:S.cxc,cxp:S.cxp,
-      kardex:S.kardex,counts:S.counts,lotesSudeban:S.lotesSudeban,retencionesIva:S.retencionesIva,cambiosDivisas:S.cambiosDivisas,
-      invoice:S.invoice,purchaseSeq:S.purchaseSeq,countSeq:S.countSeq
-    }));
-  }catch(e){}
+  const state=stateSnapshot();
+  const mode=window.__POS_DB_MODE||(window.posDesktop?'sqlite':'turso');
+  if(window.posDesktop&&mode==='sqlite'){
+    window.posDesktop.saveState(state).catch(persistenceError);
+    return;
+  }
+  if(mode==='turso'){
+    remoteRequest('/api/state',{method:'PUT',body:JSON.stringify({state})}).then(()=>{window.__POS_LAST_SAVE_OK=Date.now();}).catch(e=>{window.__POS_LAST_SAVE_OK=0;persistenceError(e);});
+    return;
+  }
+  try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){persistenceError(e);}
 }
 
 function load(){
   try{
-    const raw=localStorage.getItem(KEY);if(!raw)return false;
+    const raw=window.__POS_BOOT_STATE!==undefined?(window.__POS_BOOT_STATE?JSON.stringify(window.__POS_BOOT_STATE):null):localStorage.getItem(KEY);if(!raw)return false;
     const d=JSON.parse(raw);
     if(!d||d.v!==1||!Array.isArray(d.products)||!d.cfg)return false;
     const seedMap={};SEED.forEach(sp=>{seedMap[sp.code]=sp;});
@@ -979,7 +1012,7 @@ function load(){
     if(Array.isArray(d.counts))S.counts=d.counts;
     if(Array.isArray(d.lotesSudeban))S.lotesSudeban=d.lotesSudeban;
     if(Array.isArray(d.retencionesIva))S.retencionesIva=d.retencionesIva;
-    if(Array.isArray(d.cambiosDivisas))S.cambiosDivisas=d.cambiosDivisas;
+    if(Array.isArray(d.documents))S.documents=d.documents;\n    if(Array.isArray(d.cambiosDivisas))S.cambiosDivisas=d.cambiosDivisas;
     else if(!S.cambiosDivisas)S.cambiosDivisas=[];
     if(!S.cfg.fiscalTipo)S.cfg.fiscalTipo='FORMA_LIBRE';
     if(S.cfg.contribEspecial===undefined)S.cfg.contribEspecial=true;
@@ -7120,7 +7153,7 @@ const TB=[
  ['suspender','Suspender','F5',suspend],['recuperar','Recuperar','F6',recoverDlg],['descuento','Descuento','F7',discountDlg],['quitar','Quitar','Supr',removeSel],
  '-',['inventario','Inventario','F8',inventoryDlg],['conteo','Conteo','F11',()=>conteoDlg()],['kardex','Kardex','',()=>kardexDlg()],
  '-',['compras','Compras','F10',()=>comprasDlg('new')],['cxc','CxC','',()=>cxcDlg()],['cxp','CxP','',()=>cxpDlg()],['divisas','USD/Zelle','',()=>divisasDlg()],
- '-',['ventas','Ventas día','F9',salesDlg],['seniat','Fiscal','',()=>seniatSudebanDlg()],['tasa','Tasa','',()=>cfgDlg('cRate')]
+ '-',['ventas','Ventas día','F9',salesDlg],['seniat','Fiscal','',()=>seniatSudebanDlg()],['documentos','Documentos','',()=>fiscalDocumentsDlg()],['basedatos','Base de datos','',()=>databaseSettingsDlg()],['tasa','Tasa','',()=>cfgDlg('cRate')]
 ];
 function buildChrome(){
   $('#toolbar').innerHTML=TB.map(t=>t==='-'?'<span class="tsep"></span>':'<button class="tb" data-tb="'+t[0]+'" title="'+esc(t[1])+(t[2]?' ('+t[2]+')':'')+'">'+ico(t[0])+'<b>'+esc(t[1])+'</b><kbd>'+esc(t[2]||' ')+'</kbd>'+(t[0]==='recuperar'?'<span class="badge" id="heldBadge" hidden></span>':'')+(t[0]==='conteo'?'<span class="badge warn" id="conteoBadge" hidden></span>':'')+'</button>').join('');
@@ -7313,13 +7346,125 @@ function wire(){
   setInterval(()=>{$('#fDate').value=fmtDT(Date.now());$('#sbClock').textContent=fmtDT(Date.now());},15000);
 }
 
+
+/* ---------- Adjuntos fiscales y selección explícita del motor de datos ---------- */
+if(!Array.isArray(S.documents))S.documents=[];
+function formatDocSize(n){return n<1024? n+' B':n<1048576?(n/1024).toFixed(1)+' KB':(n/1048576).toFixed(2)+' MB';}
+function docDataUrl(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result));r.onerror=()=>reject(new Error('No se pudo leer el archivo.'));r.readAsDataURL(file);});}
+async function docSha256(dataUrl){try{const bytes=Uint8Array.from(atob(dataUrl.split(',')[1]||''),c=>c.charCodeAt(0));const hash=await crypto.subtle.digest('SHA-256',bytes);return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');}catch{return '';}}
+async function documentRows(){
+  const mode=window.__POS_DB_MODE||(window.posDesktop?'sqlite':'turso');
+  if(window.posDesktop&&mode==='sqlite')return await window.posDesktop.listDocuments({});
+  if(mode==='turso')return (await remoteRequest('/api/documents')).documents||[];
+  return S.documents||[];
+}
+async function fiscalDocumentsDlg(){
+  if(!Array.isArray(S.documents))S.documents=[];
+  const el=h('<div class="form" style="gap:10px"><div class="hint">Adjunte el documento digital original de una operación. En móviles, use <b>Tomar foto</b> para abrir la cámara si el navegador lo permite. Los archivos se vinculan al número de venta o compra seleccionado.</div><div class="f"><label>Operación fiscal</label><select class="fld" id="fdTx"><option value="">Seleccione una venta o compra</option></select></div><div class="row" style="flex-wrap:wrap"><button class="btn primary" id="fdUpload">Subir documento desde el dispositivo</button><button class="btn" id="fdCamera">Tomar foto con la cámara</button><input id="fdFile" type="file" accept="application/pdf,image/*" hidden><input id="fdCameraFile" type="file" accept="image/*" capture="environment" hidden></div><div class="f"><label>Nota de revisión (opcional)</label><input class="fld" id="fdNote" maxlength="300" placeholder="Ej. Factura original del proveedor"></div><div class="hint">Formatos: PDF, JPG, PNG, WEBP. Máximo 3 MB por archivo. El archivo se conserva como adjunto; no se afirma que sea auténtico ni que sus cifras estén verificadas por OCR.</div><div id="fdStatus" class="hint">Seleccione una operación para ver sus documentos.</div><div class="gridwrap" style="max-height:240px"><table class="grid"><thead><tr><th>Documento</th><th>Tipo</th><th>Fecha</th><th></th></tr></thead><tbody id="fdRows"><tr class="empty"><td colspan="4">Sin documentos cargados.</td></tr></tbody></table></div></div>');
+  const tx=$('#fdTx',el),status=$('#fdStatus',el),rows=$('#fdRows',el),upload=$('#fdFile',el),camera=$('#fdCameraFile',el);
+  const sales=(S.sales||[]).filter(x=>!x.void).slice().sort((a,b)=>b.ts-a.ts);
+  const purchases=(S.purchases||[]).filter(x=>!x.void).slice().sort((a,b)=>b.ts-a.ts);
+  tx.innerHTML='<option value="">Seleccione una venta o compra</option><optgroup label="Ventas">'+sales.map(x=>'<option value="sale:'+esc(String(x.no))+'">Venta #'+esc(String(x.no))+' · '+esc(fmtDT(x.ts))+' · '+esc(usd(x.total))+'</option>').join('')+'</optgroup><optgroup label="Compras">'+purchases.map(x=>'<option value="purchase:'+esc(String(x.no))+'">Compra #'+esc(String(x.no))+' · '+esc(fmtDT(x.ts))+' · '+esc(usd(x.total))+'</option>').join('')+'</optgroup>';
+  const selected=()=>{const a=tx.value.split(':');return a.length===2?{transactionType:a[0],transactionId:a[1]}:null;};
+  const render=async()=>{
+    const sel=selected(); if(!sel){rows.innerHTML='<tr class="empty"><td colspan="4">Seleccione una venta o compra.</td></tr>';return;}
+    try{
+      const docs=await documentRows();const filtered=docs.filter(d=>d.transactionType===sel.transactionType&&String(d.transactionId)===sel.transactionId);
+      rows.innerHTML=filtered.length?filtered.map(d=>'<tr><td><b>'+esc(d.fileName||'Documento')+'</b><div class="sub">'+esc(formatDocSize(Number(d.fileSize||0)))+'</div></td><td>'+esc(d.transactionType==='sale'?'Venta':'Compra')+'</td><td>'+esc(String(d.createdAt||'').slice(0,10))+'</td><td><button class="btn mini2" data-doc-open="'+esc(d.id)+'">Ver</button> <button class="btn mini2" data-doc-delete="'+esc(d.id)+'">Eliminar</button></td></tr>').join(''):'<tr class="empty"><td colspan="4">Esta operación no tiene documentos adjuntos.</td></tr>';
+    }catch(e){rows.innerHTML='<tr class="empty"><td colspan="4">'+esc(e.message||'No se pudieron cargar los documentos.')+'</td></tr>';status.textContent='Error al consultar documentos.';}
+  };
+  const processFile=async file=>{
+    const sel=selected();if(!sel){status.textContent='Primero seleccione una venta o compra.';return;}
+    if(!file)return;
+    if(file.size>3*1024*1024){status.textContent='El archivo supera el límite de 3 MB.';return;}
+    if(!(file.type==='application/pdf'||file.type.startsWith('image/'))){status.textContent='Solo se permiten PDF e imágenes.';return;}
+    status.textContent='Leyendo y guardando documento…';
+    try{
+      const dataUrl=await docDataUrl(file);
+      const doc={id:'DOC-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8),transactionType:sel.transactionType,transactionId:sel.transactionId,fileName:file.name||('captura-'+Date.now()+'.jpg'),mimeType:file.type||'application/octet-stream',fileSize:file.size,sha256:await docSha256(dataUrl),dataUrl,createdAt:new Date().toISOString(),notes:$('#fdNote',el).value.trim()};
+      const mode=window.__POS_DB_MODE||(window.posDesktop?'sqlite':'turso');
+      if(window.posDesktop&&mode==='sqlite')await window.posDesktop.saveDocument(doc);
+      else if(mode==='turso')await remoteRequest('/api/documents',{method:'POST',body:JSON.stringify(doc)});
+      else throw new Error('Seleccione SQLite en la aplicación de escritorio o configure Turso.');
+      S.documents=S.documents.filter(d=>d.id!==doc.id);
+      S.documents.push({id:doc.id,transactionType:doc.transactionType,transactionId:doc.transactionId,fileName:doc.fileName,mimeType:doc.mimeType,fileSize:doc.fileSize,sha256:doc.sha256,createdAt:doc.createdAt,notes:doc.notes});
+      save();status.textContent='Documento vinculado correctamente a '+(sel.transactionType==='sale'?'la venta #':'la compra #')+sel.transactionId+'.';await render();
+    }catch(e){status.textContent='No se guardó el documento: '+(e.message||e);persistenceError(e);}
+  };
+  $('#fdUpload',el).addEventListener('click',()=>upload.click());
+  $('#fdCamera',el).addEventListener('click',()=>camera.click());
+  upload.addEventListener('change',()=>{processFile(upload.files&&upload.files[0]);upload.value='';});
+  camera.addEventListener('change',()=>{processFile(camera.files&&camera.files[0]);camera.value='';});
+  tx.addEventListener('change',render);
+  rows.addEventListener('click',async e=>{
+    const del=e.target.closest('[data-doc-delete]'),open=e.target.closest('[data-doc-open]');
+    if(del){if(!confirm('¿Eliminar este documento adjunto?'))return;try{const mode=window.__POS_DB_MODE||(window.posDesktop?'sqlite':'turso');if(window.posDesktop&&mode==='sqlite')await window.posDesktop.deleteDocument(del.dataset.docDelete);else if(mode==='turso')await remoteRequest('/api/documents?id='+encodeURIComponent(del.dataset.docDelete),{method:'DELETE'});S.documents=S.documents.filter(d=>d.id!==del.dataset.docDelete);save();await render();}catch(err){status.textContent='No se pudo eliminar: '+err.message;}return;}
+    if(open){try{const mode=window.__POS_DB_MODE||(window.posDesktop?'sqlite':'turso');let d;if(window.posDesktop&&mode==='sqlite')d=await window.posDesktop.getDocument(open.dataset.docOpen);else if(mode==='turso'){const all=await remoteRequest('/api/documents');const meta=(all.documents||[]).find(x=>x.id===open.dataset.docOpen);if(meta){status.textContent='El servidor solo devolvió metadatos; vuelva a abrir el documento tras actualizar la API.';return;}}else d=S.documents.find(x=>x.id===open.dataset.docOpen);if(!d||!d.dataUrl)throw new Error('No se encontró el contenido del archivo.');const w=window.open();if(!w)throw new Error('El navegador bloqueó la ventana emergente.');w.document.write('<title>'+esc(d.fileName)+'</title><iframe style="border:0;width:100%;height:100vh" src="'+d.dataUrl+'"></iframe>');}catch(err){status.textContent='No se pudo abrir el archivo: '+err.message;}}
+  });
+  openWin({title:'Documentos fiscales originales',w:820,body:el,foot:[{label:'Cerrar',primary:true}],onOpen:()=>{render();}});
+}
+async function databaseSettingsDlg(){
+  const existing=dbConnection();
+  const desktop=!!window.posDesktop;
+  const current=window.__POS_DB_MODE||(desktop?'sqlite':'turso');
+  const el=h('<div class="form" style="gap:10px"><div class="hint">Elija una sola fuente de verdad para las operaciones. SQLite se ejecuta dentro del .exe y guarda el archivo en la carpeta de datos de usuario de Windows. Turso requiere las variables de entorno del servidor en Vercel; las credenciales de Turso nunca se escriben en el navegador.</div><div class="f"><label>Motor de base de datos</label><select class="fld" id="dbMode"><option value="sqlite">SQLite local (solo equipo instalado)</option><option value="turso">Turso por API de Vercel</option></select></div><div class="f"><label>URL de la aplicación/API de Vercel</label><input class="fld" id="dbUrl" placeholder="https://tu-aplicacion.vercel.app"></div><div class="f"><label>Clave de acceso POS_API_KEY (se configura también en Vercel)</label><input class="fld" id="dbKey" type="password" autocomplete="off" placeholder="Clave de acceso API"></div><div class="row" style="flex-wrap:wrap"><button class="btn" id="dbTest">Probar conexión Turso</button><button class="btn primary" id="dbSave">Guardar selección</button></div><div id="dbMsg" class="hint"></div></div>');
+  $('#dbMode',el).value=current;
+  $('#dbUrl',el).value=existing.apiUrl||(location.protocol==='file:'?'https://integral-six-steel.vercel.app':location.origin);
+  $('#dbKey',el).value=existing.apiKey||'';
+  const note=$('#dbMsg',el);
+  const updateFields=()=>{$('#dbUrl',el).disabled=$('#dbMode',el).value!=='turso';$('#dbKey',el).disabled=$('#dbMode',el).value!=='turso';$('#dbTest',el).disabled=$('#dbMode',el).value!=='turso';};
+  $('#dbMode',el).addEventListener('change',updateFields);updateFields();
+  $('#dbTest',el).addEventListener('click',async()=>{note.textContent='Probando conexión…';try{const cfg={apiUrl:$('#dbUrl',el).value.trim().replace(/\\/+$/,''),apiKey:$('#dbKey',el).value};if(!cfg.apiUrl||!cfg.apiKey)throw new Error('Indique URL y POS_API_KEY.');localStorage.setItem('pos-db-connection-v1',JSON.stringify(cfg));await remoteRequest('/api/state',{method:'GET'});note.textContent='Conexión correcta: la API respondió y Turso está accesible.';}catch(e){note.textContent='Error de conexión: '+e.message;}});
+  $('#dbSave',el).addEventListener('click',async()=>{try{
+    const mode=$('#dbMode',el).value;
+    if(mode==='sqlite'&&!desktop)throw new Error('SQLite exclusivo solo está disponible en el .exe de Windows. En navegador debe usar Turso.');
+    if(mode==='turso'){
+      const cfg={apiUrl:$('#dbUrl',el).value.trim().replace(/\\/+$/,''),apiKey:$('#dbKey',el).value};
+      if(!cfg.apiUrl||!cfg.apiKey)throw new Error('Configure URL y POS_API_KEY.');
+      localStorage.setItem('pos-db-connection-v1',JSON.stringify(cfg));
+      await remoteRequest('/api/state',{method:'GET'});
+    }
+    if(desktop)await window.posDesktop.setDatabaseMode(mode);
+    window.__POS_DB_MODE=mode;
+    note.textContent='Selección guardada. La aplicación se recargará para cargar los datos desde la fuente elegida.';
+    setTimeout(()=>location.reload(),500);
+  }catch(e){note.textContent='No se pudo cambiar la base de datos: '+e.message;}});
+  openWin({title:'Configuración de base de datos',w:620,body:el,foot:[{label:'Cerrar',primary:true}]});
+}
+async function prepareDatabaseBeforeStartup(){
+  let mode='turso',state=null;
+  if(window.posDesktop){
+    const cfg=await window.posDesktop.getDatabaseMode();mode=cfg.mode||'sqlite';
+    if(mode==='sqlite'){
+      const local=await window.posDesktop.loadState();state=local.state;
+      if(!state){try{const legacy=localStorage.getItem(KEY);if(legacy)state=JSON.parse(legacy);}catch{}}
+    }else{
+      try{const remote=await remoteRequest('/api/state',{method:'GET'});state=remote.state;}catch(e){console.warn('Turso no disponible al iniciar:',e.message);}
+    }
+  }else{
+    const cfg=dbConnection();mode=cfg.mode||'turso';
+    if(mode==='turso'){try{const remote=await remoteRequest('/api/state',{method:'GET'});state=remote.state;}catch(e){console.warn('Turso no disponible al iniciar:',e.message);}}
+    else {try{const legacy=localStorage.getItem(KEY);if(legacy)state=JSON.parse(legacy);}catch{}}
+  }
+  window.__POS_DB_MODE=mode;
+  window.__POS_BOOT_STATE=state;
+}
+
 /* ---------- arranque ---------- */
-init();
-buildChrome();
-renderCatOptions();
-renderAll();
-wire();
-msg(saved?'Datos guardados cargados. Módulos de Control SENIAT/SUDEBAN, Compras, CxC, CxP y Kardex activos.':'Venta de ejemplo cargada. Módulos de Control SENIAT/SUDEBAN, Compras, CxC, CxP y Kardex activos.');
+prepareDatabaseBeforeStartup().catch(e=>console.error('No se pudo inicializar la base de datos:',e)).finally(()=>{
+  init();
+  if(!saved&&(window.__POS_DB_MODE==='turso'||window.__POS_DB_MODE==='sqlite')){
+    /* No tratar las operaciones sembradas de demostración como movimientos fiscales reales. */
+    S.sales=[];S.purchases=[];S.cxc=[];S.cxp=[];S.kardex=[];S.retencionesIva=[];S.cambiosDivisas=[];S.held=[];S.cart=[];S.documents=[];
+  }
+  buildChrome();
+  renderCatOptions();
+  renderAll();
+  wire();
+  if(window.posDesktop&&window.__POS_DB_MODE==='sqlite'){save();try{localStorage.removeItem(KEY);}catch{}}
+  else if(window.__POS_DB_MODE==='turso'&&window.__POS_BOOT_STATE){/* Remote state loaded; next change writes to Turso. */}
+  msg(saved?'Datos guardados cargados desde la base seleccionada. Módulos fiscales y administrativos activos.':'Base de datos preparada. Verifique la conexión y registre operaciones reales.');
+});
 })();
 </script>
 
