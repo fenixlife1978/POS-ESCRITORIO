@@ -7463,7 +7463,7 @@ prepareDatabaseBeforeStartup().catch(e=>console.error('No se pudo inicializar la
   init();
   if(!saved&&(window.__POS_DB_MODE==='turso'||window.__POS_DB_MODE==='sqlite')){
     /* No tratar las operaciones sembradas de demostración como movimientos fiscales reales. */
-    S.sales=[];S.purchases=[];S.cxc=[];S.cxp=[];S.kardex=[];S.retencionesIva=[];S.cambiosDivisas=[];S.held=[];S.cart=[];S.documents=[];
+    S.sales=[];S.purchases=[];S.cxc=[];S.cxp=[];S.kardex=[];S.retencionesIva=[];S.cambiosDivisas=[];S.held=[];S.cart=[];S.documents=[];S.invoice=1;S.purchaseSeq=1;S.countSeq=1;
   }
   buildChrome();
   renderCatOptions();
