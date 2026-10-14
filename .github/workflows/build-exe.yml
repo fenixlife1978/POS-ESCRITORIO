@@ -34,7 +34,7 @@ jobs:
         run: npm run build
 
       - name: Construir instalador y ejecutable portátil de Windows (.exe)
-        run: npx --yes electron-builder --win nsis portable --config electron-builder.json
+        run: npx --yes electron-builder --win nsis portable --config electron-builder.json --publish never
       - name: Publicar instalador y ejecutable portátil en GitHub Releases
         if: github.event_name != 'pull_request'
         uses: softprops/action-gh-release@v2
