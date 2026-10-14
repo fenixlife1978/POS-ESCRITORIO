@@ -948,11 +948,18 @@ function save(){
   const state=stateSnapshot();
   const mode=window.__POS_DB_MODE||(window.posDesktop?'sqlite':'turso');
   if(window.posDesktop&&mode==='sqlite'){
-    window.posDesktop.saveState(state).catch(persistenceError);
+    window.posDesktop.saveState(state).catch(e=>{persistenceError(e);window.__POS_DB_BROKEN=true;setTimeout(()=>location.reload(),900);});
     return;
   }
   if(mode==='turso'){
-    remoteRequest('/api/state',{method:'PUT',body:JSON.stringify({state})}).then(()=>{window.__POS_LAST_SAVE_OK=Date.now();}).catch(e=>{window.__POS_LAST_SAVE_OK=0;persistenceError(e);});
+    if(window.__POS_DB_BROKEN)return;
+    window.__POS_SAVE_QUEUE=(window.__POS_SAVE_QUEUE||Promise.resolve()).then(()=>{
+      if(window.__POS_DB_BROKEN)throw new Error('La conexión de base de datos falló; recargando para no mantener cambios sin guardar.');
+      return remoteRequest('/api/state',{method:'PUT',body:JSON.stringify({state})});
+    }).then(()=>{window.__POS_LAST_SAVE_OK=Date.now();}).catch(e=>{
+      window.__POS_LAST_SAVE_OK=0;window.__POS_DB_BROKEN=true;persistenceError(e);
+      setTimeout(()=>location.reload(),1200);
+    });
     return;
   }
   try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){persistenceError(e);}
