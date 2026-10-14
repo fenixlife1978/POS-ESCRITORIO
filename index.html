@@ -933,7 +933,7 @@ function dbConnection(){
 }
 function remoteApi(path){
   const c=dbConnection();
-  const base=(c.apiUrl||(location.protocol==='file:'?'https://integral-six-steel.vercel.app':location.origin)).replace(/\\/+$/,'');
+  const base=(c.apiUrl||(location.protocol==='file:'?'https://integral-six-steel.vercel.app':location.origin)).replace(/\/+$/,'');
   return base+path;
 }
 async function remoteRequest(path,options={}){
@@ -7414,12 +7414,12 @@ async function databaseSettingsDlg(){
   const note=$('#dbMsg',el);
   const updateFields=()=>{$('#dbUrl',el).disabled=$('#dbMode',el).value!=='turso';$('#dbKey',el).disabled=$('#dbMode',el).value!=='turso';$('#dbTest',el).disabled=$('#dbMode',el).value!=='turso';};
   $('#dbMode',el).addEventListener('change',updateFields);updateFields();
-  $('#dbTest',el).addEventListener('click',async()=>{note.textContent='Probando conexión…';try{const cfg={apiUrl:$('#dbUrl',el).value.trim().replace(/\\/+$/,''),apiKey:$('#dbKey',el).value};if(!cfg.apiUrl||!cfg.apiKey)throw new Error('Indique URL y POS_API_KEY.');localStorage.setItem('pos-db-connection-v1',JSON.stringify(cfg));await remoteRequest('/api/state',{method:'GET'});note.textContent='Conexión correcta: la API respondió y Turso está accesible.';}catch(e){note.textContent='Error de conexión: '+e.message;}});
+  $('#dbTest',el).addEventListener('click',async()=>{note.textContent='Probando conexión…';try{const cfg={apiUrl:$('#dbUrl',el).value.trim().replace(/\/+$/,''),apiKey:$('#dbKey',el).value};if(!cfg.apiUrl||!cfg.apiKey)throw new Error('Indique URL y POS_API_KEY.');localStorage.setItem('pos-db-connection-v1',JSON.stringify(cfg));await remoteRequest('/api/state',{method:'GET'});note.textContent='Conexión correcta: la API respondió y Turso está accesible.';}catch(e){note.textContent='Error de conexión: '+e.message;}});
   $('#dbSave',el).addEventListener('click',async()=>{try{
     const mode=$('#dbMode',el).value;
     if(mode==='sqlite'&&!desktop)throw new Error('SQLite exclusivo solo está disponible en el .exe de Windows. En navegador debe usar Turso.');
     if(mode==='turso'){
-      const cfg={apiUrl:$('#dbUrl',el).value.trim().replace(/\\/+$/,''),apiKey:$('#dbKey',el).value};
+      const cfg={apiUrl:$('#dbUrl',el).value.trim().replace(/\/+$/,''),apiKey:$('#dbKey',el).value};
       if(!cfg.apiUrl||!cfg.apiKey)throw new Error('Configure URL y POS_API_KEY.');
       localStorage.setItem('pos-db-connection-v1',JSON.stringify(cfg));
       await remoteRequest('/api/state',{method:'GET'});
