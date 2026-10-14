@@ -955,8 +955,9 @@ function save(){
     if(window.__POS_DB_BROKEN)return;
     window.__POS_SAVE_QUEUE=(window.__POS_SAVE_QUEUE||Promise.resolve()).then(()=>{
       if(window.__POS_DB_BROKEN)throw new Error('La conexión de base de datos falló; recargando para no mantener cambios sin guardar.');
-      return remoteRequest('/api/state',{method:'PUT',body:JSON.stringify({state})});
-    }).then(()=>{window.__POS_LAST_SAVE_OK=Date.now();}).catch(e=>{
+      const expectedRevision=Number(window.__POS_DB_REVISION||0);
+      return remoteRequest('/api/state',{method:'PUT',body:JSON.stringify({state,expectedRevision})});
+    }).then(result=>{window.__POS_DB_REVISION=Number(result.revision||0);window.__POS_LAST_SAVE_OK=Date.now();}).catch(e=>{
       window.__POS_LAST_SAVE_OK=0;window.__POS_DB_BROKEN=true;persistenceError(e);
       setTimeout(()=>location.reload(),1200);
     });
@@ -7447,11 +7448,11 @@ async function prepareDatabaseBeforeStartup(){
       const local=await window.posDesktop.loadState();state=local.state;
       if(!state){try{const legacy=localStorage.getItem(KEY);if(legacy)state=JSON.parse(legacy);}catch{}}
     }else{
-      try{const remote=await remoteRequest('/api/state',{method:'GET'});state=remote.state;}catch(e){console.warn('Turso no disponible al iniciar:',e.message);}
+      try{const remote=await remoteRequest('/api/state',{method:'GET'});state=remote.state;window.__POS_DB_REVISION=Number(remote.revision||0);}catch(e){console.warn('Turso no disponible al iniciar:',e.message);}
     }
   }else{
     const cfg=dbConnection();mode=cfg.mode||'turso';
-    if(mode==='turso'){try{const remote=await remoteRequest('/api/state',{method:'GET'});state=remote.state;}catch(e){console.warn('Turso no disponible al iniciar:',e.message);}}
+    if(mode==='turso'){try{const remote=await remoteRequest('/api/state',{method:'GET'});state=remote.state;window.__POS_DB_REVISION=Number(remote.revision||0);}catch(e){console.warn('Turso no disponible al iniciar:',e.message);}}
     else {try{const legacy=localStorage.getItem(KEY);if(legacy)state=JSON.parse(legacy);}catch{}}
   }
   window.__POS_DB_MODE=mode;
