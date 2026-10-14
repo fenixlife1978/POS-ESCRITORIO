@@ -12,12 +12,27 @@
   "win": {
     "target": [
       {
+        "target": "nsis",
+        "arch": [
+          "x64"
+        ]
+      },
+      {
         "target": "portable",
-        "arch": ["x64"]
+        "arch": [
+          "x64"
+        ]
       }
     ]
   },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "artifactName": "POS-El-Piston-Setup-${version}.${ext}"
+  },
   "portable": {
-    "artifactName": "pos-el-piston-portable.exe"
+    "artifactName": "POS-El-Piston-Portable.${ext}"
   }
 }
