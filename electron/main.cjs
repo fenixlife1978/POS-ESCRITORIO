@@ -86,8 +86,10 @@ async function chooseMode(win) {
     cancelId: 2,
     noLink: true
   });
+  const previousMode = databaseMode;
   if (choice.response === 0) await setMode('sqlite');
   if (choice.response === 1) await setMode('turso');
+  if (databaseMode !== previousMode && !win.isDestroyed()) win.webContents.reload();
   return databaseMode;
 }
 async function setMode(mode) {
