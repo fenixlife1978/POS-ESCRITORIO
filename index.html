@@ -933,7 +933,8 @@ function dbConnection(){
 }
 function remoteApi(path){
   const c=dbConnection();
-  const base=(c.apiUrl||(location.protocol==='file:'?'https://integral-six-steel.vercel.app':location.origin)).replace(/\/+$/,'');
+  const base=(c.apiUrl||(location.protocol==='file:'?'':location.origin)).replace(/\/+$/,'');
+  if(!base)throw new Error('Indique la URL pública de producción de Vercel en Base de datos.');
   return base+path;
 }
 async function remoteRequest(path,options={}){
@@ -7418,7 +7419,7 @@ async function databaseSettingsDlg(){
   const current=window.__POS_DB_MODE||(desktop?'sqlite':'turso');
   const el=h('<div class="form" style="gap:10px"><div class="hint">Elija una sola fuente de verdad para las operaciones. SQLite se ejecuta dentro del .exe y guarda el archivo en la carpeta de datos de usuario de Windows. Turso requiere las variables de entorno del servidor en Vercel; las credenciales de Turso nunca se escriben en el navegador.</div><div class="f"><label>Motor de base de datos</label><select class="fld" id="dbMode"><option value="sqlite">SQLite local (solo equipo instalado)</option><option value="turso">Turso por API de Vercel</option></select></div><div class="f"><label>URL de la aplicación/API de Vercel</label><input class="fld" id="dbUrl" placeholder="https://tu-aplicacion.vercel.app"></div><div class="f"><label>Clave de acceso POS_API_KEY (se configura también en Vercel)</label><input class="fld" id="dbKey" type="password" autocomplete="off" placeholder="Clave de acceso API"></div><div class="row" style="flex-wrap:wrap"><button class="btn" id="dbTest">Probar conexión Turso</button><button class="btn primary" id="dbSave">Guardar selección</button></div><div id="dbMsg" class="hint"></div></div>');
   $('#dbMode',el).value=current;
-  $('#dbUrl',el).value=existing.apiUrl||(location.protocol==='file:'?'https://integral-six-steel.vercel.app':location.origin);
+  $('#dbUrl',el).value=existing.apiUrl||(location.protocol==='file:'?'':location.origin);
   $('#dbKey',el).value=existing.apiKey||'';
   const note=$('#dbMsg',el);
   const updateFields=()=>{$('#dbUrl',el).disabled=$('#dbMode',el).value!=='turso';$('#dbKey',el).disabled=$('#dbMode',el).value!=='turso';$('#dbTest',el).disabled=$('#dbMode',el).value!=='turso';};
