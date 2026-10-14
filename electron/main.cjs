@@ -122,7 +122,7 @@ function registerIpc() {
   ipcMain.handle('posdb:save-document', (_e, doc) => {
     if (databaseMode !== 'sqlite') throw new Error('SQLite local no está seleccionado.');
     if (!doc || !doc.id || !['sale','purchase'].includes(doc.transactionType) || !doc.transactionId || !doc.dataUrl) throw new Error('Documento incompleto.');
-    if (String(doc.dataUrl).length > 4_000_000) throw new Error('El archivo supera el límite local de 3 MB.');
+    if (String(doc.dataUrl).length > 4_300_000) throw new Error('El archivo supera el límite local de 3 MB.');
     run('INSERT OR REPLACE INTO fiscal_documents(id,transaction_type,transaction_id,file_name,mime_type,file_size,sha256,data_url,created_at,notes) VALUES(?,?,?,?,?,?,?,?,?,?)',
       [String(doc.id), doc.transactionType, String(doc.transactionId), String(doc.fileName || 'documento'), String(doc.mimeType || 'application/octet-stream'), Number(doc.fileSize || 0), String(doc.sha256 || ''), String(doc.dataUrl), String(doc.createdAt || new Date().toISOString()), String(doc.notes || '')]);
     persistDb();
