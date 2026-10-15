@@ -84,3 +84,20 @@ test('el servidor recibe operaciones idempotentes y detecta colisiones de secuen
   assert.match(preload, /networkCreateOperation/);
   assert.match(preload, /networkOperationStatus/);
 });
+
+test('el POS convierte nuevos registros operativos en eventos de la cola local', () => {
+  assert.match(pos, /OPERATION_COLLECTIONS/);
+  assert.match(pos, /\['sales','sale'\]/);
+  assert.match(pos, /\['purchases','purchase'\]/);
+  assert.match(pos, /captureNewOperations\(\)/);
+  assert.match(pos, /networkCreateOperation\(/);
+  assert.match(pos, /primeOperationBaseline\(\)/);
+});
+
+test('el servidor aplica una operación nueva una sola vez y reporta entidades en conflicto', () => {
+  assert.match(electron, /allowedCollections/);
+  assert.match(electron, /existingRecord/);
+  assert.match(electron, /entity-already-exists-with-different-data/);
+  assert.match(electron, /network_received_operations/);
+  assert.match(electron, /conflictIds/);
+});
