@@ -4466,7 +4466,7 @@ function comprasDlg(initialTab){
   const renderSuppliersTab=v=>{
     v.innerHTML=
       '<div class="gridwrap invwrap"><table class="grid"><thead><tr><th>Código</th><th>Razón Social / Proveedor</th><th>RIF</th><th>Teléfono</th><th>Condición Habitual</th><th>Retención IVA</th></tr></thead><tbody>'+
-        S.suppliers.map(s=>'<tr><td class="mono">'+esc(s.id)+'</td><td><b>'+esc(s.name)+'</b></td><td class="mono">'+esc(s.rif)+'</td><td>'+esc(s.tel)+'</td><td>'+esc(s.cond)+'</td><td>'+(s.retieneIva===true?'<span class="fiscal-tag ok">Sujeto</span>':'<span class="fiscal-tag">No configurado</span>')+'</td></tr>').join('')+
+        S.suppliers.map(s=>'<tr><td class="mono">'+esc(s.id)+'</td><td><b>'+esc(s.name)+'</b></td><td class="mono">'+esc(s.rif)+'</td><td>'+esc(s.tel)+'</td><td>'+esc(s.cond)+'</td><td>'+'<select class="fld" data-ret-iva="'+esc(s.id)+'" aria-label="Sujeto a retención IVA"><option value="no"'+(s.retieneIva===true?'':' selected')+'>No / verificar</option><option value="si"'+(s.retieneIva===true?' selected':'')+'>Sí, confirmado</option></select>'+'</td></tr>').join('')+
       '</tbody></table></div>'+
       '<details class="newp" open><summary>Registrar nuevo proveedor</summary><div class="newgrid">'+
         '<div class="f"><label for="nsRif">RIF</label><input class="fld" id="nsRif" placeholder="J-00000000-0"></div>'+
@@ -4475,6 +4475,16 @@ function comprasDlg(initialTab){
         '<div class="f"><label for="nsCond">Condición</label><select class="fld" id="nsCond"><option>Contado</option><option selected>15 días</option><option>30 días</option></select></div>'+
         '<div class="f"><label for="nsRetIva">Sujeto a retención de IVA</label><select class="fld" id="nsRetIva"><option value="no" selected>No / por verificar</option><option value="si">Sí, confirmado</option></select></div>'+
       '</div><p class="muted">Active esta opción solo después de verificar la condición fiscal del proveedor y la operación.</p><button class="btn" id="nsSave">Guardar proveedor</button></details>';
+    v.onchange=e=>{
+      const ctl=e.target.closest('[data-ret-iva]');
+      if(!ctl)return;
+      const sup=S.suppliers.find(x=>x.id===ctl.dataset.retIva);
+      if(!sup)return;
+      sup.retieneIva=ctl.value==='si';
+      save();
+      renderSuppliersTab(v);
+      msg('Configuración de retención IVA actualizada para '+sup.name+'.');
+    };
     v.onclick=e=>{
       if(e.target.id==='nsSave'){
         const rif=$('#nsRif',v).value.trim(), name=$('#nsName',v).value.trim();
