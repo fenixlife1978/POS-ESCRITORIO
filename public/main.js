@@ -808,6 +808,48 @@ const posSqliteDriver = {
 };
 
 let networkSyncTimer=null,networkSyncBusy=false,networkLastStatus='local';
+let operationBaseline = null;
+let operationCaptureBusy = false;
+const OPERATION_COLLECTIONS = [
+  ['sales','sale'], ['purchases','purchase'], ['cxc','receivable'], ['cxp','payable'],
+  ['cortesZ','cash-close'], ['kardex','inventory-movement'], ['counts','inventory-count'],
+  ['held','held-sale'], ['casheaMovimientos','cashea-operation'], ['cambiosDivisas','currency-movement'],
+  ['retencionesIva','tax-retention'], ['retentions','tax-retention'], ['returns','return'], ['voids','void']
+];
+function operationIdentity(item,index){
+  if(!item||typeof item!=='object')return String(index)+':'+JSON.stringify(item);
+  const id=item.id??item.uuid??item.eventId??item.no??item.number??item.ctrlNo??item.code;
+  return id===undefined?String(index)+':'+JSON.stringify(item):String(id);
+}
+function primeOperationBaseline(){
+  const snap=stateSnapshot();
+  operationBaseline={};
+  for(const [key] of OPERATION_COLLECTIONS) operationBaseline[key]=new Set((Array.isArray(snap[key])?snap[key]:[]).map(operationIdentity));
+}
+async function captureNewOperations(){
+  if(operationCaptureBusy||!window.posDesktop||typeof window.posDesktop.networkCreateOperation!=='function')return;
+  if(!operationBaseline){primeOperationBaseline();return;}
+  operationCaptureBusy=true;
+  try{
+    const snap=stateSnapshot();
+    for(const [key,eventType] of OPERATION_COLLECTIONS){
+      const items=Array.isArray(snap[key])?snap[key]:[];
+      const seen=operationBaseline[key]||new Set();
+      for(let i=0;i<items.length;i++){
+        const item=items[i],identity=operationIdentity(item,i);
+        if(seen.has(identity))continue;
+        const entityId=String(item&&(item.id??item.uuid??item.eventId??item.no??item.number??item.ctrlNo??item.code)??identity);
+        await window.posDesktop.networkCreateOperation({
+          eventType,entityType:key,entityId,occurredAt:new Date(Number(item.ts||item.createdAt||Date.now())).toISOString(),
+          payload:{record:item,sourceCollection:key,deviceCashbox:String(item.cashbox||snap.cfg?.caja||'01')}
+        });
+        seen.add(identity);
+      }
+      operationBaseline[key]=seen;
+    }
+  }catch(error){console.warn('No se pudo encolar una operación para sincronización:',error)}
+  finally{operationCaptureBusy=false}
+}
 function mergeRemoteSnapshot(local,remote){
   if(!remote||typeof remote!=='object')return false;
   const merged={...local};
@@ -848,6 +890,7 @@ function scheduleNetworkSync(){
 function save(){
   const state=stateSnapshot();
   posSqliteDriver.saveState(state).catch(e=>persistenceError(e));
+  captureNewOperations();
   scheduleNetworkSync();
 }
 setInterval(()=>{if(window.posDesktop&&typeof window.posDesktop.networkSyncNow==='function')networkSyncAttempt()},20000);
@@ -8211,6 +8254,7 @@ prepareDatabaseBeforeStartup().catch(e=>console.error('No se pudo inicializar la
   renderCatOptions();
   renderAll();
   wire();
+  primeOperationBaseline();
   msg(saved?'Base de datos local SQLite (elpiston.sqlite) cargada con éxito. Sistema POS y módulos Cashea listos.':'Base de datos local SQLite inicializada. Listo para operar.');
 });
 })();
