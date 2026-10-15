@@ -52,4 +52,17 @@ test('el panel explica límites de red y recomienda reserva de IP', () => {
   assert.match(ui, /ventas simultáneas sin conexión requieren conciliación/);
 });
 
-test('el servidor anuncia descubrimiento LAN sin exigir IP fija', () => {\n  assert.match(electron, /const dgram = require\\('dgram'\\)/);\n  assert.match(electron, /SIFER360_DISCOVER_V1/);\n  assert.match(electron, /SIFER360_SERVER_V1/);\n  assert.match(electron, /DISCOVERY_PORT = 38761/);\n  assert.match(electron, /function discoverLanServers/);\n});\n\ntest('la interfaz permite encontrar automáticamente la IP actual del servidor', () => {\n  assert.match(preload, /networkDiscover/);\n  assert.match(ui, /Buscar servidor automáticamente/);\n  assert.match(ui, /networkDiscover\\(\\)/);\n  assert.match(ui, /No hace falta configurar IP fija/);\n});\n
+test('el servidor anuncia descubrimiento LAN sin exigir IP fija', () => {
+  assert.match(electron, /const dgram = require\\('dgram'\\)/);
+  assert.match(electron, /SIFER360_DISCOVER_V1/);
+  assert.match(electron, /SIFER360_SERVER_V1/);
+  assert.match(electron, /DISCOVERY_PORT = 38761/);
+  assert.match(electron, /function discoverLanServers/);
+});
+
+test('la interfaz permite encontrar automáticamente la IP actual del servidor', () => {
+  assert.match(preload, /networkDiscover/);
+  assert.match(ui, /Buscar servidor automáticamente/);
+  assert.match(ui, /networkDiscover\\(\\)/);
+  assert.match(ui, /No hace falta configurar IP fija/);
+});
