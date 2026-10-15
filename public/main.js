@@ -6264,6 +6264,7 @@ function payDlg(){
 }
 
 function finalize(st,amts,isCred,cDays,refs,payEl){
+  const ctx=cajaContext();if(ctx.role==='cajero'&&ctx.status!=='abierta'){msg('La caja no está abierta. Solicite al administrador una nueva apertura antes de facturar.','bad');return;}
   const t=totals(), ts=Date.now(), invNo=nextCajaInvoice();
   const lines=S.cart.map(l=>{
     const i=lineInfo(l);
@@ -7745,6 +7746,7 @@ function corteZDlg(){
     if(b){selected=getZHistory().find(z=>z.id===b.dataset.zPrint);if(selected){printCorteZ(selected);}return;}
     if(e.target.id==='zClose'){
       if(!boxOpen){msg('No hay una apertura de caja activa para esta caja. Abra caja antes de generar el corte Z.','bad');return;}
+      if(window.SIFERAccess&&typeof window.SIFERAccess.requestPin==='function'&&!window.SIFERAccess.requestPin('Generar corte Z de '+currentCaja()))return;
       if(!confirm('¿Generar y guardar el corte Z definitivo de '+currentCaja()+'? Este registro quedará en el historial.'))return;
       const all=S.sales.filter(s=>s.cashbox===currentCaja()&&sameDay(s.ts));
       const sales=all.filter(s=>!s.void),voids=all.filter(s=>s.void);
