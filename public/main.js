@@ -4610,7 +4610,7 @@ function cxcDlg(selId){
   '</div>');
 
   const draw=()=>{
-    const now=Date.now(), rate=S.cfg.rate, all=S.cxc||[];
+    const now=Date.now(), rate=S.cfg.rate, all=(S.cxc||[]).filter(x=>x.cashbox===currentCaja());
     const totPend=r2(all.reduce((a,x)=>a+Math.max(0,x.total-x.paid),0));
     const totOver=r2(all.filter(x=>x.total-x.paid>=0.01&&x.dueTs<now).reduce((a,x)=>a+Math.max(0,x.total-x.paid),0));
     const totVig=r2(Math.max(0,totPend-totOver));
