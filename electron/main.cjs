@@ -137,7 +137,7 @@ function registerNetworkIpc() {
   ipcMain.handle('network:configure-server', async (_e, opts = {}) => {
     const port = Math.max(1024, Math.min(65535, Number(opts.port || networkConfig.port || 38760)));
     if (networkServer) await new Promise(resolve => networkServer.close(resolve));
-    networkConfig = { ...networkConfig, role: 'server', host: '', port, token: crypto.randomBytes(24).toString('hex') };
+    networkConfig = { ...networkConfig, role: 'server', host: '', port, token: networkConfig.token || crypto.randomBytes(24).toString('hex') };
     saveNetworkConfig();
     networkServer = http.createServer(async (req, res) => {
       const url = new URL(req.url, 'http://127.0.0.1');
