@@ -150,6 +150,37 @@ function initializeSchema() {
       payload TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_network_sync_events_created ON network_sync_events(created_at);
+    CREATE TABLE IF NOT EXISTS local_operation_outbox (
+      event_id TEXT PRIMARY KEY,
+      device_id TEXT NOT NULL,
+      device_seq INTEGER NOT NULL,
+      event_type TEXT NOT NULL,
+      entity_type TEXT NOT NULL,
+      entity_id TEXT NOT NULL,
+      occurred_at TEXT NOT NULL,
+      payload TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','acked','conflict')),
+      acked_at TEXT,
+      UNIQUE(device_id, device_seq)
+    );
+    CREATE INDEX IF NOT EXISTS idx_outbox_pending ON local_operation_outbox(status, device_seq);
+    CREATE TABLE IF NOT EXISTS network_received_operations (
+      event_id TEXT PRIMARY KEY,
+      device_id TEXT NOT NULL,
+      device_seq INTEGER NOT NULL,
+      event_type TEXT NOT NULL,
+      entity_type TEXT NOT NULL,
+      entity_id TEXT NOT NULL,
+      occurred_at TEXT NOT NULL,
+      payload TEXT NOT NULL,
+      received_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(device_id, device_seq)
+    );
+    CREATE TABLE IF NOT EXISTS device_sequences (
+      device_id TEXT PRIMARY KEY,
+      last_seq INTEGER NOT NULL DEFAULT 0
+    );
+    CREATE INDEX IF NOT EXISTS idx_received_operations_device_seq ON network_received_operations(device_id, device_seq);
   `);
   persistDb();
 }
@@ -183,6 +214,35 @@ async function startLanServer(requestedPort) {
     if (req.method === 'OPTIONS') { res.writeHead(204, { 'Access-Control-Allow-Origin': 'null', 'Access-Control-Allow-Headers': 'content-type,authorization', 'Access-Control-Allow-Methods': 'GET,POST,OPTIONS' }); return res.end(); }
     if (req.headers.authorization !== 'Bearer ' + networkConfig.token) return sendJson(res, 401, { error: 'No autorizado' });
     if (url.pathname === '/api/health' && req.method === 'GET') return sendJson(res, 200, { ok: true, deviceId: networkConfig.deviceId, role: 'server', protocol: 1 });
+    if (url.pathname === '/api/sync/events' && req.method === 'POST') {
+      try {
+        const body = await readBody(req);
+        if (!body || !Array.isArray(body.events) || body.events.length > 500) return sendJson(res, 400, { error: 'Lote inválido (máximo 500 operaciones).' });
+        const accepted = [], duplicates = [], conflicts = [];
+        db.run('BEGIN IMMEDIATE');
+        try {
+          for (const ev of body.events) {
+            if (!ev || !ev.eventId || !ev.deviceId || !Number.isSafeInteger(Number(ev.deviceSeq)) || Number(ev.deviceSeq) < 1 || !ev.eventType || !ev.entityType || !ev.entityId || !ev.payload || typeof ev.payload !== 'object') {
+              throw new Error('Operación inválida.');
+            }
+            const existing = one('SELECT event_id FROM network_received_operations WHERE event_id=?', [String(ev.eventId)]);
+            const seqOwner = one('SELECT event_id FROM network_received_operations WHERE device_id=? AND device_seq=?', [String(ev.deviceId), Number(ev.deviceSeq)]);
+            if (existing) { duplicates.push(String(ev.eventId)); continue; }
+            if (seqOwner) { conflicts.push({ eventId: String(ev.eventId), reason: 'device-sequence-already-used', existingEventId: seqOwner.event_id }); continue; }
+            run('INSERT INTO network_received_operations(event_id,device_id,device_seq,event_type,entity_type,entity_id,occurred_at,payload) VALUES(?,?,?,?,?,?,?,?)',
+              [String(ev.eventId), String(ev.deviceId), Number(ev.deviceSeq), String(ev.eventType), String(ev.entityType), String(ev.entityId), String(ev.occurredAt || new Date().toISOString()), JSON.stringify(ev.payload)]);
+            accepted.push(String(ev.eventId));
+          }
+          db.run('COMMIT');
+        } catch (error) { db.run('ROLLBACK'); throw error; }
+        persistDb();
+        return sendJson(res, 200, { ok: true, accepted, duplicates, conflicts, note: 'Las operaciones se almacenan como eventos; todavía no modifican automáticamente los saldos del POS.' });
+      } catch (error) { return sendJson(res, 400, { error: error.message || 'Error recibiendo operaciones' }); }
+    }
+    if (url.pathname === '/api/sync/events' && req.method === 'GET') {
+      const events = all('SELECT event_id AS eventId,device_id AS deviceId,device_seq AS deviceSeq,event_type AS eventType,entity_type AS entityType,entity_id AS entityId,occurred_at AS occurredAt,payload FROM network_received_operations ORDER BY received_at LIMIT 1000').map(ev => ({ ...ev, payload: JSON.parse(ev.payload) }));
+      return sendJson(res, 200, { ok: true, events });
+    }
     if (url.pathname === '/api/sync/state' && req.method === 'POST') {
       try {
         const body = await readBody(req);
@@ -210,6 +270,36 @@ async function startLanServer(requestedPort) {
 }
 function registerNetworkIpc() {
   ipcMain.handle('network:status', () => ({ ...networkConfig, running: !!networkServer, addresses: localAddresses() }));
+  ipcMain.handle('network:operation-create', (_e, input = {}) => {
+    const eventType = String(input.eventType || '').trim();
+    const entityType = String(input.entityType || '').trim();
+    const entityId = String(input.entityId || '').trim();
+    if (!eventType || !entityType || !entityId || !input.payload || typeof input.payload !== 'object' || Array.isArray(input.payload)) {
+      throw new Error('Operación incompleta: tipo, entidad, identificador y payload son obligatorios.');
+    }
+    const eventId = String(input.eventId || crypto.randomUUID());
+    const occurredAt = String(input.occurredAt || new Date().toISOString());
+    const payload = JSON.stringify(input.payload);
+    db.run('BEGIN IMMEDIATE');
+    try {
+      const duplicate = one('SELECT event_id FROM local_operation_outbox WHERE event_id=?', [eventId]);
+      if (duplicate) { db.run('COMMIT'); return one('SELECT * FROM local_operation_outbox WHERE event_id=?', [eventId]); }
+      run('INSERT OR IGNORE INTO device_sequences(device_id,last_seq) VALUES(?,0)', [networkConfig.deviceId]);
+      run('UPDATE device_sequences SET last_seq=last_seq+1 WHERE device_id=?', [networkConfig.deviceId]);
+      const seq = Number(one('SELECT last_seq FROM device_sequences WHERE device_id=?', [networkConfig.deviceId]).last_seq);
+      run('INSERT INTO local_operation_outbox(event_id,device_id,device_seq,event_type,entity_type,entity_id,occurred_at,payload,status) VALUES(?,?,?,?,?,?,?,?,\'pending\')',
+        [eventId, networkConfig.deviceId, seq, eventType, entityType, entityId, occurredAt, payload]);
+      db.run('COMMIT');
+      persistDb();
+      return one('SELECT * FROM local_operation_outbox WHERE event_id=?', [eventId]);
+    } catch (error) { try { db.run('ROLLBACK'); } catch {} throw error; }
+  });
+  ipcMain.handle('network:operation-pending', () => all("SELECT event_id AS eventId,device_id AS deviceId,device_seq AS deviceSeq,event_type AS eventType,entity_type AS entityType,entity_id AS entityId,occurred_at AS occurredAt,payload,status FROM local_operation_outbox WHERE status='pending' ORDER BY device_seq LIMIT 500"));
+  ipcMain.handle('network:operation-status', () => ({
+    pending: Number(one("SELECT COUNT(*) AS n FROM local_operation_outbox WHERE status='pending'").n),
+    acknowledged: Number(one("SELECT COUNT(*) AS n FROM local_operation_outbox WHERE status='acked'").n),
+    conflicts: Number(one("SELECT COUNT(*) AS n FROM local_operation_outbox WHERE status='conflict'").n)
+  }));
   ipcMain.handle('network:discover', () => discoverLanServers());
   ipcMain.handle('network:configure-server', (_e, opts = {}) => startLanServer(opts.port));
   ipcMain.handle('network:stop-server', async () => {
