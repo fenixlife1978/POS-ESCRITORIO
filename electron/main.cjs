@@ -133,42 +133,43 @@ async function setMode(mode) {
   databaseMode = 'sqlite';
   return { mode: 'sqlite', databasePath: userDbPath() };
 }
+async function startLanServer(requestedPort) {
+  const port = Math.max(1024, Math.min(65535, Number(requestedPort || networkConfig.port || 38760)));
+  if (networkServer) await new Promise(resolve => networkServer.close(resolve));
+  networkConfig = { ...networkConfig, role: 'server', host: '', port, token: networkConfig.token || crypto.randomBytes(24).toString('hex') };
+  saveNetworkConfig();
+  networkServer = http.createServer(async (req, res) => {
+    const url = new URL(req.url, 'http://127.0.0.1');
+    if (req.method === 'OPTIONS') { res.writeHead(204, { 'Access-Control-Allow-Origin': 'null', 'Access-Control-Allow-Headers': 'content-type,authorization', 'Access-Control-Allow-Methods': 'GET,POST,OPTIONS' }); return res.end(); }
+    if (req.headers.authorization !== 'Bearer ' + networkConfig.token) return sendJson(res, 401, { error: 'No autorizado' });
+    if (url.pathname === '/api/health' && req.method === 'GET') return sendJson(res, 200, { ok: true, deviceId: networkConfig.deviceId, role: 'server', protocol: 1 });
+    if (url.pathname === '/api/sync/state' && req.method === 'POST') {
+      try {
+        const body = await readBody(req);
+        if (!body || typeof body.state !== 'object' || !body.deviceId) return sendJson(res, 400, { error: 'Paquete incompleto' });
+        const incoming = body.state;
+        const existing = one('SELECT payload FROM app_state WHERE id=1');
+        const current = existing ? JSON.parse(existing.payload) : null;
+        const merged = mergeStateRecords(current, incoming);
+        run('INSERT INTO app_state(id,payload,updated_at) VALUES(1,?,CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload,updated_at=CURRENT_TIMESTAMP', [JSON.stringify(merged)]);
+        const eventId = String(body.deviceId) + '-' + crypto.createHash('sha256').update(JSON.stringify(incoming)).digest('hex');
+        run('INSERT OR IGNORE INTO network_sync_events(event_id,device_id,created_at,payload) VALUES(?,?,?,?)', [eventId, String(body.deviceId), new Date().toISOString(), JSON.stringify({ state: incoming })]);
+        persistDb();
+        return sendJson(res, 200, { ok: true, state: merged, serverDeviceId: networkConfig.deviceId, updatedAt: new Date().toISOString() });
+      } catch (error) { return sendJson(res, 400, { error: error.message || 'Error sincronizando' }); }
+    }
+    if (url.pathname === '/api/sync/state' && req.method === 'GET') {
+      const row = one('SELECT payload FROM app_state WHERE id=1');
+      return sendJson(res, 200, { ok: true, state: row ? JSON.parse(row.payload) : null, serverDeviceId: networkConfig.deviceId, updatedAt: new Date().toISOString() });
+    }
+    return sendJson(res, 404, { error: 'Ruta no encontrada' });
+  });
+  await new Promise((resolve, reject) => { networkServer.once('error', reject); networkServer.listen(port, '0.0.0.0', () => { networkServer.removeListener('error', reject); resolve(); }); });
+  return { ...networkConfig, running: true, addresses: localAddresses() };
+}
 function registerNetworkIpc() {
   ipcMain.handle('network:status', () => ({ ...networkConfig, running: !!networkServer, addresses: localAddresses() }));
-  ipcMain.handle('network:configure-server', async (_e, opts = {}) => {
-    const port = Math.max(1024, Math.min(65535, Number(opts.port || networkConfig.port || 38760)));
-    if (networkServer) await new Promise(resolve => networkServer.close(resolve));
-    networkConfig = { ...networkConfig, role: 'server', host: '', port, token: networkConfig.token || crypto.randomBytes(24).toString('hex') };
-    saveNetworkConfig();
-    networkServer = http.createServer(async (req, res) => {
-      const url = new URL(req.url, 'http://127.0.0.1');
-      if (req.method === 'OPTIONS') { res.writeHead(204, { 'Access-Control-Allow-Origin': 'null', 'Access-Control-Allow-Headers': 'content-type,authorization', 'Access-Control-Allow-Methods': 'GET,POST,OPTIONS' }); return res.end(); }
-      if (req.headers.authorization !== 'Bearer ' + networkConfig.token) return sendJson(res, 401, { error: 'No autorizado' });
-      if (url.pathname === '/api/health' && req.method === 'GET') return sendJson(res, 200, { ok: true, deviceId: networkConfig.deviceId, role: 'server', protocol: 1 });
-      if (url.pathname === '/api/sync/state' && req.method === 'POST') {
-        try {
-          const body = await readBody(req);
-          if (!body || typeof body.state !== 'object' || !body.deviceId) return sendJson(res, 400, { error: 'Paquete incompleto' });
-          const incoming = body.state;
-          const existing = one('SELECT payload FROM app_state WHERE id=1');
-          const current = existing ? JSON.parse(existing.payload) : null;
-          const merged = mergeStateRecords(current, incoming);
-          run('INSERT INTO app_state(id,payload,updated_at) VALUES(1,?,CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload,updated_at=CURRENT_TIMESTAMP', [JSON.stringify(merged)]);
-          const eventId = String(body.deviceId) + '-' + crypto.createHash('sha256').update(JSON.stringify(incoming)).digest('hex');
-          run('INSERT OR IGNORE INTO network_sync_events(event_id,device_id,created_at,payload) VALUES(?,?,?,?)', [eventId, String(body.deviceId), new Date().toISOString(), JSON.stringify({ state: incoming })]);
-          persistDb();
-          return sendJson(res, 200, { ok: true, state: merged, serverDeviceId: networkConfig.deviceId, updatedAt: new Date().toISOString() });
-        } catch (error) { return sendJson(res, 400, { error: error.message || 'Error sincronizando' }); }
-      }
-      if (url.pathname === '/api/sync/state' && req.method === 'GET') {
-        const row = one('SELECT payload FROM app_state WHERE id=1');
-        return sendJson(res, 200, { ok: true, state: row ? JSON.parse(row.payload) : null, serverDeviceId: networkConfig.deviceId, updatedAt: new Date().toISOString() });
-      }
-      return sendJson(res, 404, { error: 'Ruta no encontrada' });
-    });
-    await new Promise((resolve, reject) => { networkServer.once('error', reject); networkServer.listen(port, '0.0.0.0', () => { networkServer.removeListener('error', reject); resolve(); }); });
-    return { ...networkConfig, running: true, addresses: localAddresses() };
-  });
+  ipcMain.handle('network:configure-server', (_e, opts = {}) => startLanServer(opts.port));
   ipcMain.handle('network:stop-server', async () => {
     if (networkServer) await new Promise(resolve => networkServer.close(resolve));
     networkServer = null;
@@ -272,6 +273,7 @@ app.whenReady().then(async () => {
   readNetworkConfig();
   registerIpc();
   registerNetworkIpc();
+  if (networkConfig.role === 'server') { try { await startLanServer(networkConfig.port); } catch (error) { networkConfig.role = 'standalone'; saveNetworkConfig(); } }
   createWindow();
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 }).catch(error => {
