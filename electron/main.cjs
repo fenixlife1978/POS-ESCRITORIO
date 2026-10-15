@@ -2,6 +2,7 @@ const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
+const dgram = require('dgram');
 const os = require('os');
 const crypto = require('crypto');
 const initSqlJs = require('sql.js');
@@ -11,6 +12,45 @@ let dbConfigPath;
 let databaseMode = 'sqlite';
 let saveTimer;
 let networkServer = null;
+let discoveryServer = null;
+const DISCOVERY_PORT = 38761;
+function stopDiscoveryServer() { if (discoveryServer) { try { discoveryServer.close(); } catch {} discoveryServer = null; } }
+function startDiscoveryServer() {
+  stopDiscoveryServer();
+  discoveryServer = dgram.createSocket({ type: 'udp4', reuseAddr: true });
+  discoveryServer.on('message', (message, remote) => {
+    try {
+      const packet = JSON.parse(message.toString('utf8'));
+      if (packet.type !== 'SIFER360_DISCOVER_V1' || !networkServer || networkConfig.role !== 'server') return;
+      const response = Buffer.from(JSON.stringify({ type: 'SIFER360_SERVER_V1', deviceId: networkConfig.deviceId, port: networkConfig.port, name: os.hostname(), addresses: localAddresses() }));
+      discoveryServer.send(response, remote.port, remote.address, () => {});
+    } catch {}
+  });
+  discoveryServer.on('error', () => stopDiscoveryServer());
+  discoveryServer.bind(DISCOVERY_PORT, '0.0.0.0', () => { try { discoveryServer.setBroadcast(true); } catch {} });
+}
+async function discoverLanServers(timeoutMs = 2500) {
+  return new Promise(resolve => {
+    const socket = dgram.createSocket('udp4');
+    const found = new Map();
+    let done = false;
+    const finish = () => { if (done) return; done = true; try { socket.close(); } catch {} resolve([...found.values()]); };
+    socket.on('message', (message, remote) => {
+      try {
+        const data = JSON.parse(message.toString('utf8'));
+        if (data.type !== 'SIFER360_SERVER_V1' || !Number(data.port)) return;
+        const ips = Array.isArray(data.addresses) ? data.addresses : [];
+        const host = ips.includes(remote.address) ? remote.address : (ips[0] || remote.address);
+        found.set(data.deviceId || host, { host, port: Number(data.port), name: data.name || 'SIFER360', deviceId: data.deviceId, addresses: ips });
+      } catch {}
+    });
+    socket.on('error', finish);
+    socket.bind(0, '0.0.0.0', () => {
+      try { socket.setBroadcast(true); socket.send(Buffer.from(JSON.stringify({ type: 'SIFER360_DISCOVER_V1' })), DISCOVERY_PORT, '255.255.255.255'); } catch {}
+      setTimeout(finish, Math.max(500, Math.min(8000, Number(timeoutMs) || 2500))).unref?.();
+    });
+  });
+}
 let networkConfig = { role: 'standalone', host: '', port: 38760, token: '', deviceId: '' };
 let networkConfigPath;
 const MAX_SYNC_BODY = 8 * 1024 * 1024;
@@ -165,14 +205,17 @@ async function startLanServer(requestedPort) {
     return sendJson(res, 404, { error: 'Ruta no encontrada' });
   });
   await new Promise((resolve, reject) => { networkServer.once('error', reject); networkServer.listen(port, '0.0.0.0', () => { networkServer.removeListener('error', reject); resolve(); }); });
+  startDiscoveryServer();
   return { ...networkConfig, running: true, addresses: localAddresses() };
 }
 function registerNetworkIpc() {
   ipcMain.handle('network:status', () => ({ ...networkConfig, running: !!networkServer, addresses: localAddresses() }));
+  ipcMain.handle('network:discover', () => discoverLanServers());
   ipcMain.handle('network:configure-server', (_e, opts = {}) => startLanServer(opts.port));
   ipcMain.handle('network:stop-server', async () => {
     if (networkServer) await new Promise(resolve => networkServer.close(resolve));
     networkServer = null;
+    stopDiscoveryServer();
     if (networkConfig.role === 'server') networkConfig.role = 'standalone';
     saveNetworkConfig();
     return { ...networkConfig, running: false, addresses: localAddresses() };
@@ -281,4 +324,4 @@ app.whenReady().then(async () => {
   app.quit();
 });
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
-app.on('before-quit', () => { clearTimeout(saveTimer); if (networkServer) networkServer.close(); persistDb(); });
+app.on('before-quit', () => { clearTimeout(saveTimer); if (networkServer) networkServer.close(); stopDiscoveryServer(); persistDb(); });
