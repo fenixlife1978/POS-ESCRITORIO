@@ -4465,20 +4465,21 @@ function comprasDlg(initialTab){
 
   const renderSuppliersTab=v=>{
     v.innerHTML=
-      '<div class="gridwrap invwrap"><table class="grid"><thead><tr><th>Código</th><th>Razón Social / Proveedor</th><th>RIF</th><th>Teléfono</th><th>Condición Habitual</th></tr></thead><tbody>'+
-        S.suppliers.map(s=>'<tr><td class="mono">'+esc(s.id)+'</td><td><b>'+esc(s.name)+'</b></td><td class="mono">'+esc(s.rif)+'</td><td>'+esc(s.tel)+'</td><td>'+esc(s.cond)+'</td></tr>').join('')+
+      '<div class="gridwrap invwrap"><table class="grid"><thead><tr><th>Código</th><th>Razón Social / Proveedor</th><th>RIF</th><th>Teléfono</th><th>Condición Habitual</th><th>Retención IVA</th></tr></thead><tbody>'+
+        S.suppliers.map(s=>'<tr><td class="mono">'+esc(s.id)+'</td><td><b>'+esc(s.name)+'</b></td><td class="mono">'+esc(s.rif)+'</td><td>'+esc(s.tel)+'</td><td>'+esc(s.cond)+'</td><td>'+(s.retieneIva===true?'<span class="fiscal-tag ok">Sujeto</span>':'<span class="fiscal-tag">No configurado</span>')+'</td></tr>').join('')+
       '</tbody></table></div>'+
       '<details class="newp" open><summary>Registrar nuevo proveedor</summary><div class="newgrid">'+
         '<div class="f"><label for="nsRif">RIF</label><input class="fld" id="nsRif" placeholder="J-00000000-0"></div>'+
         '<div class="f wide"><label for="nsName">Razón Social</label><input class="fld" id="nsName" placeholder="Nombre de la distribuidora o fabricante"></div>'+
         '<div class="f"><label for="nsTel">Teléfono</label><input class="fld" id="nsTel"></div>'+
         '<div class="f"><label for="nsCond">Condición</label><select class="fld" id="nsCond"><option>Contado</option><option selected>15 días</option><option>30 días</option></select></div>'+
-      '</div><button class="btn" id="nsSave">Guardar proveedor</button></details>';
+        '<div class="f"><label for="nsRetIva">Sujeto a retención de IVA</label><select class="fld" id="nsRetIva"><option value="no" selected>No / por verificar</option><option value="si">Sí, confirmado</option></select></div>'+
+      '</div><p class="muted">Active esta opción solo después de verificar la condición fiscal del proveedor y la operación.</p><button class="btn" id="nsSave">Guardar proveedor</button></details>';
     v.onclick=e=>{
       if(e.target.id==='nsSave'){
         const rif=$('#nsRif',v).value.trim(), name=$('#nsName',v).value.trim();
         if(!rif||!name){msg('Indique RIF y razón social del proveedor.','bad');return;}
-        S.suppliers.push({id:'PRV-'+two(S.suppliers.length+1),name,rif,tel:$('#nsTel',v).value.trim(),cond:$('#nsCond',v).value});
+        S.suppliers.push({id:'PRV-'+two(S.suppliers.length+1),name,rif,tel:$('#nsTel',v).value.trim(),cond:$('#nsCond',v).value,retieneIva:$('#nsRetIva',v).value==='si'});
         save();renderSuppliersTab(v);msg('Proveedor '+name+' registrado.');
       }
     };
@@ -4515,47 +4516,40 @@ function comprasDlg(initialTab){
     const base=r2(lines.reduce((a,x)=>a+x.sub,0));
     const iva=applyIva?r2(base*IVA):0;
     const total=r2(base+iva);
-    const effPaid=cond==='Contado'?total:Math.min(total,paidInit);
     const dueTs=ts+creditDays*86400000;
-    const comp={no,docProv,ts,dueTs,supplier:Object.assign({},sup),cond,lines,base,iva,total,rate:S.cfg.rate,paid:effPaid,void:false};
+    const retPct=Number(S.cfg.retIvaPct)||75;
+    const aplicarRetencion=!!(applyIva&&iva>0&&S.cfg.contribEspecial&&sup.retieneIva===true);
+    const retUsd=aplicarRetencion?r2(iva*(retPct/100)):0;
+    const retBs=r2(retUsd*S.cfg.rate);
+    const payableTotal=r2(Math.max(0,total-retUsd));
+    const effPaid=cond==='Contado'?payableTotal:Math.min(payableTotal,paidInit);
+    const comp={no,docProv,ts,dueTs,supplier:Object.assign({},sup),cond,lines,base,iva,total,payableTotal,retIva:retUsd,rate:S.cfg.rate,paid:effPaid,void:false};
     comp.ctrlProv='00-'+pad(no+4400,8);
-    if(applyIva&&iva>0&&S.cfg.contribEspecial){
-      const retPct=S.cfg.retIvaPct||75;
-      const retUsd=r2(iva*(retPct/100));
-      const retBs=r2(retUsd*S.cfg.rate);
-      const retDoc='202610'+pad((S.retencionesIva||[]).length+42,8);
-      comp.retIva=retUsd;
+    if(aplicarRetencion){
+      const periodo=(()=>{const d=new Date(ts);return String(d.getFullYear())+String(d.getMonth()+1).padStart(2,'0');})();
+      const retSeq=(S.retencionesIva||[]).filter(r=>String(r.periodo)===periodo).reduce((m,r)=>Math.max(m,Number(String(r.id||'').slice(-8))||0),0)+1;
+      const retDoc=periodo+pad(retSeq,8);
       comp.retIvaDoc=retDoc;
       if(!S.retencionesIva)S.retencionesIva=[];
       S.retencionesIva.push({
-        id:retDoc,
-        ts,
-        periodo:'202610',
-        supplier:Object.assign({},sup),
-        purchaseNo:no,
-        docProv,
-        ctrlProv:comp.ctrlProv,
-        base,
-        iva,
-        pct:retPct,
-        rate:S.cfg.rate,
-        retainedUsd:retUsd,
-        retainedBs:retBs
+        id:retDoc,ts,periodo,supplier:Object.assign({},sup),purchaseNo:no,docProv,
+        ctrlProv:comp.ctrlProv,base,iva,pct:retPct,rate:S.cfg.rate,
+        retainedUsd:retUsd,retainedBs:retBs
       });
     }
     S.purchases.push(comp);
-    if(total-effPaid>=0.01){
+    if(payableTotal-effPaid>=0.01){
       const cxpId='CXP-'+pad((S.cxp.length+1),4);
       const payments=effPaid>0?[{ts,method:payMethod,cur:'VES',amountBs:r2(effPaid*S.cfg.rate),amountUsd:effPaid,ref:'INI-'+no,note:'Abono inicial en compra'}]:[];
       S.cxp.push({
         id:cxpId,purchaseNo:no,doc:docProv+' (COM-'+pad(no)+')',
         supplier:Object.assign({},sup),
-        concept:'Compra mercancía ('+lines.length+' reng.)',
-        ts,dueTs,total,paid:effPaid,payments
+        concept:'Compra mercancía ('+lines.length+' reng.)'+(retUsd>0?' — retención IVA '+usd(retUsd):''),
+        ts,dueTs,total:payableTotal,invoiceTotal:total,retIva:retUsd,paid:effPaid,payments
       });
     }
     save();renderAll();
-    msg('Compra COM-'+pad(no)+' procesada por '+usd(total)+'. Stock, costos y Kardex actualizados.');
+    msg('Compra COM-'+pad(no)+' guardada. Factura: '+usd(total)+(retUsd>0?'; IVA retenido: '+usd(retUsd)+'; saldo a proveedor: '+usd(payableTotal):'')+'. Stock, costos y Kardex actualizados.');
     return true;
   };
 
