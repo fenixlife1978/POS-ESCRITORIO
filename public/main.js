@@ -840,6 +840,7 @@ async function networkSyncAttempt(){
     const status=$('#sbMsg');if(status)status.textContent='Sin conexión al servidor · operaciones guardadas localmente; se reintentará automáticamente';
   }finally{networkSyncBusy=false}
 }
+window.SIFERNetworkSync=()=>networkSyncAttempt();
 function scheduleNetworkSync(){
   if(networkSyncTimer)clearTimeout(networkSyncTimer);
   networkSyncTimer=setTimeout(()=>{networkSyncAttempt();},1800);
