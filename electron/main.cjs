@@ -358,7 +358,10 @@ function registerNetworkIpc() {
       const eventResult = await eventResponse.json();
       db.run('BEGIN IMMEDIATE');
       try {
-        for (const id of [...(eventResult.accepted || []), ...(eventResult.duplicates || [])]) run("UPDATE local_operation_outbox SET status='acked',acked_at=? WHERE event_id=?", [new Date().toISOString(), String(id)]);
+        const conflictIds = new Set((eventResult.conflicts || []).map(conflict => String(conflict.eventId)));
+        for (const id of [...(eventResult.accepted || []), ...(eventResult.duplicates || [])]) {
+          if (!conflictIds.has(String(id))) run("UPDATE local_operation_outbox SET status='acked',acked_at=? WHERE event_id=?", [new Date().toISOString(), String(id)]);
+        }
         for (const conflict of (eventResult.conflicts || [])) run("UPDATE local_operation_outbox SET status='conflict' WHERE event_id=?", [String(conflict.eventId)]);
         db.run('COMMIT');
       } catch (error) { try { db.run('ROLLBACK'); } catch {} throw error; }
