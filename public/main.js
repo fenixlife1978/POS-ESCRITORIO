@@ -838,9 +838,9 @@ async function captureNewOperations(){
       for(let i=0;i<items.length;i++){
         const item=items[i],identity=operationIdentity(item,i);
         if(seen.has(identity))continue;
-        const entityId=String(item&&(item.id??item.uuid??item.eventId??item.no??item.number??item.ctrlNo??item.code)??identity);
+        const entityId=String((item ? (item.id??item.uuid??item.eventId??item.no??item.number??item.ctrlNo??item.code) : undefined) ?? identity);
         await window.posDesktop.networkCreateOperation({
-          eventType,entityType:key,entityId,occurredAt:new Date(Number(item.ts||item.createdAt||Date.now())).toISOString(),
+          eventType,entityType:key,entityId,occurredAt:(Number.isFinite(Number(item.ts))?new Date(Number(item.ts)):new Date(item.createdAt||Date.now())).toISOString(),
           payload:{record:item,sourceCollection:key,deviceCashbox:String(item.cashbox||snap.cfg?.caja||'01')}
         });
         seen.add(identity);
