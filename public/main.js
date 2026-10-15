@@ -807,10 +807,49 @@ const posSqliteDriver = {
   }
 };
 
+let networkSyncTimer=null,networkSyncBusy=false,networkLastStatus='local';
+function mergeRemoteSnapshot(local,remote){
+  if(!remote||typeof remote!=='object')return false;
+  const merged={...local};
+  for(const [key,value] of Object.entries(remote)){
+    if(!Array.isArray(value)||!Array.isArray(local[key])){merged[key]=value;continue;}
+    const map=new Map();
+    const ident=(item)=>{if(!item||typeof item!=='object')return JSON.stringify(item);const id=item.id??item.uuid??item.eventId??item.no??item.number??item.code??item.sku;if(id===undefined)return JSON.stringify(item);return (['sales','cxc','cortesZ','openings','movements','returns','voids'].includes(key)?String(item.cashbox||'sin-caja')+':':'')+String(id)};
+    for(const item of local[key])map.set(ident(item),item);
+    for(const item of value)map.set(ident(item),item);
+    merged[key]=[...map.values()];
+  }
+  let changed=false;
+  for(const [key,value] of Object.entries(merged)){if(JSON.stringify(S[key])!==JSON.stringify(value)){S[key]=value;changed=true}}
+  return changed;
+}
+async function networkSyncAttempt(){
+  if(networkSyncBusy||!window.posDesktop||typeof window.posDesktop.networkSyncNow!=='function')return;
+  networkSyncBusy=true;
+  try{
+    const local=stateSnapshot();
+    const result=await window.posDesktop.networkSyncNow(local);
+    if(result&&result.ok&&result.state){
+      const changed=mergeRemoteSnapshot(local,result.state);
+      networkLastStatus=result.role||'connected';
+      if(changed)await posSqliteDriver.saveState(stateSnapshot());
+      const status=$('#sbMsg');if(status)status.textContent=networkLastStatus==='server'?'Servidor LAN · sincronizado':networkLastStatus==='client'?'Cliente LAN · sincronizado':'Modo local';
+    }else networkLastStatus='local';
+  }catch(error){
+    networkLastStatus='offline';
+    const status=$('#sbMsg');if(status)status.textContent='Sin conexión al servidor · operaciones guardadas localmente; se reintentará automáticamente';
+  }finally{networkSyncBusy=false}
+}
+function scheduleNetworkSync(){
+  if(networkSyncTimer)clearTimeout(networkSyncTimer);
+  networkSyncTimer=setTimeout(()=>{networkSyncAttempt();},1800);
+}
 function save(){
   const state=stateSnapshot();
   posSqliteDriver.saveState(state).catch(e=>persistenceError(e));
+  scheduleNetworkSync();
 }
+setInterval(()=>{if(window.posDesktop&&typeof window.posDesktop.networkSyncNow==='function')networkSyncAttempt()},20000);
 
 function load(){
   try{
