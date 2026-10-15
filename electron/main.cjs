@@ -231,6 +231,22 @@ async function startLanServer(requestedPort) {
             if (seqOwner) { conflicts.push({ eventId: String(ev.eventId), reason: 'device-sequence-already-used', existingEventId: seqOwner.event_id }); continue; }
             run('INSERT INTO network_received_operations(event_id,device_id,device_seq,event_type,entity_type,entity_id,occurred_at,payload) VALUES(?,?,?,?,?,?,?,?)',
               [String(ev.eventId), String(ev.deviceId), Number(ev.deviceSeq), String(ev.eventType), String(ev.entityType), String(ev.entityId), String(ev.occurredAt || new Date().toISOString()), JSON.stringify(ev.payload)]);
+            const collection = String(ev.entityType);
+            const record = ev.payload && ev.payload.record;
+            const allowedCollections = new Set(['sales','purchases','cxc','cxp','cortesZ','kardex','counts','held','casheaMovimientos','cambiosDivisas','retencionesIva','retentions','returns','voids']);
+            if (allowedCollections.has(collection) && record && typeof record === 'object' && !Array.isArray(record)) {
+              const stateRow = one('SELECT payload FROM app_state WHERE id=1');
+              const state = stateRow ? JSON.parse(stateRow.payload) : {};
+              const records = Array.isArray(state[collection]) ? state[collection] : [];
+              const recordId = String(ev.entityId);
+              const existingRecord = records.find(item => item && String(item.id ?? item.uuid ?? item.eventId ?? item.no ?? item.number ?? item.ctrlNo ?? item.code ?? '') === recordId);
+              if (!existingRecord) {
+                state[collection] = [...records, record];
+                run('INSERT INTO app_state(id,payload,updated_at) VALUES(1,?,CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload,updated_at=CURRENT_TIMESTAMP', [JSON.stringify(state)]);
+              } else if (JSON.stringify(existingRecord) !== JSON.stringify(record)) {
+                conflicts.push({ eventId: String(ev.eventId), reason: 'entity-already-exists-with-different-data', entityType: collection, entityId: recordId });
+              }
+            }
             accepted.push(String(ev.eventId));
           }
           db.run('COMMIT');
