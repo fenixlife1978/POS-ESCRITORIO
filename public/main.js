@@ -6711,7 +6711,7 @@ function exportSeniatTxt(periodo){
   const rifAgente=S.cfg.rif.replace(/[^A-Za-z0-9]/g,'').toUpperCase();
   const list=S.retencionesIva||[];
   if(!list.length){
-    msg('No hay retenciones de IVA registradas para el período '+periodo+'.','bad');
+    msg('No hay registros de retención IVA para el período '+periodo+'.','bad');
     return;
   }
   const lines=list.map(r=>{
@@ -7329,11 +7329,11 @@ function seniatSudebanDlg(initialTab){
         '<td class="c"><span class="fiscal-tag ok">'+fq(r.pct||75)+'%</span></td>'+
         '<td class="r" style="color:#1842B8"><b>'+nf(retBs)+'</b></td>'+
         '<td class="c" style="white-space:nowrap">'+
-          '<button class="btn mini2" data-print-ret="'+esc(r.id)+'">Imprimir Comprobante</button> '+
+          '<button class="btn mini2" data-print-ret="'+esc(r.id)+'">Imprimir borrador</button> '+
           '<button class="btn mini2" style="color:var(--bad)" data-del-ret="'+esc(r.id)+'" title="Eliminar retención">✕</button>'+
         '</td>'+
       '</tr>';
-    }).join(''):'<tr class="empty"><td colspan="11">No hay comprobantes de retención emitidos.</td></tr>';
+    }).join(''):'<tr class="empty"><td colspan="12">No hay registros de retención.</td></tr>';
 
     return '<div class="semaforo-bar">'+
       '<div class="semaforo-dot"></div>'+
