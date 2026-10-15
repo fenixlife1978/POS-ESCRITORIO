@@ -6707,7 +6707,7 @@ function exportIgtfCsv(sales){
 }
 
 function exportSeniatTxt(periodo){
-  periodo=periodo||'202610';
+  if(!periodo){const d=new Date();periodo=String(d.getFullYear())+String(d.getMonth()+1).padStart(2,'0');}
   const rifAgente=S.cfg.rif.replace(/[^A-Za-z0-9]/g,'').toUpperCase();
   const list=S.retencionesIva||[];
   if(!list.length){
@@ -6893,11 +6893,12 @@ function newRetencionIvaDlg(onDone){
         const retUsd=r2(iva*(pct/100));
         const retBs=r2(retUsd*rate);
         const seq=(S.retencionesIva||[]).length+42;
-        const compId='202610'+pad(seq,8);
+        const fechaComp=new Date();const periodoComp=String(fechaComp.getFullYear())+String(fechaComp.getMonth()+1).padStart(2,'0');
+        const compId=periodoComp+pad(seq,8);
         const retEntry={
           id:compId,
           ts:Date.now(),
-          periodo:'202610',
+          periodo:periodoComp,
           supplier:Object.assign({},sup),
           docProv,
           ctrlProv,
@@ -7127,6 +7128,7 @@ function seniatSudebanDlg(initialTab){
         '<td class="r">'+nf(baseBs)+'</td>'+
         '<td class="r" style="color:#1D6F39"><b>'+nf(ivaBs)+'</b></td>'+
         '<td class="r" style="color:#1842B8"><b>'+nf(retBs)+'</b></td>'+
+        '<td><span class="fiscal-tag">'+esc(r.estado||'Registro histórico: revisar')+'</span><div class="sub">Declarada: '+(r.declarada?'Sí':'No consta')+' · Pagada: '+(r.pagada?'Sí':'No consta')+' · Entregada: '+(r.comprobanteEntregado?'Sí':'No consta')+'</div></td>'+ 
         '<td class="mono c">'+esc(p.retIvaDoc||('202610'+pad(idx+41,8)))+'</td>'+
         '<td class="r">'+nf(rate)+'</td>'+
       '</tr>';
@@ -7335,13 +7337,13 @@ function seniatSudebanDlg(initialTab){
 
     return '<div class="semaforo-bar">'+
       '<div class="semaforo-dot"></div>'+
-      '<div class="semaforo-text"><b>GENERADOR DE RETENCIONES IVA PARA EL PORTAL SENIAT</b> &middot; Genera el archivo TXT estructurado según Providencia SNAT/2015/0049 listo para cargar en <b>declaraciones.seniat.gob.ve</b>.</div>'+
+      '<div class="semaforo-text"><b>CONTROL Y TRAZABILIDAD DE RETENCIONES IVA</b> &middot; Reporte interno de apoyo al contador bajo referencia SNAT/2025/000054. El POS no declara ni paga; valide la normativa, las excepciones y el formato vigente antes de usar cualquier archivo.</div>'+ 
       '<button class="btn mini2 primary" id="btnNewManualRet" style="margin-left:auto;flex:none">+ Emitir Retención de IVA</button>'+
     '</div>'+
     '<div class="gridwrap fiscal-wrap"><table class="grid" style="min-width:1050px">'+
       '<thead><tr>'+
-        '<th class="c">Nº Comprobante</th><th>Fecha</th><th>RIF Proveedor</th><th>Nombre Proveedor</th>'+
-        '<th class="c">Factura Proveedor</th><th class="c">Nº Control</th><th class="r">Base Imponible Bs.</th><th class="r">IVA Facturado Bs.</th><th class="c">% Ret.</th><th class="r">Monto Retenido Bs.</th><th class="c" style="width:170px">Acciones</th>'+
+        '<th class="c">Nº / ID interno</th><th>Fecha</th><th>RIF Proveedor</th><th>Nombre Proveedor</th>'+ 
+        '<th class="c">Factura Proveedor</th><th class="c">Nº Control</th><th class="r">Base Imponible Bs.</th><th class="r">IVA Facturado Bs.</th><th class="c">% Ret.</th><th class="r">Monto Retenido Bs.</th><th>Seguimiento contable</th><th class="c" style="width:170px">Acciones</th>'+ 
       '</tr></thead>'+
       '<tbody>'+rowsHtml+'</tbody>'+
     '</table></div>';
