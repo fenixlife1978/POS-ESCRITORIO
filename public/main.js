@@ -268,7 +268,7 @@ function seed(){
       {id:'PRV-03',name:'Baterías y Partes Eléctricas Oriente, C.A.',rif:'J-29112233-9',tel:'0281-555-9011',cond:'Contado'},
       {id:'PRV-04',name:'Suministros Motopartes Venezuela, C.A.',rif:'J-41009988-1',tel:'0251-555-7730',cond:'15 días'}
     ],
-    sales:[],held:[],purchases:[],cxc:[],cxp:[],kardex:[],counts:[],
+    sales:[],held:[],purchases:[],cxc:[],cxp:[],cortesZ:[],kardex:[],counts:[],
     lotesSudeban:[],retencionesIva:[],cambiosDivisas:[],casheaMovimientos:[],documents:[],
     invoice:1043,purchaseSeq:203,countSeq:102,
     cart:[],sel:-1,cat:'Todas',query:'',catSel:null
@@ -497,7 +497,7 @@ function seed(){
 function stateSnapshot(){
   return {
     v:1,cfg:S.cfg,products:S.products,clients:S.clients,suppliers:S.suppliers,
-    sales:S.sales,held:S.held,purchases:S.purchases,cxc:S.cxc,cxp:S.cxp,
+    sales:S.sales,held:S.held,purchases:S.purchases,cxc:S.cxc,cxp:S.cxp,cortesZ:S.cortesZ||[],
     kardex:S.kardex,counts:S.counts,lotesSudeban:S.lotesSudeban,retencionesIva:S.retencionesIva,cambiosDivisas:S.cambiosDivisas,
     casheaMovimientos:S.casheaMovimientos||[],documents:S.documents||[],
     invoice:S.invoice,purchaseSeq:S.purchaseSeq,countSeq:S.countSeq
@@ -819,6 +819,10 @@ function load(){
     if(!d||d.v!==1||!Array.isArray(d.products)||!d.cfg)return false;
     const seedMap={};SEED.forEach(sp=>{seedMap[sp.code]=sp;});
     S.cfg=Object.assign(S.cfg,d.cfg);
+    S.cortesZ=Array.isArray(d.cortesZ)?d.cortesZ:[];
+    const legacyCaja=String(S.cfg.caja||'01');
+    (S.sales||[]).forEach(x=>{if(!x.cashbox)x.cashbox=legacyCaja;if(!x.cashier)x.cashier=x.user||S.cfg.cajero||'Cajero';});
+    (S.cxc||[]).forEach(x=>{if(!x.cashbox)x.cashbox=legacyCaja;});
     /* Enriquecer productos guardados con SKU, U.M., motores de venta, presentaciones, impuestos, proveedores y kits */
     S.products=d.products.map((p,idx)=>{
       const sp=seedMap[p.code]||{};
@@ -7674,7 +7678,7 @@ function cajaContext(){
 }
 function currentCaja(){
   const c=cajaContext();
-  return String(c.cashbox||S.cfg.caja||'Caja 01');
+  return String(!c.cashbox||c.cashbox==='Todas'?(S.cfg.caja||'01'):c.cashbox);
 }
 function currentCajero(){
   const c=cajaContext();
