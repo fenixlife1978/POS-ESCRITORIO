@@ -51,3 +51,5 @@ test('el panel explica límites de red y recomienda reserva de IP', () => {
   assert.match(ui, /no cifra el tráfico/);
   assert.match(ui, /ventas simultáneas sin conexión requieren conciliación/);
 });
+
+test('el servidor anuncia descubrimiento LAN sin exigir IP fija', () => {\n  assert.match(electron, /const dgram = require\\('dgram'\\)/);\n  assert.match(electron, /SIFER360_DISCOVER_V1/);\n  assert.match(electron, /SIFER360_SERVER_V1/);\n  assert.match(electron, /DISCOVERY_PORT = 38761/);\n  assert.match(electron, /function discoverLanServers/);\n});\n\ntest('la interfaz permite encontrar automáticamente la IP actual del servidor', () => {\n  assert.match(preload, /networkDiscover/);\n  assert.match(ui, /Buscar servidor automáticamente/);\n  assert.match(ui, /networkDiscover\\(\\)/);\n  assert.match(ui, /No hace falta configurar IP fija/);\n});\n
