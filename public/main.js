@@ -6260,7 +6260,7 @@ function payDlg(){
 }
 
 function finalize(st,amts,isCred,cDays,refs,payEl){
-  const t=totals(), ts=Date.now(), invNo=S.invoice;
+  const t=totals(), ts=Date.now(), invNo=nextCajaInvoice();
   const lines=S.cart.map(l=>{
     const i=lineInfo(l);
     return{
@@ -6289,9 +6289,9 @@ function finalize(st,amts,isCred,cDays,refs,payEl){
     pays.push({id:'credito',name:'Crédito CxC ('+cDays+' días)',cur:'USD',amount:creditAmt});
   }
   const ctrlPrefix=S.cfg.ctrlPrefix||'00-';
-  const ctrlNext=S.cfg.ctrlNext||invNo;
-  const ctrlNo=ctrlPrefix+pad(ctrlNext,8);
-  S.cfg.ctrlNext=ctrlNext+1;
+  const seqs=cajaSeqs(),boxSeq=seqs[currentCaja()]||(seqs[currentCaja()]={invoice:1,void:1,refund:1,cxc:1,movement:1,z:1});
+  const ctrlNext=Number(boxSeq.ctrl||1);boxSeq.ctrl=ctrlNext+1;localStorage.setItem('sifer360_box_sequences',JSON.stringify(seqs));
+  const ctrlNo=ctrlPrefix+String(currentCaja()).replace(/\W/g,'').slice(-4)+'-'+pad(ctrlNext,8);
   const sale={
     no:invNo,ctrlNo,docType:'01-FACTURA',transType:'01-REG',
     ts,cashbox:currentCaja(),cashier:currentCajero(),client:Object.assign({},S.client),lines,
@@ -6365,7 +6365,7 @@ function finalize(st,amts,isCred,cDays,refs,payEl){
       payments:paidUpfront>0?[{ts,method:'Pago inicial en caja',cur:'USD',amountUsd:paidUpfront,amountBs:r2(paidUpfront*S.cfg.rate),ref:'FAC-'+pad(invNo),note:'Abono en caja al facturar'}]:[]
     });
   }
-  S.sales.push(sale);S.invoice++;S.cart=[];S.sel=-1;S.client=S.clients[0];
+  S.sales.push(sale);S.invoice=Math.max(S.invoice,invNo+1);S.cart=[];S.sel=-1;S.client=S.clients[0];
   save();renderAll();
   msg('Factura '+pad(sale.no)+' procesada por '+usd(r2(sale.total+sale.igtf))+(casheaAmt>0?' (Financiado Cashea: '+usd(casheaAmt)+')':'')+(creditAmt>0?' (Saldo a CxC: '+usd(creditAmt)+')':'')+'.');
   showTicket(sale);
@@ -6502,15 +6502,16 @@ function salesDlg(){
     const metRows=Object.keys(by).map(k=>'<tr><td>'+esc(by[k].name.split(' (')[0])+'</td><td>'+by[k].n+'</td><td>'+(by[k].cur==='USD'?'US$ ':'Bs. ')+nf(by[k].amt)+'</td></tr>').join('')||'<tr><td colspan="3" class="dim">Sin cobros.</td></tr>';
     $('#saCierre',el).innerHTML='<table class="sumt"><thead><tr><th>Cierre por forma de pago</th><th>Ops.</th><th>Recibido</th></tr></thead><tbody>'+metRows+'</tbody></table><table class="sumt"><thead><tr><th>Totales del día</th><th>US$</th></tr></thead><tbody><tr><td>Ventas válidas</td><td>'+ok.length+'</td></tr><tr><td>Base imponible</td><td>'+nf(sum(s=>s.base))+'</td></tr><tr><td>IVA 16 %</td><td>'+nf(sum(s=>s.iva))+'</td></tr><tr><td>IGTF 3 %</td><td>'+nf(sum(s=>s.igtf))+'</td></tr><tr class="tot"><td>Total facturado</td><td>'+nf(sum(s=>s.total+s.igtf))+'</td></tr><tr><td>Total en Bs. (a la tasa de cada venta)</td><td>'+nf(sum(s=>(s.total+s.igtf)*s.rate))+'</td></tr></tbody></table>';
     $('#saNote',el).textContent=list.some(s=>s.no<1043)&&!saved?'Las facturas 1038 a 1042 son ejemplos para mostrar el cierre.':'';
-    $('#saView',el).disabled=!selNo;$('#saVoid',el).disabled=!selNo||!!(S.sales.find(s=>s.no===selNo)||{}).void;
+    $('#saView',el).disabled=!selNo;$('#saVoid',el).disabled=!selNo||!!(S.sales.find(s=>s.no===selNo&&s.cashbox===currentCaja())||{}).void;
     $('#saVoid',el).textContent='Anular venta';
   };
   el.addEventListener('click',e=>{
     const tr=e.target.closest('tr[data-no]');
     if(tr){selNo=+tr.dataset.no;armed=0;draw();return;}
-    const s=S.sales.find(x=>x.no===selNo);
+    const s=S.sales.find(x=>x.no===selNo&&x.cashbox===currentCaja());
     if(e.target.id==='saView'&&s){showTicket(s);}
     if(e.target.id==='saVoid'&&s&&!s.void){
+      if(window.SIFERAccess&&typeof window.SIFERAccess.requestPin==='function'&&!window.SIFERAccess.requestPin('Anular factura '+pad(s.no)))return;
       if(!armed||Date.now()-armed>5000){armed=Date.now();e.target.textContent='Confirmar anulación';return;}
       s.void=true;
       s.transType='03-ANUL';
@@ -6527,7 +6528,7 @@ function salesDlg(){
           });
         }
       });
-      S.cxc=(S.cxc||[]).filter(x=>x.saleNo!==s.no);
+      S.cxc=(S.cxc||[]).filter(x=>!(x.saleNo===s.no&&x.cashbox===currentCaja()));
       armed=0;save();renderCatalog();draw();msg('Factura '+pad(s.no)+' anulada. Se devolvió la mercancía al inventario y Kardex.');
     }
   });
@@ -7682,6 +7683,7 @@ function currentCajero(){
 function cajaSeqs(){
   try{return JSON.parse(localStorage.getItem('sifer360_box_sequences')||'{}')||{};}catch(e){return {};}
 }
+function currentCajaInvoice(){const box=currentCaja(),seqs=cajaSeqs();if(!seqs[box])seqs[box]={invoice:1,void:1,refund:1,cxc:1,movement:1,z:1};return Number(seqs[box].invoice)||1;}
 function nextCajaInvoice(){
   const box=currentCaja(),seqs=cajaSeqs();
   if(!seqs[box])seqs[box]={invoice:1,void:1,refund:1,cxc:1,movement:1};
@@ -7775,7 +7777,7 @@ function renderHeader(){
   $('#winTitle').textContent=c.empresa;
   if($('#winSub'))$('#winSub').textContent='Punto de venta · Caja '+c.caja;
   document.title='POS '+c.empresa;
-  $('#fNo').value=pad(S.invoice);
+  $('#fNo').value=pad(currentCajaInvoice());
   $('#fDate').value=fmtDT(Date.now());
   $('#fClient').value=S.client.name;
   $('#fRif').value=S.client.rif;
