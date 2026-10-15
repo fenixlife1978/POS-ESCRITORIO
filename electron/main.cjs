@@ -332,8 +332,23 @@ function registerNetworkIpc() {
       return { ok: true, state: merged, role: 'server', updatedAt: new Date().toISOString() };
     }
     if (networkConfig.role !== 'client' || !networkConfig.host) return { ok: false, state, role: 'standalone', message: 'Esta caja no está conectada a un servidor.' };
-    const endpoint = 'http://' + networkConfig.host + ':' + networkConfig.port + '/api/sync/state';
     const headers = { Authorization: 'Bearer ' + networkConfig.token, 'Content-Type': 'application/json' };
+    const pendingEvents = all("SELECT event_id AS eventId,device_id AS deviceId,device_seq AS deviceSeq,event_type AS eventType,entity_type AS entityType,entity_id AS entityId,occurred_at AS occurredAt,payload FROM local_operation_outbox WHERE status='pending' ORDER BY device_seq LIMIT 500").map(ev => ({ ...ev, payload: JSON.parse(ev.payload) }));
+    if (pendingEvents.length) {
+      const eventResponse = await fetch('http://' + networkConfig.host + ':' + networkConfig.port + '/api/sync/events', {
+        method: 'POST', headers, body: JSON.stringify({ events: pendingEvents }), signal: AbortSignal.timeout(8000)
+      });
+      if (!eventResponse.ok) throw new Error('Servidor rechazó operaciones pendientes (' + eventResponse.status + ').');
+      const eventResult = await eventResponse.json();
+      db.run('BEGIN IMMEDIATE');
+      try {
+        for (const id of [...(eventResult.accepted || []), ...(eventResult.duplicates || [])]) run("UPDATE local_operation_outbox SET status='acked',acked_at=? WHERE event_id=?", [new Date().toISOString(), String(id)]);
+        for (const conflict of (eventResult.conflicts || [])) run("UPDATE local_operation_outbox SET status='conflict' WHERE event_id=?", [String(conflict.eventId)]);
+        db.run('COMMIT');
+      } catch (error) { try { db.run('ROLLBACK'); } catch {} throw error; }
+      persistDb();
+    }
+    const endpoint = 'http://' + networkConfig.host + ':' + networkConfig.port + '/api/sync/state';
     const pushed = await fetch(endpoint, { method: 'POST', headers, body: JSON.stringify({ deviceId: networkConfig.deviceId, state }), signal: AbortSignal.timeout(8000) });
     if (!pushed.ok) throw new Error('Servidor rechazó la sincronización (' + pushed.status + ').');
     const result = await pushed.json();
