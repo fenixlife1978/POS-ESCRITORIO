@@ -982,6 +982,7 @@ function msg(text,kind){
 const IC={
  nueva:'<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M12 11v6M9 14h6"/>',
  buscar:'<circle cx="11" cy="11" r="6"/><path d="M16 16l5 5"/>',
+ ver:'<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',
  cliente:'<circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-4 3.5-6 7-6s7 2 7 6"/>',
  suspender:'<rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>',
  recuperar:'<path d="M4 15v4h16v-4M12 4v10M8 8l4-4 4 4"/>',
@@ -4164,6 +4165,50 @@ function productFormDlg(editCode,initialTab,initialMasterItem){
     onEnter:()=>{},
     onOpen:()=>{renderTab();if(initialMasterItem)applyMasterProduct(initialMasterItem);}
   });
+}
+
+/* ---------- búsqueda general de productos (solo consulta) ---------- */
+function productViewDlg(p){
+  if(!p)return;
+  const pres=Array.isArray(p.presentations)?p.presentations:[];
+  const suppliers=Array.isArray(p.assocSuppliers)?p.assocSuppliers:[];
+  const kit=Array.isArray(p.kitItems)?p.kitItems:[];
+  const tax=prodTaxTag(p);
+  const pricing=p.pricing||{};
+  const gaps=Array.isArray(pricing.gaps)?pricing.gaps:[];
+  const photo=p.photo?'<img src="'+esc(p.photo)+'" alt="Foto de '+esc(p.desc)+'" style="width:112px;height:112px;object-fit:contain;border:1px solid var(--line);border-radius:8px;background:#fff;padding:5px">':'<div style="width:112px;height:112px;display:grid;place-items:center;border:1px solid var(--line);border-radius:8px;color:var(--muted)">'+ico('inventario')+'<span style="font-size:11px">Sin foto</span></div>';
+  const field=(label,value)=>'<div class="pv-field"><span>'+esc(label)+'</span><b>'+esc(value===undefined||value===null||value===''?'-':String(value))+'</b></div>';
+  const section=(title,content)=>'<section class="pv-section"><h3>'+esc(title)+'</h3>'+content+'</section>';
+  let html='<div class="form product-view" style="gap:14px">'+
+    '<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">'+photo+'<div style="flex:1;min-width:220px"><div class="dim">FICHA INFORMATIVA · SOLO LECTURA</div><h2 style="margin:5px 0">'+esc(p.desc||'Producto sin descripción')+'</h2><div class="sub">'+esc(p.brand||'-')+(p.isKit?' · KIT / COMBO':'')+'</div><div style="margin-top:8px"><span class="um-tag">'+esc((p.unit||'und').toUpperCase())+'</span> <span class="iva-tag '+prodTaxCls(p)+'">'+esc(tax)+'</span></div></div></div>'+
+    section('Identificación','<div class="pv-grid">'+field('Código / EAN',p.code)+field('SKU',p.sku)+field('Código OEM',p.oem)+field('Marca',p.brand)+'</div>')+
+    section('Clasificación y ubicación','<div class="pv-grid">'+field('Departamento',p.dept)+field('Categoría',p.cat)+field('Subcategoría',p.subcat)+field('Pasillo / Ubicación',p.loc)+field('Unidad de medida',(p.unit||'und').toUpperCase())+'</div>')+
+    section('Existencias y precios','<div class="pv-grid">'+field('Existencia',fq(Number(p.stock)||0)+' '+(p.unit||'und'))+field('Stock mínimo',fq(Number(p.min)||0))+field('Costo unitario',usd(Number(p.cost)||0))+field('Flete unitario',usd(Number(p.freight)||0))+field('Precio base sin IVA',usd(Number(p.price)||0))+field('Precio con IVA',usd(r2((Number(p.price)||0)*(1+prodTaxRate(p)/100))))+field('Impuesto',tax)+'</div>');
+  if(gaps.length)html+=section('Precios por modalidad','<div class="gridwrap"><table class="grid"><thead><tr><th>Modalidad</th><th class="r">Descuento / brecha</th><th class="r">Precio US$</th></tr></thead><tbody>'+gaps.map(g=>'<tr><td>'+esc(g.name||'-')+'</td><td class="r">'+fq(Number(g.gapPct)||0)+'%</td><td class="r">'+nf(Number(g.price)||0)+'</td></tr>').join('')+'</tbody></table></div>');
+  if(pres.length)html+=section('Presentaciones y códigos asociados','<div class="gridwrap"><table class="grid"><thead><tr><th>Presentación</th><th>U.M.</th><th class="r">Factor</th><th>Código de barras</th><th class="r">Precio US$</th></tr></thead><tbody>'+pres.map(pr=>'<tr><td>'+esc(pr.name||'-')+'</td><td>'+esc(pr.unit||p.unit||'und')+'</td><td class="r">'+fq(Number(pr.factor)||1)+'</td><td class="mono">'+esc(pr.barcode||'-')+'</td><td class="r">'+nf(Number(pr.price)||0)+'</td></tr>').join('')+'</tbody></table></div>');
+  if(suppliers.length)html+=section('Proveedores asociados','<div class="gridwrap"><table class="grid"><thead><tr><th>RIF</th><th>Proveedor</th><th>Código proveedor</th><th class="r">Costo US$</th><th>Notas</th></tr></thead><tbody>'+suppliers.map(a=>'<tr><td>'+esc(a.rif||'-')+'</td><td>'+esc(a.name||'-')+'</td><td class="mono">'+esc(a.barcode||'-')+'</td><td class="r">'+nf(Number(a.cost)||0)+'</td><td>'+esc(a.notes||'-')+'</td></tr>').join('')+'</tbody></table></div>');
+  if(p.isKit)html+=section('Componentes del kit / combo','<div class="gridwrap"><table class="grid"><thead><tr><th>Código</th><th>Producto</th><th class="r">Cantidad</th></tr></thead><tbody>'+kit.map(k=>{const cp=prod(k.code);return '<tr><td class="mono">'+esc(k.code||'-')+'</td><td>'+esc(cp?cp.desc:(k.desc||'Producto'))+'</td><td class="r">'+fq(Number(k.qty)||0)+'</td></tr>';}).join('')+'</tbody></table></div>');
+  html+='</div>';
+  const style='<style>.product-view .pv-section{border:1px solid var(--line);border-radius:8px;padding:11px;display:grid;gap:9px}.product-view .pv-section h3{margin:0;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}.product-view .pv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:9px}.product-view .pv-field{display:flex;flex-direction:column;gap:3px;min-width:0}.product-view .pv-field span{font-size:11px;color:var(--muted)}.product-view .pv-field b{font-size:13px;overflow-wrap:anywhere}</style>';
+  openWin({title:'Ficha informativa del producto',w:820,body:h(style+html),foot:[{label:'Cerrar',primary:true}]});
+}
+function searchCatalogDlg(){
+  const el=h('<div class="form" style="gap:10px"><label for="catalogSearchQ">Buscar por código, SKU, descripción, marca, departamento, categoría o ubicación</label><input class="fld big" id="catalogSearchQ" autocomplete="off" placeholder="Escriba para ver productos coincidentes…"><div class="dim" id="catalogSearchSummary">Escriba para buscar en el inventario.</div><div class="gridwrap tallwrap"><table class="grid" style="min-width:850px"><thead><tr><th>Código / SKU</th><th>Producto / Marca</th><th>Departamento / Categoría</th><th class="r">Existencia</th><th class="r">Precio US$</th><th class="c">Ver</th></tr></thead><tbody id="catalogSearchBody"><tr class="empty"><td colspan="6">Escriba un término de búsqueda.</td></tr></tbody></table></div><div class="hint">Use el botón con el ojo para consultar la ficha completa. Esta ventana no permite editar ni agregar productos a la venta.</div></div>');
+  const input=$('#catalogSearchQ',el);
+  const draw=()=>{
+    const q=input.value.trim();
+    const list=q?searchProducts(q,'Todas'): [];
+    $('#catalogSearchSummary',el).textContent=q?(list.length+' producto(s) coincidente(s)'+(list.length>200?' · Mostrando los primeros 200':'')+'.'):'Escriba para buscar en el inventario.';
+    $('#catalogSearchBody',el).innerHTML=list.length?list.slice(0,200).map(p=>'<tr><td class="mono"><b>'+esc(p.sku||p.code)+'</b><div class="sub">EAN: '+esc(p.code)+'</div></td><td>'+(p.photo?'<img class="thumb-sm" src="'+esc(p.photo)+'" alt="">':'')+'<b>'+esc(p.desc)+'</b><div class="sub">'+esc(p.brand||'-')+'</div></td><td>'+esc(p.dept||'-')+'<div class="sub">'+esc(p.cat||'-')+' › '+esc(p.subcat||'-')+'</div></td><td class="r '+stockCls(p)+'">'+fq(Number(p.stock)||0)+' '+esc(p.unit||'und')+'</td><td class="r">'+nf(Number(p.price)||0)+'</td><td class="c"><button class="btn mini2" data-view="'+esc(p.code)+'" title="Ver ficha informativa de '+esc(p.desc)+'" aria-label="Ver ficha de '+esc(p.desc)+'">'+ico('ver')+'</button></td></tr>').join(''):'<tr class="empty"><td colspan="6">'+(q?'No se encontraron productos coincidentes.':'Escriba un término de búsqueda.')+'</td></tr>';
+  };
+  input.addEventListener('input',draw);
+  el.addEventListener('click',e=>{
+    const b=e.target.closest('[data-view]');
+    if(!b)return;
+    const p=prod(b.dataset.view);
+    if(p)productViewDlg(p);
+  });
+  openWin({title:'Buscar productos',w:980,body:el,foot:[{label:'Cerrar',primary:true}],onEnter:()=>draw(),onOpen:()=>input.focus()});
 }
 
 /* ---------- inventario ---------- */
@@ -7610,7 +7655,7 @@ function openMenu(){
   const first=$('.mi',m);if(first)first.focus();
 }
 const TB=[
- ['nueva','Nueva','F2',newSale],['buscar','Buscar','F3',focusEntry],['cliente','Cliente','F4',clientDlg],
+ ['nueva','Nueva','F2',newSale],['buscar','Buscar','F3',searchCatalogDlg],['cliente','Cliente','F4',clientDlg],
  ['suspender','Suspender','F5',suspend],['recuperar','Recuperar','F6',recoverDlg],['descuento','Descuento','F7',discountDlg],['quitar','Quitar','Supr',removeSel],
  '-',['inventario','Inventario','F8',inventoryDlg],['conteo','Conteo','F11',()=>conteoDlg()],['kardex','Kardex','',()=>kardexDlg()],
  '-',['compras','Compras','F10',()=>comprasDlg('new')],['cxc','CxC','',()=>cxcDlg()],['cxp','CxP','',()=>cxpDlg()],['divisas','USD/Zelle','',()=>divisasDlg()],['cashea','Cashea','',()=>casheaDlg()],
