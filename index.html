@@ -919,6 +919,7 @@ function save(){
     localStorage.setItem(KEY,JSON.stringify({
       v:1,cfg:S.cfg,products:S.products,clients:S.clients,suppliers:S.suppliers,
       sales:S.sales,held:S.held,purchases:S.purchases,cxc:S.cxc,cxp:S.cxp,
+      casheaTransactions:S.casheaTransactions||[],casheaSettlements:S.casheaSettlements||[],
       kardex:S.kardex,counts:S.counts,lotesSudeban:S.lotesSudeban,retencionesIva:S.retencionesIva,cambiosDivisas:S.cambiosDivisas,
       invoice:S.invoice,purchaseSeq:S.purchaseSeq,countSeq:S.countSeq
     }));
@@ -975,6 +976,7 @@ function load(){
     if(Array.isArray(d.purchases))S.purchases=d.purchases;
     if(Array.isArray(d.cxc))S.cxc=d.cxc;
     if(Array.isArray(d.cxp))S.cxp=d.cxp;
+    S.casheaTransactions=Array.isArray(d.casheaTransactions)?d.casheaTransactions:[];S.casheaSettlements=Array.isArray(d.casheaSettlements)?d.casheaSettlements:[];
     if(Array.isArray(d.kardex)&&d.kardex.length)S.kardex=d.kardex;
     if(Array.isArray(d.counts))S.counts=d.counts;
     if(Array.isArray(d.lotesSudeban))S.lotesSudeban=d.lotesSudeban;
@@ -1092,6 +1094,7 @@ const IC={
  cxc:'<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 9h2M16 15h2"/>',
  cxp:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10h10M7 14h6"/><path d="M18 3l3 3-3 3"/>',
  ventas:'<path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 8h6M9 12h6"/>',
+ cashea:'<path d="M12 3v18M17 7H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
  tasa:'<path d="M4 8h13M13 4l4 4-4 4M20 16H7M11 12l-4 4 4 4"/>',
  seniat:'<path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z"/><path d="M9 12l2 2 4-4"/>',
  divisas:'<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>'
@@ -5705,6 +5708,27 @@ function divisasDlg(filterType){
 
 
 /* ---------- cobro (con soporte de Crédito / CxC) ---------- */
+
+/* Cashea: ventas financiadas, auxiliar y liquidaciones */
+function chInit(){if(!Array.isArray(S.casheaTransactions))S.casheaTransactions=[];if(!Array.isArray(S.casheaSettlements))S.casheaSettlements=[];}
+function chMoney(n){return usd(r2(n||0));}
+function chDetail(x){openWin({title:'Detalle Cashea · '+x.casheaOrderId,w:760,body:h('<div class="form"><h3>Factura '+esc(x.invoiceNo)+' · '+esc(x.casheaOrderId)+'</h3><div class="kpis"><div class="kpi"><span>Venta fiscal 100%</span><b>'+chMoney(x.totalSaleAmountUsd)+'</b></div><div class="kpi"><span>Inicial en caja</span><b>'+chMoney(x.initialPaidUsd)+'</b><small>'+esc(x.initialMethodName)+' · Ref. '+esc(x.initialRef)+'</small></div><div class="kpi"><span>Financiado</span><b>'+chMoney(x.financedAmountUsd)+'</b></div><div class="kpi"><span>Comisión</span><b>'+chMoney(x.commissionUsd)+'</b><small>'+nf(x.commissionPct)+'%</small></div><div class="kpi"><span>Neto esperado/recibido</span><b>'+chMoney(x.netSettledAmountUsd)+'</b><small>Ref. banco: '+esc(x.bankDepositRef||'Pendiente')+'</small></div></div><p><b>Cliente:</b> '+esc(x.clientName)+' · '+esc(x.clientRif)+' · <b>Estado:</b> '+(x.status==='SETTLED'?'LIQUIDADO':'PENDIENTE')+'</p>'+(x.status==='SETTLED'?'<p><b>Lote:</b> '+esc(x.settlementId)+' · <b>Fecha:</b> '+fmtD(x.settlementDate)+' · <b>Comisión real:</b> '+chMoney(x.actualCommissionUsd)+'</p>':'<p class="hint">Pendiente de depósito bancario.</p>')+'</div>'),foot:[{label:'Cerrar',primary:true}]});}
+function chSettle(){
+ chInit();const pending=S.casheaTransactions.filter(x=>x.status==='PENDING');if(!pending.length){msg('No hay órdenes Cashea pendientes.');return;}
+ const chosen=new Set(pending.map(x=>x.id));
+ const el=h('<div class="form"><div class="f"><label for="chBankRef">Referencia bancaria *</label><input class="fld" id="chBankRef" placeholder="Banco / referencia de depósito"></div><div class="f"><label for="chDate">Fecha de liquidación *</label><input class="fld" id="chDate" type="date" value="'+new Date().toISOString().slice(0,10)+'"></div><div class="gridwrap invwrap"><table class="grid"><thead><tr><th>Incluir</th><th>Orden / factura</th><th class="r">Financiado US$</th><th class="r">Comisión %</th></tr></thead><tbody>'+pending.map(x=>'<tr><td><input type="checkbox" data-chsel="'+esc(x.id)+'" checked></td><td>'+esc(x.casheaOrderId)+' · '+esc(x.invoiceNo)+'</td><td class="r">'+nf(x.financedAmountUsd)+'</td><td class="r"><input class="fld r" style="width:78px" type="number" min="0" max="100" step=".01" data-chpct="'+esc(x.id)+'" value="'+nf(x.commissionPct)+'"></td></tr>').join('')+'</tbody></table></div><div id="chSummary" class="kpis"></div><p class="hint">Registre solo abonos realmente recibidos. El lote documenta el cruce, no consulta automáticamente el banco.</p></div>');
+ const summary=()=>{let g=0,c=0;pending.forEach(x=>{if(chosen.has(x.id)){g+=x.financedAmountUsd;const i=$('[data-chpct="'+x.id+'"]',el);c+=x.financedAmountUsd*Math.max(0,Math.min(100,pn(i?i.value:x.commissionPct)))/100;}});$('#chSummary',el).innerHTML='<div class="kpi"><span>Bruto</span><b>'+chMoney(g)+'</b></div><div class="kpi"><span>Comisión</span><b>'+chMoney(c)+'</b></div><div class="kpi"><span>Neto esperado</span><b>'+chMoney(g-c)+'</b></div>';};
+ el.addEventListener('change',e=>{const c=e.target.closest('[data-chsel]');if(c){if(c.checked)chosen.add(c.dataset.chsel);else chosen.delete(c.dataset.chsel);}summary();});el.addEventListener('input',e=>{if(e.target.matches('[data-chpct]'))summary();});
+ openWin({title:'Cashea · Liquidación bancaria por lote',w:850,body:el,foot:[{label:'Cancelar'},{label:'Confirmar liquidación',primary:true,fn:()=>{const ref=$('#chBankRef',el).value.trim(),date=$('#chDate',el).value;if(!ref||!date||!chosen.size){msg('Indique referencia, fecha y órdenes.','bad');return false;}const items=pending.filter(x=>chosen.has(x.id));let gross=0,comm=0;items.forEach(x=>{const i=$('[data-chpct="'+x.id+'"]',el);x.commissionPct=Math.max(0,Math.min(100,pn(i?i.value:x.commissionPct)));x.actualCommissionUsd=x.commissionUsd=r2(x.financedAmountUsd*x.commissionPct/100);x.netSettledAmountUsd=r2(x.financedAmountUsd-x.commissionUsd);gross+=x.financedAmountUsd;comm+=x.commissionUsd;});const id='CSH-LIQ-'+String(S.casheaSettlements.length+1).padStart(5,'0'),ts=new Date(date+'T12:00:00').getTime();S.casheaSettlements.push({id,bankDepositRef:ref,settlementDate:ts,grossDepositUsd:r2(gross),commissionUsd:r2(comm),netSettledAmountUsd:r2(gross-comm),transactionIds:items.map(x=>x.id),createdAt:Date.now(),status:'SETTLED'});items.forEach(x=>{x.status='SETTLED';x.settlementId=id;x.settlementDate=ts;x.bankDepositRef=ref;x.updatedAt=Date.now();});save();closeWin();casheaDlg();msg('Lote '+id+' registrado. Neto esperado '+chMoney(gross-comm)+'.');return false;}}],onOpen:summary});
+}
+function casheaDlg(){
+ chInit();let state='PENDING',query='';
+ const el=h('<div class="form"><div class="kpis" id="chKpis"></div><div class="invbar"><label for="chState">Estado</label><select class="fld" id="chState"><option value="PENDING">Pendientes</option><option value="SETTLED">Liquidados</option><option value="ALL">Todos</option></select><label for="chQuery">Buscar</label><input class="fld" id="chQuery" placeholder="Orden, factura, cliente, referencia"><button class="btn mini2" id="chLiquidate">Registrar liquidación</button></div><div class="gridwrap invwrap"><table class="grid" style="min-width:920px"><thead><tr><th>Orden</th><th>Factura</th><th>Cliente</th><th class="r">Venta US$</th><th class="r">Inicial</th><th class="r">Financiado</th><th class="r">Comisión</th><th class="r">Neto</th><th>Estado</th><th>Detalle</th></tr></thead><tbody id="chBody"></tbody></table></div><p class="hint">La factura y la salida de inventario se registran por el 100%. El saldo financiado se administra aquí y no se mezcla con la CxC comercial.</p></div>');
+ const draw=()=>{const a=S.casheaTransactions,p=a.filter(x=>x.status==='PENDING'),d=a.filter(x=>x.status==='SETTLED');$('#chKpis',el).innerHTML='<div class="kpi"><span>Órdenes pendientes</span><b>'+p.length+'</b><small>'+chMoney(p.reduce((n,x)=>n+x.financedAmountUsd,0))+'</small></div><div class="kpi"><span>Liquidadas</span><b>'+d.length+'</b><small>'+chMoney(d.reduce((n,x)=>n+x.netSettledAmountUsd,0))+'</small></div><div class="kpi"><span>Comisiones pendientes</span><b>'+chMoney(p.reduce((n,x)=>n+x.commissionUsd,0))+'</b></div>';const q=norm(query),list=a.filter(x=>(state==='ALL'||x.status===state)&&(!q||norm([x.casheaOrderId,x.invoiceNo,x.clientName,x.clientRif,x.bankDepositRef].join(' ')).includes(q))).sort((x,y)=>y.createdAt-x.createdAt);$('#chBody',el).innerHTML=list.length?list.map(x=>'<tr><td>'+esc(x.casheaOrderId)+'</td><td>'+esc(x.invoiceNo)+'</td><td>'+esc(x.clientName)+'</td><td class="r">'+chMoney(x.totalSaleAmountUsd)+'</td><td class="r">'+chMoney(x.initialPaidUsd)+'</td><td class="r">'+chMoney(x.financedAmountUsd)+'</td><td class="r">'+chMoney(x.commissionUsd)+' ('+nf(x.commissionPct)+'%)</td><td class="r">'+chMoney(x.netSettledAmountUsd)+'</td><td>'+(x.status==='SETTLED'?'LIQUIDADO':'PENDIENTE')+'</td><td><button class="btn mini2" data-chview="'+esc(x.id)+'">👁️</button></td></tr>').join(''):'<tr class="empty"><td colspan="10">Sin operaciones para este filtro.</td></tr>';$('#chLiquidate',el).disabled=!p.length;};
+ el.addEventListener('input',e=>{if(e.target.id==='chQuery'){query=e.target.value;draw();}});el.addEventListener('change',e=>{if(e.target.id==='chState'){state=e.target.value;draw();}});el.addEventListener('click',e=>{const v=e.target.closest('[data-chview]');if(v){const x=S.casheaTransactions.find(z=>z.id===v.dataset.chview);if(x)chDetail(x);}if(e.target.id==='chLiquidate')chSettle();});
+ openWin({title:'Cashea · Cuentas por liquidar',w:1080,body:el,foot:[{label:'Exportar CSV',left:true,fn:()=>{const rows=[['Orden','Factura','Cliente','Venta USD','Inicial USD','Financiado USD','Comisión USD','Neto USD','Estado','Ref. bancaria']];S.casheaTransactions.forEach(x=>rows.push([x.casheaOrderId,x.invoiceNo,x.clientName,x.totalSaleAmountUsd,x.initialPaidUsd,x.financedAmountUsd,x.commissionUsd,x.netSettledAmountUsd,x.status,x.bankDepositRef||'']));downloadBlob('cashea-liquidaciones.csv',rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n'));return false;}},{label:'Cerrar',primary:true}],onOpen:draw});
+}
+
 function payDlg(){
   if(!S.cart.length){msg('Agregue productos antes de cobrar.','bad');return;}
   const t=totals(),rate=S.cfg.rate;
@@ -5721,6 +5745,7 @@ function payDlg(){
     '</tr>';
   }).join('');
   const el=h('<div class="form"><div class="paytop"><div class="lcd"><div class="lcd-label">TOTAL FACTURA</div><div class="lcd-bs">'+bsf(t.total*rate)+'</div><div class="lcd-usd">'+usd(t.total)+'</div></div><table class="sumt"><thead><tr><th>Concepto</th><th class="r">US$</th><th class="r">Bs.</th></tr></thead><tbody id="payRes"></tbody></table></div>'+
+    '<div class="invbar" style="background:var(--alt);padding:5px 8px;border:1px solid var(--lo);margin-bottom:8px"><label class="chk"><input type="checkbox" id="payCasheaChk"> Venta financiada por Cashea</label><span class="hint">Factura fiscal por el 100%; saldo diferido.</span></div><div id="payCasheaFields" hidden style="border:1px solid var(--lo);border-radius:6px;padding:8px;margin-bottom:8px"><div class="formgrid"><div class="f"><label for="chOrder">Orden Cashea *</label><input class="fld mono" id="chOrder" placeholder="CSH-992140"></div><div class="f"><label for="chPct">Inicial (%)</label><input class="fld" id="chPct" type="number" min="1" max="99.99" step=".01" value="40"></div><div class="f"><label for="chMethod">Medio de la inicial</label><select class="fld" id="chMethod"><option value="pmovil">Pago móvil</option><option value="transf">Transferencia Bs.</option><option value="punto">Punto de venta TDD/TDC</option><option value="biopago">Biopago</option><option value="efBs">Efectivo Bs.</option><option value="efUSD">Divisas US$</option><option value="zelle">Zelle</option></select></div><div class="f"><label for="chRef">Referencia inicial *</label><input class="fld mono" id="chRef" placeholder="Referencia de pago"></div><div class="f"><label for="chComm">Comisión estimada (%)</label><input class="fld" id="chComm" type="number" min="0" max="100" step=".01" value="8"></div></div><div class="kpis" id="chPreview"></div><p class="hint">Inicial calculada sobre el total fiscal con IVA; comisión estimada sobre el saldo financiado.</p></div>'+
     '<div class="invbar" style="background:var(--alt);padding:5px 8px;border:1px solid var(--lo)">'+
       '<label class="chk"><input type="checkbox" id="payCreditChk"> Enviar saldo pendiente a <b>Cuentas por Cobrar (CxC)</b></label>'+
       '<span id="payCreditDaysWrap" class="row" style="margin-left:auto" hidden><label for="payCreditDays">Plazo crédito (días):</label><input class="fld r" id="payCreditDays" value="15" style="width:64px" inputmode="numeric"></span>'+
@@ -5729,22 +5754,27 @@ function payDlg(){
   const amts=()=>{const o={};METHODS.forEach(m=>{o[m.id]=pn($('#pm-'+m.id,el).value);});return o;};
   const refs=()=>{const o={};METHODS.forEach(m=>{const inp=$('#pref-'+m.id,el);o[m.id]=inp?inp.value.trim():'';});return o;};
   let last=null;
+  const chOn=()=>$('#payCasheaChk',el).checked;
+  const chData=()=>({orderId:$('#chOrder',el).value.trim(),pct:Math.max(1,Math.min(99.99,pn($('#chPct',el).value)||40)),method:$('#chMethod',el).value,ref:$('#chRef',el).value.trim(),commissionPct:Math.max(0,Math.min(100,pn($('#chComm',el).value)||0))});
   const upd=()=>{
+    const ch=chOn();if(ch){const c=chData(),m=METHODS.find(x=>x.id===c.method),ini=r2(t.total*c.pct/100);METHODS.forEach(x=>{const inp=$('#pm-'+x.id,el);if(inp){inp.disabled=x.id!==c.method;if(x.id!==c.method)inp.value='';}});const inp=$('#pm-'+c.method,el);if(inp)inp.value=nf(m.cur==='USD'?r2(ini*(1+IGTF)):r2(ini*rate));}
     const st=calcPay(t.total,rate,amts());last=st;
-    const isCred=$('#payCreditChk',el).checked;
+    const isCred=$('#payCreditChk',el).checked&&!ch;$('#payCreditChk',el).disabled=ch;$('#payCreditDaysWrap',el).hidden=!isCred;
+    if(ch){const c=chData(),ini=r2(t.total*c.pct/100),fin=r2(t.total-ini),com=r2(fin*c.commissionPct/100);$('#chPreview',el).innerHTML='<div class="kpi"><span>Factura total</span><b>'+usd(t.total)+'</b><small>'+bsf(t.total*rate)+'</small></div><div class="kpi"><span>Inicial</span><b>'+usd(ini)+'</b><small>'+bsf(ini*rate)+'</small></div><div class="kpi"><span>Financiado</span><b>'+usd(fin)+'</b><small>'+bsf(fin*rate)+'</small></div><div class="kpi"><span>Comisión / neto</span><b>'+usd(com)+'</b><small>Neto '+usd(fin-com)+'</small></div>';}
     $('#payCreditDaysWrap',el).hidden=!isCred;
     const row=(c,a,cls,tot)=>'<tr class="'+(cls||'')+(tot?' tot':'')+'"><td>'+c+'</td><td class="r">'+nf(a)+'</td><td class="r">'+nf(a*rate)+'</td></tr>';
     let html=row('Total factura',t.total)+row('IGTF 3 % (divisas)',st.igtf)+row('Total a cobrar',st.due,'',true);
-    if(st.pending>=0.01){
+    if(ch){const c=chData(),fin=r2(t.total*(1-c.pct/100));html+=row('Inicial cobrada hoy',t.total*c.pct/100,'good')+row('Saldo financiado Cashea',fin,'warn')+row('Comisión estimada',fin*c.commissionPct/100)+row('Neto esperado de Cashea',fin*(1-c.commissionPct/100),'good');}
+    else if(st.pending>=0.01){
       html+=row(isCred?'Saldo a Cuentas por Cobrar (CxC)':'Falta por cobrar',st.pending,isCred?'good':'warn');
     }
     else if(st.change>=0.01)html+=row('Vuelto al cliente',st.change,'good');
     else html+='<tr class="good"><td colspan="3">Saldo cubierto. Puede confirmar el cobro.</td></tr>';
     $('#payRes',el).innerHTML=html;
-    const b=$('#btnConfirm');if(b)b.disabled=!(st.pending<0.01||isCred);
+    const b=$('#btnConfirm');if(b)b.disabled=ch?false:!(st.pending<0.01||isCred);
   };
-  el.addEventListener('input',e=>{if(e.target.matches('.pin'))upd();});
-  el.addEventListener('change',e=>{if(e.target.id==='payCreditChk')upd();});
+  el.addEventListener('input',e=>{if(e.target.matches('.pin')||['chPct','chComm'].includes(e.target.id))upd();});
+  el.addEventListener('change',e=>{if(e.target.id==='payCreditChk')upd();if(e.target.id==='payCasheaChk'){const on=e.target.checked;$('#payCasheaFields',el).hidden=!on;$('#payCreditChk',el).checked=false;upd();}if(['chPct','chComm','chMethod'].includes(e.target.id))upd();});
   el.addEventListener('click',e=>{
     const b=e.target.closest('[data-fill]');if(!b)return;
     const m=METHODS.find(x=>x.id===b.dataset.fill),inp=$('#pm-'+m.id,el);
@@ -5755,19 +5785,20 @@ function payDlg(){
   });
   openWin({title:'Cobrar factura '+pad(S.invoice),w:760,body:el,
     foot:[{label:'Cancelar'},{id:'btnConfirm',label:'Confirmar cobro',primary:true,fn:()=>{
-      const isCred=$('#payCreditChk',el).checked;
-      if(!last||(last.pending>=0.01&&!isCred))return false;
+      const ch=chOn(),cd=chData(),isCred=$('#payCreditChk',el).checked&&!ch;
+      if(ch&&(!cd.orderId||!cd.ref)){msg('Indique la orden Cashea y la referencia del pago inicial.','bad');return false;}
+      if(!last||(last.pending>=0.01&&!isCred&&!ch))return false;
       if(isCred&&last.pending>=0.01&&S.client.rif==='V-00000000'){
         msg('Para ventas a crédito (CxC), seleccione o registre primero el cliente (F4).','bad');
         return false;
       }
       const cDays=Math.max(1,Math.round(pn($('#payCreditDays',el).value)||15));
-      finalize(last,amts(),isCred,cDays,refs());return false;
+      const paymentRefs=refs();if(ch)paymentRefs[cd.method]=cd.ref;finalize(last,amts(),isCred,cDays,paymentRefs,ch?cd:null);return false;
     }}],
     onOpen:()=>{upd();$('#pm-efUSD',el).focus();}});
 }
 
-function finalize(st,amts,isCred,cDays,refs){
+function finalize(st,amts,isCred,cDays,refs,cashea){
   const t=totals(), ts=Date.now(), invNo=S.invoice;
   const lines=S.cart.map(l=>{
     const i=lineInfo(l);
@@ -5792,7 +5823,7 @@ function finalize(st,amts,isCred,cDays,refs){
     amount:r2(amts[m.id]),
     ref:(refs&&refs[m.id])||''
   }));
-  const creditAmt=(isCred&&st.pending>=0.01)?r2(st.pending):0;
+  const creditAmt=(!cashea&&isCred&&st.pending>=0.01)?r2(st.pending):0;
   if(creditAmt>0){
     pays.push({id:'credito',name:'Crédito CxC ('+cDays+' días)',cur:'USD',amount:creditAmt});
   }
@@ -5830,7 +5861,9 @@ function finalize(st,amts,isCred,cDays,refs){
       payments:paidUpfront>0?[{ts,method:'Pago inicial en caja',cur:'USD',amountUsd:paidUpfront,amountBs:r2(paidUpfront*S.cfg.rate),ref:'FAC-'+pad(invNo),note:'Abono en caja al facturar'}]:[]
     });
   }
-  S.sales.push(sale);S.invoice++;S.cart=[];S.sel=-1;S.client=S.clients[0];
+  S.sales.push(sale);
+  if(cashea){chInit();const ini=r2(Math.max(0,t.total-st.pending)),fin=r2(Math.max(0,st.pending)),com=r2(fin*cashea.commissionPct/100),m=METHODS.find(x=>x.id===cashea.method),ip=(sale.pays||[]).find(x=>x.id===cashea.method);const tx={id:'CSH-TXN-'+String(S.casheaTransactions.length+1).padStart(6,'0'),orderId:'FAC-'+pad(invNo),casheaOrderId:cashea.orderId,totalSaleAmountUsd:r2(t.total),initialPaidUsd:ini,financedAmountUsd:fin,commissionPct:cashea.commissionPct,commissionUsd:com,netSettledAmountUsd:r2(fin-com),status:'PENDING',settlementDate:null,bankDepositRef:null,createdAt:ts,updatedAt:ts,saleNo:invNo,invoiceNo:'FAC-'+pad(invNo),clientName:S.client.name,clientRif:S.client.rif,rate:S.cfg.rate,initialMethodId:cashea.method,initialMethodName:m?m.name:cashea.method,initialRef:cashea.ref,initialPaymentAmount:ip?ip.amount:0,initialPaymentCurrency:m?m.cur:'VES',financedPct:r2(fin/t.total*100),grossDepositUsd:fin,actualCommissionUsd:com};S.casheaTransactions.push(tx);sale.casheaTransactionId=tx.id;sale.casheaOrderId=cashea.orderId;sale.casheaFinancedAmountUsd=fin;}
+  S.invoice++;S.cart=[];S.sel=-1;S.client=S.clients[0];
   save();renderAll();
   msg('Factura '+pad(sale.no)+' procesada por '+usd(r2(sale.total+sale.igtf))+(creditAmt>0?' (Saldo a CxC: '+usd(creditAmt)+')':'')+'.');
   showTicket(sale);
@@ -7120,7 +7153,7 @@ const TB=[
  ['suspender','Suspender','F5',suspend],['recuperar','Recuperar','F6',recoverDlg],['descuento','Descuento','F7',discountDlg],['quitar','Quitar','Supr',removeSel],
  '-',['inventario','Inventario','F8',inventoryDlg],['conteo','Conteo','F11',()=>conteoDlg()],['kardex','Kardex','',()=>kardexDlg()],
  '-',['compras','Compras','F10',()=>comprasDlg('new')],['cxc','CxC','',()=>cxcDlg()],['cxp','CxP','',()=>cxpDlg()],['divisas','USD/Zelle','',()=>divisasDlg()],
- '-',['ventas','Ventas día','F9',salesDlg],['seniat','Fiscal','',()=>seniatSudebanDlg()],['tasa','Tasa','',()=>cfgDlg('cRate')]
+ '-',['ventas','Ventas día','F9',salesDlg],['cashea','Cashea','',casheaDlg],['seniat','Fiscal','',()=>seniatSudebanDlg()],['tasa','Tasa','',()=>cfgDlg('cRate')]
 ];
 function buildChrome(){
   $('#toolbar').innerHTML=TB.map(t=>t==='-'?'<span class="tsep"></span>':'<button class="tb" data-tb="'+t[0]+'" title="'+esc(t[1])+(t[2]?' ('+t[2]+')':'')+'">'+ico(t[0])+'<b>'+esc(t[1])+'</b><kbd>'+esc(t[2]||' ')+'</kbd>'+(t[0]==='recuperar'?'<span class="badge" id="heldBadge" hidden></span>':'')+(t[0]==='conteo'?'<span class="badge warn" id="conteoBadge" hidden></span>':'')+'</button>').join('');
