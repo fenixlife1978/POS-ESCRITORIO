@@ -66,3 +66,21 @@ test('la interfaz permite encontrar automáticamente la IP actual del servidor',
   assert.ok(ui.includes('networkDiscover()'));
   assert.ok(ui.includes('No hace falta configurar IP fija'));
 });
+
+test('la cola de operaciones tiene UUID, secuencia por dispositivo y estado de acuse', () => {
+  assert.match(electron, /CREATE TABLE IF NOT EXISTS local_operation_outbox/);
+  assert.match(electron, /UNIQUE\(device_id, device_seq\)/);
+  assert.match(electron, /crypto\.randomUUID\(\)/);
+  assert.match(electron, /network:operation-create/);
+  assert.match(electron, /network:operation-pending/);
+  assert.match(electron, /status='acked'/);
+});
+
+test('el servidor recibe operaciones idempotentes y detecta colisiones de secuencia', () => {
+  assert.match(electron, /\/api\/sync\/events/);
+  assert.match(electron, /CREATE TABLE IF NOT EXISTS network_received_operations/);
+  assert.match(electron, /device-sequence-already-used/);
+  assert.match(electron, /eventResult\.duplicates/);
+  assert.match(preload, /networkCreateOperation/);
+  assert.match(preload, /networkOperationStatus/);
+});
