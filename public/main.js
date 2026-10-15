@@ -249,7 +249,7 @@ function seed(){
   S={
     cfg:{
       empresa:'Autopartes El Pistón, C.A.',rif:'J-40123456-8',dir:'Av. Intercomunal, Local 12',cajero:'Mariela G.',caja:'01',rate:480,ticketFont:'ibm',ticketSize:'12',ticketBold:false,
-      fiscalTipo:'FORMA_LIBRE',contribEspecial:true,retIvaPct:75,provEspecial:'SNAT/2023/000412',
+      fiscalTipo:'FORMA_LIBRE',contribEspecial:false,retencionHabilitadaConfirmada:false,retIvaPct:75,provEspecial:'',
       ctrlPrefix:'00-',ctrlNext:1043,ctrlRangoDesde:'00-00000001',ctrlRangoHasta:'00-00050000',
       imprentaRif:'J-31009988-4',imprentaAut:'SENIAT/DAF/2022/981',serialFiscal:'Z4A7719204'
     },
@@ -873,9 +873,10 @@ function load(){
     if(Array.isArray(d.cambiosDivisas))S.cambiosDivisas=d.cambiosDivisas;
     else if(!S.cambiosDivisas)S.cambiosDivisas=[];
     if(!S.cfg.fiscalTipo)S.cfg.fiscalTipo='FORMA_LIBRE';
-    if(S.cfg.contribEspecial===undefined)S.cfg.contribEspecial=true;
+    if(S.cfg.contribEspecial===undefined)S.cfg.contribEspecial=false;
+    if(S.cfg.retencionHabilitadaConfirmada===undefined)S.cfg.retencionHabilitadaConfirmada=false;
     if(!S.cfg.retIvaPct)S.cfg.retIvaPct=75;
-    if(!S.cfg.provEspecial)S.cfg.provEspecial='SNAT/2023/000412';
+    if(!S.cfg.provEspecial)S.cfg.provEspecial='';
     if(!S.cfg.ctrlPrefix)S.cfg.ctrlPrefix='00-';
     if(!S.cfg.ctrlNext)S.cfg.ctrlNext=1043;
     if(!S.cfg.ctrlRangoDesde)S.cfg.ctrlRangoDesde='00-00000001';
@@ -4527,8 +4528,8 @@ function comprasDlg(initialTab){
     const iva=applyIva?r2(base*IVA):0;
     const total=r2(base+iva);
     const dueTs=ts+creditDays*86400000;
-    const retPct=Number(S.cfg.retIvaPct)||75;
-    const aplicarRetencion=!!(applyIva&&iva>0&&S.cfg.contribEspecial&&sup.retieneIva===true);
+    const retPct=75; /* Por defecto legal ordinario; los casos especiales al 100% se documentan aparte para revisión del contador. */
+    const aplicarRetencion=!!(applyIva&&iva>0&&S.cfg.contribEspecial&&S.cfg.retencionHabilitadaConfirmada===true&&sup.retieneIva===true);
     const retUsd=aplicarRetencion?r2(iva*(retPct/100)):0;
     const retBs=r2(retUsd*S.cfg.rate);
     const payableTotal=r2(Math.max(0,total-retUsd));
@@ -4544,7 +4545,8 @@ function comprasDlg(initialTab){
       S.retencionesIva.push({
         id:retDoc,ts,periodo,supplier:Object.assign({},sup),purchaseNo:no,docProv,
         ctrlProv:comp.ctrlProv,base,iva,pct:retPct,rate:S.cfg.rate,
-        retainedUsd:retUsd,retainedBs:retBs
+        retainedUsd:retUsd,retainedBs:retBs,
+        estado:'Pendiente de revisión del contador',declarada:false,pagada:false,comprobanteEntregado:false,observaciones:''
       });
     }
     S.purchases.push(comp);
@@ -6562,7 +6564,7 @@ function printFiscalReport(title,html){
       '<div>'+
         '<h2 style="margin:0;font-size:16px;text-transform:uppercase">'+esc(S.cfg.empresa)+'</h2>'+
         '<div style="font-size:11.5px"><b>RIF:</b> '+esc(S.cfg.rif)+' &middot; <b>Domicilio Fiscal:</b> '+esc(S.cfg.dir||'No especificado')+'</div>'+
-        '<div style="font-size:11.5px"><b>Condición:</b> '+(S.cfg.contribEspecial?'Sujeto Pasivo Especial (Agente Retención IVA '+S.cfg.retIvaPct+'%)':'Contribuyente Ordinario')+' &middot; <b>Prov:</b> '+esc(S.cfg.provEspecial||'-')+'</div>'+
+        '<div style="font-size:11.5px"><b>Condición declarada en el POS:</b> '+(S.cfg.contribEspecial?'Sujeto Pasivo Especial (confirmar notificación)':'No confirmado como Sujeto Pasivo Especial')+' &middot; <b>Referencia:</b> '+esc(S.cfg.provEspecial||'No registrada')+'</div>'+
       '</div>'+
       '<div style="text-align:right">'+
         '<div style="font-weight:700;font-size:14px;color:#1842B8">'+esc(title)+'</div>'+
@@ -6725,7 +6727,7 @@ function exportSeniatTxt(periodo){
   });
   const txt=lines.join('\r\n');
   downloadBlob(`RetencionesIVA_${rifAgente}_${periodo}.txt`,txt,'text/plain;charset=utf-8;');
-  msg('Archivo TXT para portal SENIAT descargado con éxito.');
+  msg('Archivo de trabajo exportado. El contador debe validar formato y datos antes de cualquier carga o declaración ante el SENIAT.');
 }
 
 function printComprobanteRetencion(r){
@@ -6854,7 +6856,7 @@ function newRetencionIvaDlg(onDone){
   '<div class="cierre" style="margin-top:6px">'+
     '<table class="sumt" id="retPreviewTable"><tbody></tbody></table>'+
   '</div>'+
-  '<p class="hint">Emisión de Comprobante de Retención de IVA conforme al Artículo 11 de la Ley del IVA y Providencia SNAT/2015/0049. Se generará correlativo fiscal para el portal SENIAT.</p></div>');
+  '<p class="hint">Borrador de apoyo y trazabilidad para revisión del contador. Referencia normativa: Providencia Administrativa SNAT/2025/000054. Este POS no declara, no paga ni certifica por sí mismo la retención ante el SENIAT; el contador debe validar datos, excepciones y formalidades antes de emitir o declarar.</p></div>');
 
   const upd=()=>{
     const base=pn($('#retBase',el).value);
@@ -6909,7 +6911,8 @@ function newRetencionIvaDlg(onDone){
         if(!S.retencionesIva)S.retencionesIva=[];
         S.retencionesIva.push(retEntry);
         save();
-        msg('Comprobante de Retención IVA '+compId+' emitido con éxito.');
+        retEntry.estado='Borrador para revisión del contador';retEntry.declarada=false;retEntry.pagada=false;retEntry.comprobanteEntregado=false;retEntry.observaciones='Registro interno del POS; validar antes de emitir/declarar ante SENIAT.';
+        msg('Registro de retención guardado como borrador para revisión del contador.');
         if(onDone)onDone();
         printComprobanteRetencion(retEntry);
         return false;
@@ -7393,7 +7396,8 @@ function seniatSudebanDlg(initialTab){
       '<div class="f wide"><label for="fDir">Domicilio Fiscal</label><input class="fld" id="fDir" value="'+esc(c.dir)+'"></div>'+
       '<div class="f"><label for="fTipo">Modalidad de Facturación</label><select class="fld" id="fTipo"><option value="FORMA_LIBRE" '+(c.fiscalTipo==='FORMA_LIBRE'?'selected':'')+'>Formas Libres por Computador</option><option value="MAQUINA_FISCAL" '+(c.fiscalTipo==='MAQUINA_FISCAL'?'selected':'')+'>Impresora Fiscal Homologada</option></select></div>'+
       '<div class="f"><label for="fEsp">Calificación Tributaria</label><select class="fld" id="fEsp"><option value="1" '+(c.contribEspecial?'selected':'')+'>Sujeto Pasivo Especial (Agente Retención)</option><option value="0" '+(!c.contribEspecial?'selected':'')+'>Contribuyente Ordinario</option></select></div>'+
-      '<div class="f"><label for="fPctRet">% Retención IVA en Compras</label><select class="fld" id="fPctRet"><option value="75" '+(c.retIvaPct===75?'selected':'')+'>75 % (Estándar)</option><option value="100" '+(c.retIvaPct===100?'selected':'')+'>100 % (Sanción/Designación total)</option></select></div>'+
+      '<div class="f"><label for="fPctRet">Retención ordinaria de referencia</label><select class="fld" id="fPctRet"><option value="75" selected>75 % del IVA (referencia general; verificar excepciones)</option></select></div>'+
+      '<div class="f wide"><label><input type="checkbox" id="fRetConfirm" '+(c.retencionHabilitadaConfirmada===true?'checked':'')+'> Confirmo que el negocio fue designado como Sujeto Pasivo Especial/agente de retención y verifiqué su notificación vigente.</label><p class="muted">Sin esta confirmación, el POS no calculará retenciones automáticamente. El contador debe verificar la designación, la operación y las excepciones aplicables.</p></div>'+ 
       '<div class="f"><label for="fProvEsp">Nº Providencia Notificación</label><input class="fld" id="fProvEsp" value="'+esc(c.provEspecial||'SNAT/2023/000412')+'"></div>'+
       '<div class="f"><label for="fCtrlPref">Prefijo Nº Control Fiscal</label><input class="fld mono" id="fCtrlPref" value="'+esc(c.ctrlPrefix||'00-')+'"></div>'+
       '<div class="f"><label for="fCtrlNext">Próximo Nº de Control</label><input class="fld mono r" id="fCtrlNext" value="'+(c.ctrlNext||1043)+'"></div>'+
@@ -7561,7 +7565,9 @@ function seniatSudebanDlg(initialTab){
           S.cfg.dir=$('#fDir',el).value.trim();
           S.cfg.fiscalTipo=$('#fTipo',el).value;
           S.cfg.contribEspecial=$('#fEsp',el).value==='1';
-          S.cfg.retIvaPct=parseInt($('#fPctRet',el).value)||75;
+          S.cfg.retIvaPct=75;
+          S.cfg.retencionHabilitadaConfirmada=$('#fRetConfirm',el).checked===true;
+          if(!S.cfg.contribEspecial)S.cfg.retencionHabilitadaConfirmada=false;
           S.cfg.provEspecial=$('#fProvEsp',el).value.trim();
           S.cfg.ctrlPrefix=$('#fCtrlPref',el).value.trim()||'00-';
           S.cfg.ctrlNext=parseInt($('#fCtrlNext',el).value)||1043;
