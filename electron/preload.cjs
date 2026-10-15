@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('posDesktop', {
   getDocument: id => ipcRenderer.invoke('posdb:get-document', id),
   deleteDocument: id => ipcRenderer.invoke('posdb:delete-document', id),
   networkStatus: () => ipcRenderer.invoke('network:status'),
+  networkDiscover: () => ipcRenderer.invoke('network:discover'),
   networkStartServer: options => ipcRenderer.invoke('network:configure-server', options),
   networkStopServer: () => ipcRenderer.invoke('network:stop-server'),
   networkConfigureClient: options => ipcRenderer.invoke('network:configure-client', options),
