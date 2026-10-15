@@ -4886,7 +4886,7 @@ function newCxcManualDlg(){
         id,saleNo:null,doc:$('#mcDoc',el).value.trim()||id,
         client:Object.assign({},cl),
         concept:$('#mcConc',el).value.trim()||'Cargo a crédito',
-        ts:Date.now(),dueTs:parseIsoD($('#mcDue',el).value),
+        ts:Date.now(),dueTs:parseIsoD($('#mcDue',el).value),cashbox:currentCaja(),cashier:currentCajero(),
         total:amt,paid:0,payments:[]
       });
       save();cxcDlg(id);msg('Cuenta por cobrar registrada.');return false;
@@ -7675,7 +7675,7 @@ function openMenu(){
 
 /* ---------- control de caja por sesión y corte Z persistente ---------- */
 function cajaContext(){
-  try{return JSON.parse(localStorage.getItem('sifer360_active_box')||'null')||{};}catch(e){return {};}
+  try{return JSON.parse(sessionStorage.getItem('sifer360_active_box')||localStorage.getItem('sifer360_active_box')||'null')||{};}catch(e){return {};}
 }
 function currentCaja(){
   const c=cajaContext();
@@ -7726,14 +7726,15 @@ function printCorteZ(z){
 }
 function corteZDlg(){
   const history=getZHistory().filter(z=>z.cashbox===currentCaja()).slice().sort((a,b)=>b.closedAt-a.closedAt);
-  const today=S.sales.filter(s=>s.cashbox===currentCaja()&&sameDay(s.ts));
-  const active=JSON.parse(localStorage.getItem('sifer360_active_opening')||'null');
+  const shiftStart=active&&active.openedAt?new Date(active.openedAt).getTime():new Date().setHours(0,0,0,0);
+  const today=S.sales.filter(s=>s.cashbox===currentCaja()&&Number(s.ts)>=shiftStart);
+  const active=JSON.parse(sessionStorage.getItem('sifer360_active_opening')||localStorage.getItem('sifer360_active_opening')||'null');
   const boxOpen=active&&active.cashbox===currentCaja()&&active.status==='abierta';
   const el=h('<div class="form"><div class="hint">Corte Z definitivo por caja. Al confirmar, el sistema guarda una fotografía del período y la agrega al historial; no se sobrescribe un corte anterior.</div><div class="gridwrap"><table class="grid"><thead><tr><th>Concepto</th><th class="r">Total</th></tr></thead><tbody id="zSummary"></tbody></table></div><div class="gridwrap"><table class="grid"><thead><tr><th>Conteo físico declarado</th><th>Importe</th></tr></thead><tbody><tr><td>Efectivo contado en Bs.</td><td><input class="fld r" id="zDeclaredBs" value="0,00" inputmode="decimal"></td></tr><tr><td>Efectivo contado en USD</td><td><input class="fld r" id="zDeclaredUsd" value="0,00" inputmode="decimal"></td></tr></tbody></table></div><div class="row"><button class="btn primary" id="zClose">Generar y guardar corte Z</button><button class="btn" id="zReprint" disabled>Reimprimir seleccionado</button></div><div class="gridwrap"><table class="grid"><thead><tr><th>Corte</th><th>Fecha</th><th>Cajero</th><th class="r">Ventas USD</th><th>Acción</th></tr></thead><tbody id="zHistory"></tbody></table></div><p class="hint">La impresión usa formato térmico de 80 mm mediante el diálogo estándar del navegador; no requiere impresora fiscal.</p></div>');
   let selected=null;
   const draw=()=>{
-    const sales=S.sales.filter(s=>s.cashbox===currentCaja()&&sameDay(s.ts)&&!s.void);
-    const voids=S.sales.filter(s=>s.cashbox===currentCaja()&&sameDay(s.ts)&&s.void);
+    const sales=S.sales.filter(s=>s.cashbox===currentCaja()&&Number(s.ts)>=shiftStart&&!s.void);
+    const voids=S.sales.filter(s=>s.cashbox===currentCaja()&&Number(s.ts)>=shiftStart&&s.void);
     const net=moneyTotal(sales,s=>s.total),iva=moneyTotal(sales,s=>s.iva),igtf=moneyTotal(sales,s=>s.igtf);
     $('#zSummary',el).innerHTML=[
       ['Caja',currentCaja()],['Cajero',currentCajero()],['Facturas válidas',String(sales.length)],['Anulaciones',String(voids.length)],['Ventas netas USD',usd(net)],['Ventas netas Bs.',bsf(net*S.cfg.rate)],['IVA USD',usd(iva)],['IGTF USD',usd(igtf)]
@@ -7748,7 +7749,7 @@ function corteZDlg(){
       if(!boxOpen){msg('No hay una apertura de caja activa para esta caja. Abra caja antes de generar el corte Z.','bad');return;}
       if(window.SIFERAccess&&typeof window.SIFERAccess.requestPin==='function'&&!window.SIFERAccess.requestPin('Generar corte Z de '+currentCaja()))return;
       if(!confirm('¿Generar y guardar el corte Z definitivo de '+currentCaja()+'? Este registro quedará en el historial.'))return;
-      const all=S.sales.filter(s=>s.cashbox===currentCaja()&&sameDay(s.ts));
+      const all=S.sales.filter(s=>s.cashbox===currentCaja()&&Number(s.ts)>=shiftStart);
       const sales=all.filter(s=>!s.void),voids=all.filter(s=>s.void);
       const payments=zPayTotals(sales),opening=active||{};
       const cashInBs=moneyTotal(sales,x=>(x.pays||[]).filter(p=>p.id==='efBs').reduce((a,p)=>a+Number(p.amount||0),0));
