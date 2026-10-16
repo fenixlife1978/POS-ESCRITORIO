@@ -7983,7 +7983,7 @@ function corteZDlg(){
     '<div class="gridwrap"><table class="grid" style="min-width:660px"><thead><tr><th>Método de pago</th><th>Moneda</th><th class="r">Saldo en sistema</th><th class="r">Monto real contado / conciliado</th><th class="r">Dif. (+/−)</th></tr></thead><tbody id="zReconcile"></tbody><tfoot id="zReconcileFoot"></tfoot></table></div>'+
     '<div class="gridwrap"><table class="grid"><thead><tr><th>Totales de arqueo</th><th class="r">US$</th><th class="r">Bs.</th></tr></thead><tbody id="zTotals"></tbody></table></div>'+
     '<label for="zObservations">Observaciones del cierre</label><textarea class="fld" id="zObservations" rows="2" placeholder="Explique faltantes, sobrantes, depósitos pendientes o incidencias."></textarea>'+
-    '<div class="row" style="margin:10px 0;gap:8px;flex-wrap:wrap"><button class="btn" id="zPreview">Vista previa del reporte Z · 80 mm</button><button class="btn primary" id="zClose">Confirmar cierre e imprimir</button></div>'+
+    '<div class="row" style="margin:10px 0;gap:8px;flex-wrap:wrap"><button class="btn" id="zPreview">Vista previa del reporte Z · 80 mm</button><button class="btn primary" id="zClose">Confirmar cierre e imprimir</button></div><div class="hint" id="zActionStatus" role="status" aria-live="polite">Abra el turno y complete el arqueo para habilitar el cierre.</div>'+
     '<p class="hint">El botón de impresión abre el diálogo del sistema para seleccionar una impresora térmica de 80 mm. Este reporte es no fiscal; una impresora fiscal requiere su integración/controlador homologado para emitir documentos fiscales.</p>'+
     '<h3>Historial de Cortes Z</h3><div class="gridwrap"><table class="grid" style="min-width:560px"><thead><tr><th>Corte</th><th>Fecha</th><th>Cajero</th><th class="r">Ventas USD</th><th>Resultado</th><th>Acciones</th></tr></thead><tbody id="zHistory"></tbody></table></div></div>');
   const getPeriodSales=()=>S.sales.filter(s=>String(s.cashbox||box)===box&&Number(s.ts)>=shiftStart());
@@ -8042,6 +8042,8 @@ function corteZDlg(){
     const hs=getZHistory().filter(z=>String(z.cashbox)===box).slice().sort((a,b)=>Number(b.closedAt)-Number(a.closedAt));
     $('#zHistory',el).innerHTML=hs.length?hs.map(z=>'<tr><td>'+esc(z.id)+'</td><td>'+esc(fmtDT(z.closedAt))+'</td><td>'+esc(z.cashier||'—')+'</td><td class="r">'+esc(usd(z.netUsd||0))+'</td><td>'+esc(z.reconciliationStatus||'Histórico anterior')+'</td><td><button class="btn mini2" data-z-view="'+esc(z.id)+'">Mostrar</button> <button class="btn mini2" data-z-print="'+esc(z.id)+'">Reimprimir</button></td></tr>').join(''):'<tr class="empty"><td colspan="6">Todavía no hay cortes Z guardados para esta caja.</td></tr>';
     const result=updateTotals();
+    $('#zClose',el).disabled=!opened||!result.total.complete;
+    $('#zActionStatus',el).textContent=!opened?'El cierre está bloqueado: primero abra el turno de esta caja.':(!result.total.complete?'Arqueo incompleto: ingrese el monto real de los 8 métodos de pago; use 0,00 en los métodos sin movimientos.':'Arqueo completo. Puede revisar la vista previa de 80 mm y confirmar el cierre.');
     result.rec.forEach(r=>{
       const cell=$('[data-z-diff="'+r.id+'"]',el);
       if(cell)cell.textContent=r.diff===null?'—':(r.diff>0?'+':'')+nf(r.diff);
@@ -8050,10 +8052,16 @@ function corteZDlg(){
     $('#zPreview',el).disabled=!opened;
   };
   el.addEventListener('input',e=>{
-    if(e.target.matches('[data-z-real]'))updateTotals().rec.forEach(r=>{
-      const cell=$('[data-z-diff="'+r.id+'"]',el);
-      if(cell)cell.textContent=r.diff===null?'—':(r.diff>0?'+':'')+nf(r.diff);
-    });
+    if(e.target.matches('[data-z-real]')){
+      const result=updateTotals();
+      result.rec.forEach(r=>{
+        const cell=$('[data-z-diff="'+r.id+'"]',el);
+        if(cell)cell.textContent=r.diff===null?'—':(r.diff>0?'+':'')+nf(r.diff);
+      });
+      const opened=boxOpen();
+      $('#zClose',el).disabled=!opened||!result.total.complete;
+      $('#zActionStatus',el).textContent=!opened?'El cierre está bloqueado: primero abra el turno de esta caja.':(!result.total.complete?'Arqueo incompleto: ingrese el monto real de los 8 métodos de pago; use 0,00 en los métodos sin movimientos.':'Arqueo completo. Puede revisar la vista previa de 80 mm y confirmar el cierre.');
+    }
   });
   el.addEventListener('click',e=>{
     const view=e.target.closest('[data-z-view]');
