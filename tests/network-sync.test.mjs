@@ -49,7 +49,7 @@ test('el administrador tiene panel para servidor y clientes LAN', () => {
 test('el panel explica límites de red y recomienda reserva de IP', () => {
   assert.match(ui, /Reserva esta IP en el router/);
   assert.match(ui, /no cifra el tráfico/);
-  assert.match(ui, /Las diferencias de inventario por ventas simultáneas requieren conciliación/);
+  assert.match(ui, /diferencias de inventario por ventas simultáneas requieren conciliación/);
 });
 
 test('el servidor anuncia descubrimiento LAN sin exigir IP fija', () => {
