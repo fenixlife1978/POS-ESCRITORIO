@@ -112,6 +112,7 @@ test('la liquidación CASHEA exige depósito real conciliado y guarda trazabilid
   assert.match(pos, /Monto neto depositado según banco/);
   assert.match(pos, /Liquidación rechazada/);
   assert.match(pos, /S\.casheaLiquidaciones\.push/);
-  assert.match(pos, /depositadoLoteUsd/);
+  assert.match(pos, /depositadoUsd:depositUsd/);
+  assert.match(pos, /includeBatch\?batch\.depositadoUsd/);
   assert.match(pos, /Referencia_Bancaria/);
 });
