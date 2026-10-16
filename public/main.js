@@ -7946,8 +7946,8 @@ function cajaContext(){
   try{return JSON.parse(sessionStorage.getItem('sifer360_active_box')||localStorage.getItem('sifer360_active_box')||'null')||{};}catch(e){return {};}
 }
 function currentCaja(){
-  const c=cajaContext();
-  if(c.role==='admin'&&(!c.cashbox||c.cashbox==='Todas'||c.cashbox==='—'))return 'SIN-ASIGNAR';
+  const c=cajaContext(),session=activeUser();
+  if((c.role==='admin'||session.role==='admin')&&(!c.cashbox||c.cashbox==='Todas'||c.cashbox==='—'||c.cashbox==='SIN-ASIGNAR'))return 'SIN-ASIGNAR';
   return String(!c.cashbox||c.cashbox==='Todas'?(S.cfg.caja||'01'):c.cashbox);
 }
 function currentCajero(){
