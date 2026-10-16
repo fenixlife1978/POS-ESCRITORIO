@@ -101,3 +101,17 @@ test('el servidor aplica una operación nueva una sola vez y reporta entidades e
   assert.match(electron, /network_received_operations/);
   assert.match(electron, /conflictIds/);
 });
+
+test('CASHEA no precarga operaciones ficticias y elimina únicamente firmas semilla conocidas', () => {
+  assert.match(pos, /S\.casheaMovimientos=\[\];/);
+  assert.match(pos, /demoCasheaSignatures/);
+  assert.match(pos, /Number\(m\.financiadoUsd\)===demo\.financiadoUsd/);
+});
+
+test('la liquidación CASHEA exige depósito real conciliado y guarda trazabilidad del lote', () => {
+  assert.match(pos, /Monto neto depositado según banco/);
+  assert.match(pos, /Liquidación rechazada/);
+  assert.match(pos, /S\.casheaLiquidaciones\.push/);
+  assert.match(pos, /depositadoLoteUsd/);
+  assert.match(pos, /Referencia_Bancaria/);
+});
