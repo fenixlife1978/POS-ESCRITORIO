@@ -8234,6 +8234,7 @@ const TB=[
 function buildChrome(){
   addAdminToolbarItems();
   $('#toolbar').innerHTML=TB.map(t=>t==='-'?'<span class="tsep"></span>':'<button class="tb" data-tb="'+t[0]+'" title="'+esc(t[1])+(t[2]?' ('+t[2]+')':'')+'">'+ico(t[0])+'<b>'+esc(t[1])+'</b><kbd>'+esc(t[2]||' ')+'</kbd>'+(t[0]==='recuperar'?'<span class="badge" id="heldBadge" hidden></span>':'')+(t[0]==='conteo'?'<span class="badge warn" id="conteoBadge" hidden></span>':'')+'</button>').join('');
+  if(window.SIFERAccess&&window.SIFERAccess.applyPermissions)window.SIFERAccess.applyPermissions(activeUser());
 }
 
 /* ---------- render ---------- */
