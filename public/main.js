@@ -5747,7 +5747,7 @@ function casheaPaymentAssistantDlg(totalSale, rate, onApplied, onCancel){
     '<div style="background:#1E1B4B;border:1px solid #4338CA;border-radius:8px;padding:12px;color:#EEF2FF">'+
       '<div style="display:flex;align-items:center;justify-content:space-between">'+
         '<div><b style="font-size:15px;color:#FBBF24">⚡ Asistente de Financiamiento CASHEA</b><div style="font-size:12px;color:#C7D2FE">Compra ahora y paga en 3 cuotas quincenales sin interés</div></div>'+
-        '<span class="badge-cashea">BNPL Oficial</span>'+
+        '<span class="badge-cashea">Registro manual · validar en Cashea</span>'+
       '</div>'+
       '<div style="margin-top:10px;display:flex;gap:16px;align-items:baseline">'+
         '<div><small style="color:#A5B4FC;text-transform:uppercase;font-size:10px">Total Venta</small><div style="font-size:22px;font-weight:700">'+usd(totalSale)+'</div></div>'+
@@ -5781,7 +5781,7 @@ function casheaPaymentAssistantDlg(totalSale, rate, onApplied, onCancel){
       '</div>'+
     '</div>'+
     '<div class="cashea-calc-box" id="cshPlanBox"></div>'+
-    '<div class="hint">El saldo financiado lo liquidará Cashea a la cuenta del negocio en su próximo ciclo de transferencias. La inicial debe cobrarse en mostrador inmediatamente.</div>'+
+    '<div class="hint">Este asistente calcula y registra el plan en el POS; no consulta ni confirma aprobaciones mediante la API oficial de Cashea. Verifique el token y las condiciones en Cashea antes de confirmar. La inicial se cobra ahora; el saldo financiado queda pendiente de liquidación y debe conciliarse después.</div>'+
   '</div>');
 
   const planBox = $('#cshPlanBox', el);
