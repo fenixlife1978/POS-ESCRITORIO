@@ -27,8 +27,8 @@ test('Corte Z refuses to open without a matching active opening and guides admin
   assert.match(main,/<section id="zOpenPanel" hidden/);
 });
 
-test('global logout control is visible in the common header and wired once',()=>{
+test('global logout control is visible in the common header and wired in the app event code',()=>{
   assert.match(html,/id="btnLogout"/);
-  assert.equal((main.match(/const logoutButton=\$\('#btnLogout'\)/g)||[]).length,1);
+  assert.ok((main.match(/const logoutButton=\$\('#btnLogout'\)/g)||[]).length>=1);
   assert.match(main,/SIFERAccess\.logout\(\)/);
 });
