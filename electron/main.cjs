@@ -233,7 +233,7 @@ async function startLanServer(requestedPort) {
               [String(ev.eventId), String(ev.deviceId), Number(ev.deviceSeq), String(ev.eventType), String(ev.entityType), String(ev.entityId), String(ev.occurredAt || new Date().toISOString()), JSON.stringify(ev.payload)]);
             const collection = String(ev.entityType);
             const record = ev.payload && ev.payload.record;
-            const allowedCollections = new Set(['sales','purchases','cxc','cxp','cortesZ','kardex','counts','held','casheaMovimientos','cambiosDivisas','retencionesIva','retentions','returns','voids']);
+            const allowedCollections = new Set(['sales','purchases','cxc','cxp','cortesZ','kardex','counts','held','casheaMovimientos','casheaLiquidaciones','cambiosDivisas','retencionesIva','retentions','returns','voids']);
             if (allowedCollections.has(collection) && record && typeof record === 'object' && !Array.isArray(record)) {
               const stateRow = one('SELECT payload FROM app_state WHERE id=1');
               const state = stateRow ? JSON.parse(stateRow.payload) : {};
