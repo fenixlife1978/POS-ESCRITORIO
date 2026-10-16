@@ -7932,7 +7932,14 @@ function zExpectedByMethod(sales,opening){
       }
     }
   });
-  Object.keys(out).forEach(k=>out[k]=r2(Math.max(0,out[k])));
+  (S.movimientosCaja||[]).forEach(m=>{
+    if(String(m.cashbox||opening.cashbox||'')!==String(opening.cashbox||m.cashbox||'')||Number(m.ts)<Number(opening.openedAt||0))return;
+    const key=m.currency==='USD'?'efUSD':(m.currency==='BS'?'efBs':null);
+    if(!key)return;
+    const amount=Math.max(0,Number(m.amount||0));
+    out[key]+=m.direction==='IN'?amount:-amount;
+  });
+  Object.keys(out).forEach(k=>out[k]=r2(k==='efBs'||k==='efUSD'?out[k]:Math.max(0,out[k])));
   return out;
 }
 function zDiffStatus(rows){
