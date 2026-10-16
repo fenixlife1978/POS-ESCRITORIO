@@ -5773,6 +5773,8 @@ function casheaPaymentAssistantDlg(totalSale, rate, onApplied, onCancel){
           '<option value="punto">Punto de venta (débito / crédito)</option>'+
           '<option value="biopago">Biopago (BDV Huella)</option>'+
           '<option value="pmovil">Pago móvil</option>'+
+          '<option value="transf">Transferencia Bs.</option>'+
+          '<option value="zelle">Zelle</option>'+
           '<option value="efBs">Efectivo Bs.</option>'+
           '<option value="efUSD">Efectivo US$</option>'+
         '</select>'+
@@ -6309,7 +6311,12 @@ function payDlg(draft){
   METHODS.forEach(m=>{const a=$('#pm-'+m.id,el),r=$('#pref-'+m.id,el);if(a&&draft.amts&&draft.amts[m.id]>0)a.value=nf(draft.amts[m.id]);if(r&&draft.refs&&draft.refs[m.id])r.value=draft.refs[m.id];});
   if(draft.credit)$('#payCreditChk',el).checked=true;
   if(draft.cDays)$('#payCreditDays',el).value=String(draft.cDays);
-  if(draft.casheaTx)el._casheaTx=draft.casheaTx;
+  if(draft.casheaTx){
+    el._casheaTx=draft.casheaTx;
+    const prev=$('#casheaPayPreview',el);
+    prev.hidden=false;
+    prev.innerHTML='<b>⚡ CASHEA:</b> Aprobación <b>'+esc(draft.casheaTx.aprobacion)+'</b> · Inicial: <b>'+usd(draft.casheaTx.inicialUsd)+'</b> · Financiado: <b>'+usd(draft.casheaTx.financiadoUsd)+'</b> ('+draft.casheaTx.cuotasCount+' cuota(s) de '+usd(draft.casheaTx.cuotaUsd)+' c/u)';
+  }
   const upd=()=>{
     const st=calcPay(t.total,rate,amts());last=st;
     const isCred=$('#payCreditChk',el).checked;
@@ -6335,7 +6342,8 @@ function payDlg(draft){
         draftNow.amts.cashea=cData.financiadoUsd;
         if(cData.inicialUsd>0&&cData.inicialMetodoId){
           const m=METHODS.find(x=>x.id===cData.inicialMetodoId);
-          const amt=m.cur==='USD'?cData.inicialUsd:r2(cData.inicialUsd*rate);
+          let amt=m.cur==='USD'?cData.inicialUsd:r2(cData.inicialUsd*rate);
+          if(cData.inicialMetodoId==='efUSD')amt=r2(cData.inicialUsd*(1+IGTF));
           draftNow.amts[cData.inicialMetodoId]=amt;
         }
         payDlg(draftNow);
@@ -6433,7 +6441,7 @@ function finalize(st,amts,isCred,cDays,refs,payEl){
       financiadoUsd:casheaAmt,
       cuotasCount,
       cuotaUsd,
-      fechasCuotas:[ts+14*86400000,ts+28*86400000,ts+42*86400000].map(fmtDT),
+      fechasCuotas:Array.from({length:cuotasCount},(_,i)=>ts+(i+1)*14*86400000).map(fmtDT),
       estado:'Pendiente Liquidación'
     };
     if(!Array.isArray(S.casheaMovimientos))S.casheaMovimientos=[];
