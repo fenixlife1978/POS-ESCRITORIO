@@ -7961,7 +7961,7 @@ function printCorteZ(z,autoPrint){
     line('Corte Z',z.id)+line('Fecha',fmtDT(z.closedAt))+line('Caja',z.cashbox)+line('Cajero',z.cashier)+line('Desde',z.openedAt?fmtDT(z.openedAt):'—')+line('Desde factura',z.invoiceFrom||'—')+line('Hasta factura',z.invoiceTo||'—')+
     '<hr><b>RESUMEN DE VENTAS</b>'+line('Facturas válidas',String(z.salesCount))+line('Anulaciones',String(z.voidCount))+line('Ventas netas USD',usd(z.netUsd))+line('Ventas netas Bs.',bsf(z.netBs))+line('IVA USD',usd(z.ivaUsd))+line('IGTF USD',usd(z.igtfUsd))+
     '<hr><b>RESUMEN DE COBROS Y CRÉDITOS</b>'+line('Cobros de CxC recibidos',usd(z.detailTotals&&z.detailTotals.cxcUsd||0)+' / '+bsf(z.detailTotals&&z.detailTotals.cxcBs||0))+line('Depósitos Cashea recibidos',usd(z.detailTotals&&z.detailTotals.casheaUsd||0))+line('Ventas a crédito generadas (CxC)',usd(z.detailTotals&&z.detailTotals.creditSalesUsd||0))+
-    '<hr><b>ARQUEO DE CAJA · POR MÉTODO</b><div class="zrec-head"><b>SISTEMA</b> / <b>REAL CONTADO O CONCILIADO</b> / <b>DIFERENCIA</b></div>'+(recHtml||'<div class="zrec">Este Corte Z no contiene detalle de arqueo por método.</div>')+
+    '<hr><b>TOTALES COBRADOS · POR MÉTODO</b>'+(Object.keys(z.payments||{}).length?Object.entries(z.payments).map(([name,amount])=>line(name,usd(amount))).join(''):'<div class="zrec">No hay cobros registrados por método en este corte.</div>')+'<hr><b>ARQUEO DE CAJA · POR MÉTODO</b><div class="zrec-head"><b>SISTEMA</b> / <b>REAL CONTADO O CONCILIADO</b> / <b>DIFERENCIA</b></div>'+(recHtml||'<div class="zrec">Este Corte Z no contiene detalle de arqueo por método.</div>')+
     '<hr><b>RESULTADO DEL ARQUEO</b>'+line('Estado de conciliación',z.reconciliationStatus||(reconciliation.length?zDiffStatus(reconciliation):'SIN ARQUEO DETALLADO · CORTE ANTERIOR'))+line('Faltante USD',usd(z.shortageUsd||0))+line('Sobrante USD',usd(z.surplusUsd||0))+line('Faltante Bs.',bsf(z.shortageBs||0))+line('Sobrante Bs.',bsf(z.surplusBs||0))+
     '<hr><b>MOVIMIENTOS DE EFECTIVO FÍSICO</b>'+line('Entradas efectivo USD (+)',usd(z.detailTotals&&z.detailTotals.cashInUsd||0))+line('Salidas efectivo USD (−)',usd(z.detailTotals&&z.detailTotals.cashOutUsd||0))+line('Entradas efectivo Bs. (+)',bsf(z.detailTotals&&z.detailTotals.cashInBs||0))+line('Salidas efectivo Bs. (−)',bsf(z.detailTotals&&z.detailTotals.cashOutBs||0))+line('Cantidad de movimientos',String(z.detailTotals&&z.detailTotals.movementCount||0))+notes+
     '<hr>'+line('Operador',z.cashier)+line('Generado',new Date(z.closedAt).toLocaleString('es-VE'))+'<hr><center>Conserve este reporte para auditoría interna.<br>La impresión no sustituye una factura fiscal ni registra una operación directamente en una impresora fiscal.</center></div>';
@@ -7983,7 +7983,7 @@ function corteZDlg(){
     '<div class="gridwrap"><table class="grid" style="min-width:660px"><thead><tr><th>Método de pago</th><th>Moneda</th><th class="r">Saldo en sistema</th><th class="r">Monto real contado / conciliado</th><th class="r">Dif. (+/−)</th></tr></thead><tbody id="zReconcile"></tbody><tfoot id="zReconcileFoot"></tfoot></table></div>'+
     '<div class="gridwrap"><table class="grid"><thead><tr><th>Totales de arqueo</th><th class="r">US$</th><th class="r">Bs.</th></tr></thead><tbody id="zTotals"></tbody></table></div>'+
     '<label for="zObservations">Observaciones del cierre</label><textarea class="fld" id="zObservations" rows="2" placeholder="Explique faltantes, sobrantes, depósitos pendientes o incidencias."></textarea>'+
-    '<div class="row" style="margin:10px 0"><button class="btn primary" id="zClose">Confirmar cierre Z e imprimir</button></div>'+
+    '<div class="row" style="margin:10px 0;gap:8px;flex-wrap:wrap"><button class="btn" id="zPreview">Vista previa del reporte Z · 80 mm</button><button class="btn primary" id="zClose">Confirmar cierre e imprimir</button></div>'+
     '<p class="hint">El botón de impresión abre el diálogo del sistema para seleccionar una impresora térmica de 80 mm. Este reporte es no fiscal; una impresora fiscal requiere su integración/controlador homologado para emitir documentos fiscales.</p>'+
     '<h3>Historial de Cortes Z</h3><div class="gridwrap"><table class="grid" style="min-width:560px"><thead><tr><th>Corte</th><th>Fecha</th><th>Cajero</th><th class="r">Ventas USD</th><th>Resultado</th><th>Acciones</th></tr></thead><tbody id="zHistory"></tbody></table></div></div>');
   const getPeriodSales=()=>S.sales.filter(s=>String(s.cashbox||box)===box&&Number(s.ts)>=shiftStart());
@@ -8047,6 +8047,7 @@ function corteZDlg(){
       if(cell)cell.textContent=r.diff===null?'—':(r.diff>0?'+':'')+nf(r.diff);
     });
     $('#zClose',el).disabled=!opened;
+    $('#zPreview',el).disabled=!opened;
   };
   el.addEventListener('input',e=>{
     if(e.target.matches('[data-z-real]'))updateTotals().rec.forEach(r=>{
@@ -8081,6 +8082,16 @@ function corteZDlg(){
       msg('Turno abierto para la caja '+box+'. Registre el arqueo real antes de cerrar.');
       draw();return;
     }
+    if(e.target.id==='zPreview'){
+      active=readActiveOpening();
+      if(!boxOpen()){msg('Abra el turno y registre el fondo inicial antes de previsualizar el Corte Z.','bad');draw();return;}
+      const result=calculate();
+      const all=getPeriodSales(),sales=all.filter(s=>!s.void),voids=all.filter(s=>s.void);
+      const now=Date.now();
+      const rec=result.rec.map(r=>Object.assign({},r,{real:r.real==null?null:Number(r.real),diff:r.diff==null?null:Number(r.diff)}));
+      const draft={id:'VISTA PREVIA · Z-'+box,cashbox:box,cashier:currentCajero(),openedAt:active.openedAt,closedAt:now,openingId:active.id||'',invoiceFrom:all.length?pad(Math.min(...all.map(s=>Number(s.no)||0))):'—',invoiceTo:all.length?pad(Math.max(...all.map(s=>Number(s.no)||0))):'—',salesCount:sales.length,voidCount:voids.length,netUsd:moneyTotal(sales,s=>Number(s.total||0)),netBs:moneyTotal(sales,s=>Number(s.total||0)*Number(s.rate||S.cfg.rate||0)),ivaUsd:moneyTotal(sales,s=>Number(s.iva||0)),igtfUsd:moneyTotal(sales,s=>Number(s.igtf||0)),payments:zPayTotals(sales),detailTotals:zOperationalTotals(all,shiftStart(),now,box),openingBs:Number(active.bs||0),openingUsd:Number(active.usd||0),reconciliation:rec,reconciliationStatus:result.total.status,shortageUsd:result.total.shortageUsd,surplusUsd:result.total.surplusUsd,shortageBs:result.total.shortageBs,surplusBs:result.total.surplusBs,observations:$('#zObservations',el).value.trim(),saleIds:all.map(s=>s.no),status:'previa'};
+      printCorteZ(draft,false);return;
+    }
     if(e.target.id==='zClose'){
       active=readActiveOpening();
       if(!boxOpen()){msg('Abra el turno y registre el fondo inicial antes del cierre Z.','bad');draw();return;}
@@ -8100,7 +8111,7 @@ function corteZDlg(){
       writeActiveOpening(closedOpening);
       const closedBox=Object.assign(cajaContext(),{cashbox:box,status:'cerrada',closedAt:z.closedAt,cutId:z.id});
       sessionStorage.setItem('sifer360_active_box',JSON.stringify(closedBox));localStorage.setItem('sifer360_active_box',JSON.stringify(closedBox));
-      msg('Corte Z '+z.id+' guardado. Resultado: '+status+'.');
+      msg('Corte Z '+z.id+' guardado. Resultado: '+status+'. Se abrirá la vista previa de 80 mm para imprimir.');
       printCorteZ(z,false);draw();
     }
   });
