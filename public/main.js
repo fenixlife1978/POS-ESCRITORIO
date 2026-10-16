@@ -7849,7 +7849,7 @@ function showPosScreen(){
 function showDashboardScreen(){
   const d=$('#adminDashboard'),main=$('.main'),left=$('.left');
   if(!d||!main)return;
-  if(left)left.hidden=false; // Mantener la toolbar completa visible también en el dashboard administrativo.
+  if(left)left.hidden=true; // Ocultar toda el área de venta; la cabecera y la toolbar están fuera de .main y permanecen visibles.
   d.hidden=false;main.classList.add('dashboard-mode');
   const b=$('#btnDashboard');if(b){b.hidden=activeUser().role!=='admin';b.setAttribute('aria-pressed','true');}
   renderHeader();
