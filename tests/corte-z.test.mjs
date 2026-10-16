@@ -64,6 +64,19 @@ test('Corte Z abre vista previa térmica de 80 mm antes de imprimir al confirmar
   assert.match(pos, /msg\('Corte Z '\+z\.id\+' guardado\. Resultado: '\+status\+'\.'\);\s*printCorteZ\(z,false\);draw\(\);/);
 });
 
+test('el reporte Z destaca el arqueo por método antes de detallar movimientos físicos', () => {
+  const printStart = pos.indexOf('function printCorteZ(');
+  const printEnd = pos.indexOf('function corteZDlg(', printStart);
+  const report = pos.slice(printStart, printEnd);
+  assert.match(report, /ARQUEO DE CAJA · POR MÉTODO/);
+  assert.match(report, /RESULTADO DEL ARQUEO/);
+  assert.match(report, /SISTEMA/);
+  assert.match(report, /REAL CONTADO O CONCILIADO/);
+  assert.match(report, /DIFERENCIA/);
+  assert.ok(report.indexOf('ARQUEO DE CAJA · POR MÉTODO') < report.indexOf('MOVIMIENTOS DE EFECTIVO FÍSICO'));
+  assert.match(report, /Este Corte Z no contiene detalle de arqueo por método/);
+});
+
 function extractFunction(name, nextName) {
   const start = pos.indexOf('function ' + name + '(');
   const end = pos.indexOf('function ' + nextName + '(', start);
