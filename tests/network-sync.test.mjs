@@ -152,7 +152,6 @@ test('cobros expone efectivo, Zelle, pago móvil, transferencia, tarjeta, Biopag
   for (const method of ['efUSD','efBs','zelle','pmovil','transf','punto','biopago','cashea']) {
     assert.match(pos, new RegExp("id:'" + method + "'"));
   }
-  }
   assert.match(pos, /id="pm-'\+m\.id\+'" data-m="'\+m\.id\+'/);
   assert.match(pos, /const pays=METHODS\.filter\(m=>amts\[m\.id\]>0\)/);
   assert.match(pos, /Enviar saldo pendiente a/);
