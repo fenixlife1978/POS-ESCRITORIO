@@ -57,6 +57,13 @@ test('reporte térmico incluye detalle de conciliación y aclara que no emite fi
   assert.match(pos, /ni registra una operación directamente en una impresora fiscal/);
 });
 
+test('Corte Z abre vista previa térmica de 80 mm antes de imprimir al confirmar el cierre', () => {
+  assert.match(pos, /Vista previa de impresión · Térmica 80 mm/);
+  assert.match(pos, /onclick="window\.print\(\)"/);
+  assert.match(pos, /\.zpreview-tools\{display:none!important\}/);
+  assert.match(pos, /msg\('Corte Z '\+z\.id\+' guardado\. Resultado: '\+status\+'\.'\);\s*printCorteZ\(z,false\);draw\(\);/);
+});
+
 function extractFunction(name, nextName) {
   const start = pos.indexOf('function ' + name + '(');
   const end = pos.indexOf('function ' + nextName + '(', start);
