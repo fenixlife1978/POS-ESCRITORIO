@@ -7976,7 +7976,7 @@ function corteZDlg(){
   const box=currentCaja();
   const boxOpen=()=>!!(active&&String(active.cashbox)===box&&active.status==='abierta');
   const shiftStart=()=>active&&active.openedAt?new Date(active.openedAt).getTime():Date.now();
-  const el=h('<div class="form"><div class="hint">Arqueo previo obligatorio: compare el saldo que registra el sistema con el importe real de cada método. La diferencia se calcula como Real − Sistema. El cierre guarda una fotografía inalterable del turno y después permite imprimir el reporte térmico de 80 mm.</div>'+
+  const el=h('<div class="form"><div class="hint" id="zIntro">Arqueo previo obligatorio: compare el saldo que registra el sistema con el importe real de cada método. La diferencia se calcula como Real − Sistema. El cierre guarda una fotografía inalterable del turno y después permite imprimir el reporte térmico de 80 mm.</div>'+
     '<section id="zOpenPanel" style="border:1px solid var(--lo);padding:10px;margin:8px 0;border-radius:6px"><b>Apertura de turno / fondo inicial</b><p class="hint">Si esta caja todavía no tiene un turno abierto, registre el fondo inicial antes de realizar el arqueo.</p><div class="row"><label>Fondo inicial Bs. <input class="fld r" id="zOpeningBs" value="0,00" inputmode="decimal" style="width:125px"></label><label>Fondo inicial US$ <input class="fld r" id="zOpeningUsd" value="0,00" inputmode="decimal" style="width:125px"></label><button class="btn primary" id="zOpenShift">Abrir turno</button></div><div class="hint" id="zOpenStatus"></div></section>'+
     '<div class="gridwrap"><table class="grid"><thead><tr><th>Resumen del turno</th><th class="r">Total</th></tr></thead><tbody id="zSummary"></tbody></table></div>'+
     '<section id="zArqueoPanel" style="border:2px solid var(--ac);padding:12px;margin:10px 0;border-radius:8px"><h3 style="margin:0 0 6px">ARQUEO PREVIO POR MÉTODO DE PAGO</h3><p class="hint" style="margin:4px 0 10px">Este formulario es obligatorio para el Corte Z. Abra el turno primero; luego escriba el monto real contado o conciliado en cada método. Si no tuvo movimientos, escriba 0,00. La diferencia se calcula automáticamente.</p><div class="gridwrap"><table class="grid" style="min-width:660px"><thead><tr><th>Método de pago</th><th>Moneda</th><th class="r">Saldo en sistema</th><th class="r">Monto real contado / conciliado</th><th class="r">Dif. (+/−)</th></tr></thead><tbody id="zReconcile"></tbody><tfoot id="zReconcileFoot"></tfoot></table></div><div class="gridwrap"><table class="grid"><thead><tr><th>Totales de arqueo</th><th class="r">US$</th><th class="r">Bs.</th></tr></thead><tbody id="zTotals"></tbody></table></div></section>'+
@@ -8023,7 +8023,9 @@ function corteZDlg(){
     active=readActiveOpening();
     const opened=boxOpen();
     $('#zOpenStatus',el).textContent=opened?'Turno abierto desde '+fmtDT(active.openedAt)+' · Caja '+box+' · '+String(active.cashier||currentCajero()):'No hay un turno abierto para esta caja. Registre el fondo inicial y pulse Abrir turno.';
-    $('#zOpenPanel',el).style.opacity=opened?'0.85':'1';
+    $('#zOpenPanel',el).hidden=opened;
+    $('#zIntro',el).textContent=opened?'La apertura de caja ya está registrada. Se reutiliza el turno iniciado al entrar al POS; no debe abrir otro turno aquí. Complete el arqueo real de los 8 métodos, revise la vista previa de 80 mm y luego confirme el cierre.':'No se detectó una apertura válida para esta caja. Registre el fondo inicial aquí solo si no se hizo al iniciar sesión. El arqueo por los 8 métodos seguirá siendo obligatorio antes del cierre.';
+    $('#zOpenPanel',el).style.opacity='1';
     $('#zOpenShift',el).disabled=opened;
     $('#zOpeningBs',el).disabled=opened;
     $('#zOpeningUsd',el).disabled=opened;
