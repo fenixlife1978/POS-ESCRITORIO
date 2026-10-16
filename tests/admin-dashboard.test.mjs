@@ -85,3 +85,18 @@ test('admin POS button opens mandatory opening dialog and logout is visible and 
   assert.match(main, /const logoutButton=\$\('#btnLogout'\);if\(logoutButton\)logoutButton\.addEventListener\('click'/);
   assert.match(access, /function logout\(\)\{sessionStorage\.removeItem\(SESSION\)/);
 });
+
+
+test('finalizar venta muestra un modal centrado con vuelto o VENTA FINALIZADA y permite abrir el ticket', () => {
+  assert.match(main, /function showSaleCompletion\(sale\)/);
+  const fn = main.slice(main.indexOf('function showSaleCompletion(sale)'), main.indexOf('function finalize(st,amts,isCred,cDays,refs,payEl)'));
+  assert.match(fn, /change>=0\.01/);
+  assert.match(fn, /VUELTO A ENTREGAR/);
+  assert.match(fn, /VENTA FINALIZADA/);
+  assert.match(fn, /usd\(change\)/);
+  assert.match(fn, /bsf\(r2\(change\*rate\)\)/);
+  assert.match(fn, /w:390/);
+  assert.match(fn, /Ver \/ imprimir ticket/);
+  assert.match(main, /save\(\);renderAll\(\);[\s\S]{0,400}showSaleCompletion\(sale\);/);
+  assert.match(css, /\.sale-completion\{display:flex;flex-direction:column;align-items:center;text-align:center/);
+});
