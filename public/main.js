@@ -6441,6 +6441,22 @@ function payDlg(draft){
     onOpen:()=>{upd();$('#pm-efUSD',el).focus();}});
 }
 
+function showSaleCompletion(sale){
+  const change=r2(Math.max(0,Number(sale.change)||0));
+  const rate=Number(sale.rate||S.cfg.rate)||1;
+  const hasChange=change>=0.01;
+  const body=h('<div class="sale-completion">'+
+    '<div class="sale-completion-icon '+(hasChange?'change':'success')+'">'+(hasChange?'↩':'✓')+'</div>'+
+    '<div class="sale-completion-label">'+(hasChange?'VUELTO A ENTREGAR':'VENTA FINALIZADA')+'</div>'+
+    (hasChange?'<div class="sale-completion-amount">'+esc(usd(change))+'</div><div class="sale-completion-equivalent">Equivalente: <b>'+esc(bsf(r2(change*rate)))+'</b></div><p class="sale-completion-note">Entregue el vuelto en efectivo según la moneda acordada con el cliente. Si el excedente provino de un pago electrónico, gestione la devolución por ese mismo medio.</p>':'<p class="sale-completion-note">La factura '+esc(pad(sale.no))+' fue registrada correctamente. No hay vuelto pendiente.</p>')+
+    '<div class="sale-completion-ticket">Factura <b>'+esc(pad(sale.no))+'</b> · Total <b>'+esc(usd(r2(sale.total+sale.igtf)))+'</b></div>'+
+    '</div>');
+  openWin({title:hasChange?'Vuelto de la venta':'Venta finalizada',w:390,body,foot:[
+    {label:'Ver / imprimir ticket',primary:true,fn:()=>{closeWin();showTicket(sale);return false;}},
+    {label:'Cerrar'}
+  ],onOpen:()=>{const node=$('.sale-completion',body);if(node)node.setAttribute('tabindex','-1');}});
+}
+
 function finalize(st,amts,isCred,cDays,refs,payEl){
   const ctx=cajaContext();if(ctx.role==='cajero'&&ctx.status!=='abierta'){msg('La caja no está abierta. Solicite al administrador una nueva apertura antes de facturar.','bad');return;}
   const t=totals(), ts=Date.now(), invNo=nextCajaInvoice();
@@ -6552,7 +6568,7 @@ function finalize(st,amts,isCred,cDays,refs,payEl){
   S.sales.push(sale);S.invoice=Math.max(S.invoice,invNo+1);S.cart=[];S.sel=-1;S.client=S.clients[0];
   save();renderAll();
   msg('Factura '+pad(sale.no)+' procesada por '+usd(r2(sale.total+sale.igtf))+(casheaAmt>0?' (Financiado Cashea: '+usd(casheaAmt)+')':'')+(creditAmt>0?' (Saldo a CxC: '+usd(creditAmt)+')':'')+'.');
-  showTicket(sale);
+  showSaleCompletion(sale);
 }
 
 const TICKET_FONTS=[
