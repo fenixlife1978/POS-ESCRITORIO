@@ -24,25 +24,25 @@ test('CxC se consulta por caja y los cargos manuales también guardan caja', () 
   assert.match(main, /cashbox:currentCaja\(\),cashier:currentCajero\(\),\s*total:amt/);
 });
 
-test('el corte Z se conserva en el estado persistente', () => {
+test('el corte Z se conserva en el estado persistente y en historial', () => {
   assert.match(main, /cortesZ:S\.cortesZ\|\|\[\]/);
-  assert.match(main, /getZHistory\(\)\.push\(z\);save\(\)/);
+  assert.match(main, /getZHistory\(\)\.push\(z\);\s*save\(\)/);
   assert.match(main, /data-z-print/);
 });
 
 test('el corte Z se calcula desde la apertura de jornada y por caja', () => {
-  assert.match(main, /const shiftStart=active&&active\.openedAt/);
-  assert.match(main, /Number\(s\.ts\)>=shiftStart/);
-  assert.match(main, /s\.cashbox===currentCaja\(\)&&Number\(s\.ts\)>=shiftStart/);
+  assert.match(main, /const shiftStart=\(\)=>active&&active\.openedAt/);
+  assert.match(main, /Number\(s\.ts\)>=shiftStart\(\)/);
+  assert.match(main, /String\(s\.cashbox\|\|box\)===box&&Number\(s\.ts\)>=shiftStart\(\)/);
 });
 
-test('la plantilla de impresión Z declara papel térmico de 80 mm', () => {
+test('la plantilla de impresión Z declara papel térmico de 80 mm y reporte no fiscal', () => {
   assert.match(main, /@page\{size:80mm auto;margin:3mm\}/);
-  assert.match(main, /NO FISCAL · CONTROL INTERNO/);
+  assert.match(main, /REPORTE DE CONTROL INTERNO · NO FISCAL/);
 });
 
 test('el corte Z requiere autorización y cierra la apertura activa', () => {
-  assert.match(main, /requestPin\('Generar corte Z de '\+currentCaja\(\)\)/);
+  assert.match(main, /requestPin\('Cerrar caja y generar Corte Z '\+box\)/);
   assert.match(main, /status:'cerrada',closedAt:z\.closedAt,cutId:z\.id/);
 });
 

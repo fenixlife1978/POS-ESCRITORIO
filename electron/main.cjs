@@ -93,12 +93,28 @@ function mergeStateRecords(base, incoming) {
 function userDbPath() {
   return path.join(app.getPath('userData'), 'elpiston.sqlite');
 }
+function databaseIntegrityStatus(database) {
+  try {
+    const result = database.exec('PRAGMA integrity_check');
+    return result[0] && result[0].values[0] ? String(result[0].values[0][0]) : 'sin resultado';
+  } catch (error) {
+    return 'error: ' + (error && error.message ? error.message : String(error));
+  }
+}
 function persistDb() {
   if (!db) return;
+  const integrity = databaseIntegrityStatus(db);
+  if (integrity !== 'ok') throw new Error('Se impidió guardar SQLite porque integrity_check no devolvió ok: ' + integrity);
   const target = userDbPath();
   const temporary = target + '.tmp';
+  const backup = target + '.bak';
+  const backupTemporary = backup + '.tmp';
   const bytes = db.export();
   fs.writeFileSync(temporary, Buffer.from(bytes));
+  if (fs.existsSync(target)) {
+    fs.copyFileSync(target, backupTemporary);
+    fs.renameSync(backupTemporary, backup);
+  }
   fs.renameSync(temporary, target);
 }
 function run(sql, params = []) {
@@ -190,7 +206,20 @@ async function initializeDatabase() {
   if (fs.existsSync(file)) {
     try { db = new SQL.Database(new Uint8Array(fs.readFileSync(file))); }
     catch (error) {
-      throw new Error('No se pudo abrir la base SQLite existente. El archivo original se conserva sin sobrescribir. Copie el archivo de respaldo desde: ' + file + '. Verifique el disco antes de volver a intentar. Detalle: ' + (error && error.message ? error.message : String(error)));
+      throw new Error('No se pudo abrir la base SQLite existente. El archivo original se conserva sin sobrescribir. Si existe, revise el respaldo automático ' + file + '.bak. Detalle: ' + (error && error.message ? error.message : String(error)));
+    }
+    const integrity = databaseIntegrityStatus(db);
+    if (integrity !== 'ok') {
+      const backup = file + '.bak';
+      if (!fs.existsSync(backup)) throw new Error('La base SQLite no superó integrity_check (' + integrity + ') y no existe respaldo automático. Se conserva el archivo original: ' + file);
+      let restored;
+      try { restored = new SQL.Database(new Uint8Array(fs.readFileSync(backup))); }
+      catch (error) { throw new Error('SQLite está corrupta y el respaldo tampoco se puede abrir. Se conservan ambos archivos para recuperación manual.'); }
+      const backupIntegrity = databaseIntegrityStatus(restored);
+      if (backupIntegrity !== 'ok') throw new Error('SQLite y su respaldo fallaron integrity_check. No se sobrescribió ninguno de los dos archivos.');
+      fs.renameSync(file, file + '.corrupt-' + Date.now());
+      fs.copyFileSync(backup, file);
+      db = restored;
     }
   } else db = new SQL.Database();
   initializeSchema();

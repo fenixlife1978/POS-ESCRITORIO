@@ -268,7 +268,7 @@ function seed(){
       {id:'PRV-03',name:'Baterías y Partes Eléctricas Oriente, C.A.',rif:'J-29112233-9',tel:'0281-555-9011',cond:'Contado'},
       {id:'PRV-04',name:'Suministros Motopartes Venezuela, C.A.',rif:'J-41009988-1',tel:'0251-555-7730',cond:'15 días'}
     ],
-    sales:[],held:[],purchases:[],cxc:[],cxp:[],cortesZ:[],kardex:[],counts:[],
+    sales:[],held:[],purchases:[],cxc:[],cxp:[],cortesZ:[],movimientosCaja:[],kardex:[],counts:[],
     lotesSudeban:[],retencionesIva:[],cambiosDivisas:[],casheaMovimientos:[],casheaLiquidaciones:[],documents:[],
     invoice:1043,purchaseSeq:203,countSeq:102,
     cart:[],sel:-1,cat:'Todas',query:'',catSel:null
@@ -6012,19 +6012,23 @@ function casheaPrintVoucherDlg(m){
 }
 
 function casheaSettlementDlg(onDone){
-  const pendings = (S.casheaMovimientos || []).filter(m => m.estado === 'Pendiente Liquidación');
+  const allPendings = (S.casheaMovimientos || []).filter(m => m.estado === 'Pendiente Liquidación');
+  let pendings = allPendings.slice();
   if(!pendings.length){
     msg('No hay operaciones de Cashea pendientes de liquidación.', 'bad');
     return;
   }
   const rate = S.cfg.rate;
-  const totFinanciado = pendings.reduce((acc, m) => acc + (m.financiadoUsd || 0), 0);
+  let totFinanciado = pendings.reduce((acc, m) => acc + (m.financiadoUsd || 0), 0);
 
   const el = h('<div class="form" style="gap:12px">'+
     '<div style="background:#1E1B4B;border:1px solid #4338CA;border-radius:8px;padding:12px;color:#EEF2FF">'+
       '<b style="font-size:15px;color:#FBBF24">📥 Registrar Liquidación de Lote CASHEA</b>'+
-      '<div style="font-size:12px;color:#C7D2FE">Concilie las transferencias bancarias depositadas por Cashea en la cuenta del comercio</div>'+
+      '<div style="font-size:12px;color:#C7D2FE">Seleccione las operaciones incluidas en este depósito real de Cashea. Se puede liquidar un subconjunto y conciliar el resto posteriormente.</div>'+
     '</div>'+
+    '<div class="gridwrap" style="max-height:180px"><table class="grid"><thead><tr><th>Incluir</th><th>Factura</th><th>Cliente</th><th class="r">Financiado US$</th></tr></thead><tbody>'+
+      allPendings.map(m=>'<tr><td><input type="checkbox" data-liq-op="'+esc(m.id)+'" checked aria-label="Incluir operación '+esc(m.id)+'"></td><td>'+esc(m.ventaNo)+'</td><td>'+esc(m.clienteNombre||m.clienteCi||'—')+'</td><td class="r">'+esc(usd(m.financiadoUsd||0))+'</td></tr>').join('')+
+    '</tbody></table></div>'+
     '<div class="docgrid">'+
       '<div class="f"><label>Nº de Operaciones pendientes</label><input class="fld mono" value="'+pendings.length+' facturas" readonly></div>'+
       '<div class="f"><label>Total Bruto por Cobrar (US$)</label><input class="fld r mono" id="liqBruto" value="'+nf(totFinanciado)+'" readonly style="font-weight:700"></div>'+
@@ -6049,6 +6053,15 @@ function casheaSettlementDlg(onDone){
   const refInp = $('#liqRef', el);
   const depositInp = $('#liqDeposit', el);
   const bancoSel = $('#liqBanco', el);
+  el.addEventListener('change', e => {
+    const checkbox = e.target.closest('[data-liq-op]');
+    if(!checkbox)return;
+    const selected = new Set($('[data-liq-op]',el).filter(input=>input.checked).map(input=>input.dataset.liqOp));
+    pendings = allPendings.filter(m=>selected.has(String(m.id)));
+    totFinanciado = r2(pendings.reduce((acc,m)=>acc+Number(m.financiadoUsd||0),0));
+    $('#liqBruto',el).value=nf(totFinanciado);
+    recalc();
+  });
 
   function recalc(){
     const pct = Math.max(0, Number(comPctInp.value) || 0);
@@ -6094,6 +6107,7 @@ function casheaSettlementDlg(onDone){
           const ref = refInp.value.trim();
           const depositRaw = depositInp.value.trim();
           const pct = Number(comPctInp.value);
+          if(!pendings.length){msg('Seleccione al menos una operación pendiente para liquidar.','bad');return false;}
           const comUsd = r2(totFinanciado * (pct / 100));
           const netoUsd = r2(totFinanciado - comUsd);
           const depositUsd = depositRaw ? pn(depositRaw) : null;
@@ -6123,6 +6137,33 @@ function casheaSettlementDlg(onDone){
       }
     ]
   });
+}
+
+function reverseCasheaSettlement(movementId,onDone){
+  const movement=(S.casheaMovimientos||[]).find(m=>String(m.id)===String(movementId));
+  if(!movement||movement.estado!=='Liquidado'||!movement.loteLiquidacion){msg('La operación no tiene una liquidación activa que pueda revertirse.','bad');return false;}
+  const lot=(S.casheaLiquidaciones||[]).find(item=>item.id===movement.loteLiquidacion&&item.tipo!=='REVERSIÓN');
+  if(!lot||lot.estado==='Revertido'){msg('El lote ya fue revertido o no existe en el historial.','bad');return false;}
+  if(!window.SIFERAccess||typeof window.SIFERAccess.requestPin!=='function'){msg('No se puede revertir: el servicio de autorización no está disponible.','bad');return false;}
+  if(!window.SIFERAccess.requestPin('Revertir liquidación CASHEA '+lot.id))return false;
+  const motivo=window.prompt('Indique el motivo de la reversión del lote '+lot.id+':','');
+  if(!motivo||!motivo.trim()){msg('La reversión requiere un motivo para auditoría.','bad');return false;}
+  if(!confirm('¿Revertir el lote '+lot.id+'? Las operaciones volverán a pendientes y el motivo quedará registrado.'))return false;
+  const now=Date.now(), revId='REV-CSH-'+now.toString(36).toUpperCase();
+  const affected=(S.casheaMovimientos||[]).filter(m=>m.estado==='Liquidado'&&m.loteLiquidacion===lot.id);
+  if(!affected.length){msg('No hay operaciones activas en ese lote.','bad');return false;}
+  lot.estado='Revertido';lot.revertidoAt=now;lot.revertidoPor=currentCajero();lot.reversionId=revId;lot.motivoReversion=motivo.trim();
+  affected.forEach(m=>{
+    m.loteLiquidacionAnterior=lot.id;
+    m.estado='Pendiente Liquidación';
+    m.loteLiquidacion='';
+    delete m.bancoReceptor;delete m.refBancaria;delete m.comisionPct;delete m.comisionUsd;delete m.netoEsperadoUsd;delete m.tasaBcvLiquidacion;delete m.fechaLiquidacion;
+  });
+  S.casheaLiquidaciones.push({id:revId,tipo:'REVERSIÓN',fecha:now,loteOriginal:lot.id,operaciones:affected.map(m=>m.id),cantidad:affected.length,operador:currentCajero(),motivo:motivo.trim(),estado:'Registrada'});
+  save();
+  msg('Reversión '+revId+' registrada. '+affected.length+' operaciones regresaron a pendientes.');
+  if(onDone)onDone();
+  return true;
 }
 
 function casheaDlg(defaultTab){
@@ -6226,6 +6267,7 @@ function casheaDlg(defaultTab){
         '<td class="c">'+
           '<button class="btn mini2" data-csh-vouch="'+esc(m.id)+'" title="Ver Comprobante">Voucher</button> '+
           '<button class="btn mini2" data-csh-ticket="'+m.ventaNo+'" title="Ver Ticket Térmico 80mm">Ticket</button>'+
+          (isOk?'<button class="btn mini2" data-csh-reverse="'+esc(m.id)+'" title="Revertir lote conciliado">Revertir lote</button>':'')+
         '</td>'+
       '</tr>';
     }).join('');
@@ -6256,6 +6298,12 @@ function casheaDlg(defaultTab){
   });
 
   $('#cshRows', el).addEventListener('click', e => {
+    const bReverse = e.target.closest('[data-csh-reverse]');
+    if(bReverse){
+      const movement=(S.casheaMovimientos||[]).find(x=>x.id===bReverse.dataset.cshReverse);
+      if(movement)reverseCasheaSettlement(movement.id,()=>render());
+      return;
+    }
     const bVouch = e.target.closest('[data-csh-vouch]');
     if(bVouch){
       const m = (S.casheaMovimientos || []).find(x => x.id === bVouch.dataset.cshVouch);
@@ -7827,6 +7875,27 @@ function zPayTotals(sales){
   }));
   return out;
 }
+function zOperationalTotals(sales,start,end,box){
+  const inPeriod=ts=>Number(ts)>=Number(start)&&Number(ts)<=Number(end);
+  const out={cxcUsd:0,cxcBs:0,casheaUsd:0,creditSalesUsd:0,cashInUsd:0,cashOutUsd:0,cashInBs:0,cashOutBs:0,movementCount:0};
+  (S.cxc||[]).forEach(item=>{
+    if(item.cashbox&&String(item.cashbox)!==String(box))return;
+    (item.payments||[]).forEach(p=>{if(inPeriod(p.ts)){out.cxcUsd=r2(out.cxcUsd+Number(p.amountUsd||0));out.cxcBs=r2(out.cxcBs+Number(p.amountBs||0));}});
+  });
+  sales.filter(s=>!s.void).forEach(s=>(s.pays||[]).forEach(p=>{if(p.id==='credito')out.creditSalesUsd=r2(out.creditSalesUsd+Number(p.amount||0));}));
+  const saleNos=new Set(sales.filter(s=>!s.void&&String(s.cashbox||box)===String(box)).map(s=>String(s.no)));
+  (S.casheaLiquidaciones||[]).forEach(lot=>{
+    if(lot.tipo==='REVERSIÓN'||lot.estado==='Revertido'||!inPeriod(lot.fecha))return;
+    const ops=Array.isArray(lot.operaciones)?lot.operaciones:[];
+    if((S.casheaMovimientos||[]).some(m=>ops.includes(m.id)&&saleNos.has(String(m.ventaNo))))out.casheaUsd=r2(out.casheaUsd+Number(lot.depositadoUsd||0));
+  });
+  (S.movimientosCaja||[]).forEach(m=>{
+    if(String(m.cashbox||box)!==String(box)||!inPeriod(m.ts))return;
+    const currency=m.currency==='USD'?'Usd':'Bs',direction=m.direction==='IN'?'In':'Out',key='cash'+direction+currency;
+    out[key]=r2(out[key]+Math.max(0,Number(m.amount||0)));out.movementCount++;
+  });
+  return out;
+}
 function readActiveOpening(){
   try{
     const sessionValue=JSON.parse(sessionStorage.getItem('sifer360_active_opening')||'null');
@@ -7863,7 +7932,14 @@ function zExpectedByMethod(sales,opening){
       }
     }
   });
-  Object.keys(out).forEach(k=>out[k]=r2(Math.max(0,out[k])));
+  (S.movimientosCaja||[]).forEach(m=>{
+    if(String(m.cashbox||opening.cashbox||'')!==String(opening.cashbox||m.cashbox||'')||Number(m.ts)<Number(opening.openedAt||0))return;
+    const key=m.currency==='USD'?'efUSD':(m.currency==='BS'?'efBs':null);
+    if(!key)return;
+    const amount=Math.max(0,Number(m.amount||0));
+    out[key]+=m.direction==='IN'?amount:-amount;
+  });
+  Object.keys(out).forEach(k=>out[k]=r2(k==='efBs'||k==='efUSD'?out[k]:Math.max(0,out[k])));
   return out;
 }
 function zDiffStatus(rows){
@@ -7884,6 +7960,8 @@ function printCorteZ(z,autoPrint){
   const html='<div class="zpaper"><center><b>'+esc(S.cfg.empresa||'POS El Pistón')+'</b><br>REPORTE Z · CIERRE DE CAJA<br><small>REPORTE DE CONTROL INTERNO · NO FISCAL</small></center><hr>'+
     line('Corte Z',z.id)+line('Fecha',fmtDT(z.closedAt))+line('Caja',z.cashbox)+line('Cajero',z.cashier)+line('Desde',z.openedAt?fmtDT(z.openedAt):'—')+line('Desde factura',z.invoiceFrom||'—')+line('Hasta factura',z.invoiceTo||'—')+
     '<hr><b>RESUMEN DE VENTAS</b>'+line('Facturas válidas',String(z.salesCount))+line('Anulaciones',String(z.voidCount))+line('Ventas netas USD',usd(z.netUsd))+line('Ventas netas Bs.',bsf(z.netBs))+line('IVA USD',usd(z.ivaUsd))+line('IGTF USD',usd(z.igtfUsd))+
+    '<hr><b>RESUMEN DE COBROS Y CRÉDITOS</b>'+line('Cobros de CxC recibidos',usd(z.detailTotals&&z.detailTotals.cxcUsd||0)+' / '+bsf(z.detailTotals&&z.detailTotals.cxcBs||0))+line('Depósitos Cashea recibidos',usd(z.detailTotals&&z.detailTotals.casheaUsd||0))+line('Ventas a crédito generadas (CxC)',usd(z.detailTotals&&z.detailTotals.creditSalesUsd||0))+
+    '<hr><b>MOVIMIENTOS DE EFECTIVO FÍSICO</b>'+line('Entradas efectivo USD (+)',usd(z.detailTotals&&z.detailTotals.cashInUsd||0))+line('Salidas efectivo USD (−)',usd(z.detailTotals&&z.detailTotals.cashOutUsd||0))+line('Entradas efectivo Bs. (+)',bsf(z.detailTotals&&z.detailTotals.cashInBs||0))+line('Salidas efectivo Bs. (−)',bsf(z.detailTotals&&z.detailTotals.cashOutBs||0))+line('Cantidad de movimientos',String(z.detailTotals&&z.detailTotals.movementCount||0))+
     '<hr><b>ARQUEO POR MÉTODO</b><div class="zrec-head">Sistema / Real / Diferencia</div>'+recHtml+
     '<hr><b>RESULTADO DE CONCILIACIÓN</b>'+line('Estado',z.reconciliationStatus||(reconciliation.length?zDiffStatus(reconciliation):'SIN ARQUEO DETALLADO · CORTE ANTERIOR'))+line('Faltante USD',usd(z.shortageUsd||0))+line('Sobrante USD',usd(z.surplusUsd||0))+line('Faltante Bs.',bsf(z.shortageBs||0))+line('Sobrante Bs.',bsf(z.surplusBs||0))+notes+
     '<hr>'+line('Operador',z.cashier)+line('Generado',new Date(z.closedAt).toLocaleString('es-VE'))+'<hr><center>Conserve este reporte para auditoría interna.<br>La impresión no sustituye una factura fiscal ni registra una operación directamente en una impresora fiscal.</center></div>';
@@ -7899,6 +7977,7 @@ function corteZDlg(){
   const el=h('<div class="form"><div class="hint">Arqueo previo obligatorio: compare el saldo que registra el sistema con el importe real de cada método. La diferencia se calcula como Real − Sistema. El cierre guarda una fotografía inalterable del turno y después permite imprimir el reporte térmico de 80 mm.</div>'+
     '<section id="zOpenPanel" style="border:1px solid var(--lo);padding:10px;margin:8px 0;border-radius:6px"><b>Apertura de turno / fondo inicial</b><p class="hint">Si esta caja todavía no tiene un turno abierto, registre el fondo inicial antes de realizar el arqueo.</p><div class="row"><label>Fondo inicial Bs. <input class="fld r" id="zOpeningBs" value="0,00" inputmode="decimal" style="width:125px"></label><label>Fondo inicial US$ <input class="fld r" id="zOpeningUsd" value="0,00" inputmode="decimal" style="width:125px"></label><button class="btn primary" id="zOpenShift">Abrir turno</button></div><div class="hint" id="zOpenStatus"></div></section>'+
     '<div class="gridwrap"><table class="grid"><thead><tr><th>Resumen del turno</th><th class="r">Total</th></tr></thead><tbody id="zSummary"></tbody></table></div>'+
+    '<section style="border:1px solid var(--lo);padding:10px;margin:8px 0;border-radius:6px"><b>Movimientos de efectivo físico (+ / −)</b><div class="row" style="flex-wrap:wrap"><label>Tipo <select class="fld" id="zMovDir"><option value="IN">Entrada (+)</option><option value="OUT">Salida (−)</option></select></label><label>Moneda <select class="fld" id="zMovCur"><option value="BS">Efectivo Bs.</option><option value="USD">Efectivo USD</option></select></label><label>Monto <input class="fld r" id="zMovAmount" inputmode="decimal" placeholder="0,00" style="width:110px"></label><label>Motivo <input class="fld" id="zMovReason" maxlength="160" placeholder="Ej. retiro para sencillo" style="min-width:190px"></label><button class="btn" id="zMovAdd">Registrar movimiento</button></div><div class="hint" id="zMovStatus">Registre entradas o salidas de efectivo físico para que aparezcan en el cierre.</div><div id="zMovRows"></div></section>'+
     '<div class="gridwrap"><table class="grid" style="min-width:660px"><thead><tr><th>Método de pago</th><th>Moneda</th><th class="r">Saldo en sistema</th><th class="r">Monto real contado / conciliado</th><th class="r">Dif. (+/−)</th></tr></thead><tbody id="zReconcile"></tbody><tfoot id="zReconcileFoot"></tfoot></table></div>'+
     '<div class="gridwrap"><table class="grid"><thead><tr><th>Totales de arqueo</th><th class="r">US$</th><th class="r">Bs.</th></tr></thead><tbody id="zTotals"></tbody></table></div>'+
     '<label for="zObservations">Observaciones del cierre</label><textarea class="fld" id="zObservations" rows="2" placeholder="Explique faltantes, sobrantes, depósitos pendientes o incidencias."></textarea>'+
@@ -7950,6 +8029,8 @@ function corteZDlg(){
     const period=getPeriodSales(),validSales=period.filter(s=>!s.void),voidSales=period.filter(s=>s.void);
     $('#zSummary',el).innerHTML=[['Facturas válidas',String(validSales.length)],['Anulaciones',String(voidSales.length)],['Ventas netas USD',usd(moneyTotal(validSales,s=>Number(s.total||0)))],['Ventas netas Bs.',bsf(moneyTotal(validSales,s=>Number(s.total||0)*Number(s.rate||S.cfg.rate||0)))],['IVA USD',usd(moneyTotal(validSales,s=>Number(s.iva||0)))],['IGTF USD',usd(moneyTotal(validSales,s=>Number(s.igtf||0)))]] .map(r=>'<tr><td>'+esc(r[0])+'</td><td class="r"><b>'+esc(r[1])+'</b></td></tr>').join('');
     const oldReal=readReal();
+    const movements=(S.movimientosCaja||[]).filter(m=>String(m.cashbox||box)===String(box)&&Number(m.ts)>=shiftStart()&&Number(m.ts)<=Date.now()).sort((a,b)=>Number(b.ts)-Number(a.ts));
+    $('#zMovRows',el).innerHTML=movements.length?'<div class="gridwrap"><table class="grid"><thead><tr><th>Fecha</th><th>Movimiento</th><th>Motivo</th><th class="r">Monto</th><th>Usuario</th></tr></thead><tbody>'+movements.map(m=>'<tr><td>'+esc(fmtDT(m.ts))+'</td><td>'+esc((m.direction==='IN'?'Entrada (+)':'Salida (−)')+' · '+(m.currency==='USD'?'Efectivo USD':'Efectivo Bs.'))+'</td><td>'+esc(m.reason||'—')+'</td><td class="r">'+esc(m.currency==='USD'?usd(m.amount):bsf(m.amount))+'</td><td>'+esc(m.user||'—')+'</td></tr>').join('')+'</tbody></table></div>':'<div class="hint">Sin movimientos de efectivo registrados en este turno.</div>';
     const rows=getRows();
     $('#zReconcile',el).innerHTML=rows.map(r=>{
       const existing=oldReal[r.id];
@@ -7976,6 +8057,15 @@ function corteZDlg(){
     if(view){const z=getZHistory().find(item=>item.id===view.dataset.zView&&String(item.cashbox)===box);if(z)printCorteZ(z,false);return;}
     const reprint=e.target.closest('[data-z-print]');
     if(reprint){const z=getZHistory().find(item=>item.id===reprint.dataset.zPrint&&String(item.cashbox)===box);if(z)printCorteZ(z,true);return;}
+    if(e.target.id==='zMovAdd'){
+      active=readActiveOpening();
+      if(!boxOpen()){msg('Debe abrir el turno antes de registrar movimientos.','bad');return;}
+      const amount=pn($('#zMovAmount',el).value),reason=$('#zMovReason',el).value.trim();
+      if(!amount||!reason){msg('Indique un monto mayor que cero y el motivo del movimiento.','bad');return;}
+      if(!Array.isArray(S.movimientosCaja))S.movimientosCaja=[];
+      S.movimientosCaja.push({id:'MOV-'+box.replace(/\W/g,'')+'-'+Date.now(),cashbox:box,ts:Date.now(),direction:$('#zMovDir',el).value,currency:$('#zMovCur',el).value,amount:r2(amount),reason,user:currentCajero(),openingId:active.id||''});
+      save();$('#zMovAmount',el).value='';$('#zMovReason',el).value='';$('#zMovStatus',el).textContent='Movimiento registrado y guardado en el historial del turno.';draw();return;
+    }
     if(e.target.id==='zOpenShift'){
       active=readActiveOpening();
       if(boxOpen()){msg('Ya existe un turno abierto para esta caja.','bad');draw();return;}
@@ -8001,7 +8091,7 @@ function corteZDlg(){
       const rec=result.rec.map(r=>Object.assign({},r,{real:Number(r.real),diff:Number(r.diff)}));
       const seqs=cajaSeqs(),seq=seqs[box]||{z:1};const zSeq=Number(seq.z)||1;seq.z=zSeq+1;seqs[box]=seq;localStorage.setItem('sifer360_box_sequences',JSON.stringify(seqs));
       const t=Object.assign({},result.total);
-      const z={id:'Z-'+box.replace(/\W/g,'')+'-'+new Date().getFullYear()+two(new Date().getMonth()+1)+two(new Date().getDate())+'-'+pad(zSeq,4),cashbox:box,cashier:currentCajero(),openedAt:active.openedAt,closedAt:Date.now(),openingId:active.id||'',invoiceFrom:all.length?pad(Math.min(...all.map(s=>Number(s.no)||0))):'—',invoiceTo:all.length?pad(Math.max(...all.map(s=>Number(s.no)||0))):'—',salesCount:sales.length,voidCount:voids.length,netUsd:moneyTotal(sales,s=>Number(s.total||0)),netBs:moneyTotal(sales,s=>Number(s.total||0)*Number(s.rate||S.cfg.rate||0)),ivaUsd:moneyTotal(sales,s=>Number(s.iva||0)),igtfUsd:moneyTotal(sales,s=>Number(s.igtf||0)),payments:zPayTotals(sales),openingBs:Number(active.bs||0),openingUsd:Number(active.usd||0),reconciliation:rec,reconciliationStatus:status,shortageUsd:t.shortageUsd,surplusUsd:t.surplusUsd,shortageBs:t.shortageBs,surplusBs:t.surplusBs,observations:$('#zObservations',el).value.trim(),saleIds:all.map(s=>s.no),status:'cerrada'};
+      const z={id:'Z-'+box.replace(/\W/g,'')+'-'+new Date().getFullYear()+two(new Date().getMonth()+1)+two(new Date().getDate())+'-'+pad(zSeq,4),cashbox:box,cashier:currentCajero(),openedAt:active.openedAt,closedAt:Date.now(),openingId:active.id||'',invoiceFrom:all.length?pad(Math.min(...all.map(s=>Number(s.no)||0))):'—',invoiceTo:all.length?pad(Math.max(...all.map(s=>Number(s.no)||0))):'—',salesCount:sales.length,voidCount:voids.length,netUsd:moneyTotal(sales,s=>Number(s.total||0)),netBs:moneyTotal(sales,s=>Number(s.total||0)*Number(s.rate||S.cfg.rate||0)),ivaUsd:moneyTotal(sales,s=>Number(s.iva||0)),igtfUsd:moneyTotal(sales,s=>Number(s.igtf||0)),payments:zPayTotals(sales),detailTotals:zOperationalTotals(all,shiftStart(),Date.now(),box),openingBs:Number(active.bs||0),openingUsd:Number(active.usd||0),reconciliation:rec,reconciliationStatus:status,shortageUsd:t.shortageUsd,surplusUsd:t.surplusUsd,shortageBs:t.shortageBs,surplusBs:t.surplusBs,observations:$('#zObservations',el).value.trim(),saleIds:all.map(s=>s.no),status:'cerrada'};
       getZHistory().push(z);
       save();
       const closedOpening=Object.assign({},active,{status:'cerrada',closedAt:z.closedAt,cutId:z.id});

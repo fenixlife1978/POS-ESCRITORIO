@@ -18,7 +18,9 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install
-      - name: Cash register regression tests
+      - name: Automated tests
         run: npm test
+      - name: TypeScript validation
+        run: npm run lint
       - name: Production build
         run: npm run build
