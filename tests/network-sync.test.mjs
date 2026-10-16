@@ -147,3 +147,37 @@ test('las liquidaciones CASHEA se encolan y se aceptan al sincronizar cajas', ()
   assert.match(electron, /'casheaLiquidaciones'/);
   assert.match(electron, /allowedCollections\.has\(collection\)/);
 });
+
+test('cobros expone efectivo, Zelle, pago móvil, transferencia, tarjeta, Biopago y Cashea', () => {
+  for (const method of ['efUSD','efBs','zelle','pmovil','transf','punto','biopago','cashea']) {
+    assert.match(pos, new RegExp("id:'" + method + "'"));
+    assert.match(pos, new RegExp('id="pm-' + method + '"|data-m="' + method + '"'));
+  }
+  assert.match(pos, /const pays=METHODS\.filter\(m=>amts\[m\.id\]>0\)/);
+  assert.match(pos, /Enviar saldo pendiente a/);
+  assert.match(pos, /S\.cxc\.push/);
+});
+
+test('CASHEA permite seleccionar liquidaciones parciales y concilia solo el lote seleccionado', () => {
+  assert.match(pos, /const allPendings = \(S\.casheaMovimientos \|\| \[\]\)\.filter/);
+  assert.match(pos, /data-liq-op=/);
+  assert.match(pos, /pendings = allPendings\.filter/);
+  assert.match(pos, /totFinanciado = r2\(pendings\.reduce/);
+  assert.match(pos, /Math\.abs\(depositUsd-netoUsd\)>0\.01/);
+  assert.match(pos, /m\.estado = 'Liquidado'/);
+});
+
+test('CASHEA registra reversión auditada, exige autorización y devuelve operaciones a pendientes', () => {
+  assert.match(pos, /function reverseCasheaSettlement\(/);
+  assert.match(pos, /requestPin\('Revertir liquidación CASHEA '\+lot\.id\)/);
+  assert.match(pos, /lot\.estado='Revertido'/);
+  assert.match(pos, /tipo:'REVERSIÓN'/);
+  assert.match(pos, /m\.estado='Pendiente Liquidación'/);
+  assert.match(pos, /data-csh-reverse=/);
+});
+
+test('la liquidación CASHEA guarda referencia bancaria y el depósito real conciliado', () => {
+  assert.match(pos, /refBancaria = ref/);
+  assert.match(pos, /depositadoUsd:depositUsd/);
+  assert.match(pos, /diferenciaUsd:r2\(depositUsd-netoUsd\)/);
+});
