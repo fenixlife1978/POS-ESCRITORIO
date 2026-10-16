@@ -7826,42 +7826,55 @@ function showPosScreen(){
 function showDashboardScreen(){
   const d=$('#adminDashboard'),main=$('.main'),left=$('.left');
   if(!d||!main)return;
-  if(left)left.hidden=true;d.hidden=false;main.classList.add('dashboard-mode');
+  if(left)left.hidden=true;
+  d.hidden=false;main.classList.add('dashboard-mode');
   const b=$('#btnDashboard');if(b){b.hidden=activeUser().role!=='admin';b.setAttribute('aria-pressed','true');}
   renderHeader();
-  const today=new Date();today.setHours(0,0,0,0);
-  const tomorrow=new Date(today.getTime()+86400000),prev=new Date(today.getTime()-86400000);
+  const now=new Date(),today=new Date(now);today.setHours(0,0,0,0);
+  const tomorrow=new Date(today.getTime()+86400000),monthStart=new Date(now.getFullYear(),now.getMonth(),1),nextMonth=new Date(now.getFullYear(),now.getMonth()+1,1);
   const sales=(S.sales||[]).filter(x=>!x.void);
+  const purchases=(S.purchases||[]).filter(x=>!x.void);
   const stamp=x=>{const n=Number(x.ts||x.timestamp||0);if(n)return n;const parsed=Date.parse(x.date||x.fecha||'');return Number.isFinite(parsed)?parsed:0;};
   const value=x=>Number(x.total||x.totalUsd||x.amount||0);
-  const todaySales=sales.filter(x=>stamp(x)>=today.getTime()&&stamp(x)<tomorrow.getTime());
-  const prevSales=sales.filter(x=>stamp(x)>=prev.getTime()&&stamp(x)<today.getTime());
   const sum=list=>r2(list.reduce((a,x)=>a+value(x),0));
-  const todayTotal=sum(todaySales),prevTotal=sum(prevSales),change=prevTotal?((todayTotal-prevTotal)/prevTotal)*100:(todayTotal?100:0);
-  const avg=todaySales.length?todayTotal/todaySales.length:0;
-  const low=(S.products||[]).filter(p=>Number(p.stock||0)<=Number(p.min||0)).length;
-  const cxc=(S.cxc||[]).filter(x=>!['Pagada','Cerrada','Anulada','Pagado','Cerrado'].includes(String(x.status||x.estado||'')));
-  const cxp=(S.cxp||[]).filter(x=>!['Pagada','Cerrada','Anulada','Pagado','Cerrado'].includes(String(x.status||x.estado||'')));
-  const boxes=cashboxList(),users=window.SIFERAccess&&window.SIFERAccess.getUsers?window.SIFERAccess.getUsers():[];
-  const openings=(()=>{try{return JSON.parse(localStorage.getItem('sifer360_openings')||'[]')||[];}catch(e){return [];}})();
-  const openCount=boxes.filter(b=>{try{const o=JSON.parse(localStorage.getItem('sifer360_active_opening')||'null');return o&&o.status==='abierta'&&String(o.cashbox)===String(b.id);}catch(e){return false;}}).length;
-  const pct=change>0?'+':change<0?'':'';
+  const todaySales=sales.filter(x=>stamp(x)>=today.getTime()&&stamp(x)<tomorrow.getTime());
+  const monthSales=sales.filter(x=>stamp(x)>=monthStart.getTime()&&stamp(x)<nextMonth.getTime());
+  const previousDay=sales.filter(x=>stamp(x)>=today.getTime()-86400000&&stamp(x)<today.getTime());
+  const todayTotal=sum(todaySales),monthTotal=sum(monthSales),yesterdayTotal=sum(previousDay);
+  const change=yesterdayTotal?((todayTotal-yesterdayTotal)/yesterdayTotal)*100:(todayTotal?100:0);
   const fmtPct=n=>(n>0?'+':'')+n.toFixed(1).replace('.',',')+'%';
-  const dayLabels=[],dayValues=[];
-  for(let i=6;i>=0;i--){const start=new Date(today.getTime()-i*86400000),end=new Date(start.getTime()+86400000);dayLabels.push(start.toLocaleDateString('es-VE',{weekday:'short'}).replace('.',''));dayValues.push(sum(sales.filter(x=>stamp(x)>=start.getTime()&&stamp(x)<end.getTime())));}
-  const maxDay=Math.max(1,...dayValues);
-  d.innerHTML='<div class="admin-dash-head"><div><div class="dash-eyebrow">PANEL DE CONTROL · SIFER 360</div><h1>Resumen del negocio</h1><p>Indicadores de operación y actividad comercial · '+esc(fmtDT(Date.now()))+'</p></div><div class="dash-head-actions"><button class="btn" data-dash-action="users">♙ Gestión de usuarios</button><button class="btn primary" data-dash-action="boxes">▣ Gestión de cajas</button></div></div>'+
+  const fmtMoney=n=>usd(n);
+  const outstanding=list=>r2(list.reduce((a,x)=>a+Math.max(0,Number(x.total||0)-Number(x.paid||0)),0));
+  const cxc=(S.cxc||[]).filter(x=>Math.max(0,Number(x.total||0)-Number(x.paid||0))>0.009);
+  const cxp=(S.cxp||[]).filter(x=>Math.max(0,Number(x.total||0)-Number(x.paid||0))>0.009);
+  const totalCxc=outstanding(cxc),totalCxp=outstanding(cxp);
+  const products=S.products||[],low=products.filter(p=>Number(p.stock||0)<=Number(p.min||0)).length;
+  const fmtDate=x=>{const t=stamp(x);return t?new Date(t).toLocaleString('es-VE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';};
+  const escMoney=x=>esc(fmtMoney(value(x)));
+  const latestSales=sales.slice().sort((a,b)=>stamp(b)-stamp(a)).slice(0,5);
+  const latestPurchases=purchases.slice().sort((a,b)=>stamp(b)-stamp(a)).slice(0,5);
+  const methodTotals={};
+  todaySales.forEach(sale=>(sale.pays||[]).forEach(p=>{const name=p.name||p.method||p.id||'Otros';const amount=Number(p.amountUsd??p.amount??p.amountBs??0);methodTotals[name]=(methodTotals[name]||0)+Math.max(0,amount);}));
+  const paymentSlices=Object.entries(methodTotals).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const palette=['#2563eb','#10b981','#f59e0b','#8b5cf6','#ef4444'];
+  const grand=paymentSlices.reduce((a,x)=>a+x[1],0);
+  let offset=0;
+  const gradient=grand?paymentSlices.map(([name,v],i)=>{const start=offset;offset+=v/grand*100;return palette[i%palette.length]+' '+start.toFixed(2)+'% '+offset.toFixed(2)+'%';}).join(', '):'#dbe3ea 0% 100%';
+  const pieLegend=paymentSlices.length?paymentSlices.map(([name,v],i)=>'<div class="dash-legend-row"><span class="dash-legend-dot" style="background:'+palette[i%palette.length]+'"></span><span>'+esc(name)+'</span><b>'+fmtMoney(v)+'</b><small>'+((v/grand)*100).toFixed(1).replace('.',',')+'%</small></div>').join(''):'<div class="dash-empty">No hay ventas con métodos de pago registrados hoy.</div>';
+  const salesRows=latestSales.length?latestSales.map(x=>'<tr><td>'+esc(fmtDate(x))+'</td><td><b>'+esc(x.ctrlNo||('Venta #'+String(x.no??'—')) )+'</b></td><td>'+esc(x.client?.name||x.clientName||'Cliente general')+'</td><td class="r">'+escMoney(x)+'</td></tr>').join(''):'<tr><td colspan="4" class="dash-empty">Todavía no hay ventas registradas.</td></tr>';
+  const purchaseRows=latestPurchases.length?latestPurchases.map(x=>'<tr><td>'+esc(fmtDate(x))+'</td><td><b>'+esc(x.docProv||('Compra #'+String(x.no??'—')) )+'</b></td><td>'+esc(x.supplier?.name||x.supplierName||'Proveedor')+'</td><td class="r">'+escMoney(x)+'</td></tr>').join(''):'<tr><td colspan="4" class="dash-empty">Todavía no hay compras registradas.</td></tr>';
+  d.innerHTML='<div class="admin-dash-head"><div><div class="dash-eyebrow">PANEL DE CONTROL · SIFER 360</div><h1>Resumen del negocio</h1><p>Indicadores comerciales y financieros · '+esc(fmtDate({ts:Date.now()}))+'</p></div></div>'+
   '<div class="dash-kpis">'+
-  '<article class="dash-kpi"><span class="dash-kpi-icon blue">↗</span><div class="dash-kpi-label">Ventas de hoy</div><div class="dash-kpi-value">'+usd(todayTotal)+'</div><div class="dash-kpi-foot '+(change>=0?'positive':'negative')+'">'+fmtPct(change)+' <span>vs. día anterior</span></div></article>'+
-  '<article class="dash-kpi"><span class="dash-kpi-icon green">▤</span><div class="dash-kpi-label">Operaciones de hoy</div><div class="dash-kpi-value">'+todaySales.length+'</div><div class="dash-kpi-foot">'+(prevSales.length)+' ayer <span>· ventas cerradas</span></div></article>'+
-  '<article class="dash-kpi"><span class="dash-kpi-icon amber">◉</span><div class="dash-kpi-label">Ticket promedio</div><div class="dash-kpi-value">'+usd(avg)+'</div><div class="dash-kpi-foot">'+(todaySales.length?'Promedio de hoy':'Sin operaciones hoy')+'</div></article>'+
-  '<article class="dash-kpi"><span class="dash-kpi-icon violet">▦</span><div class="dash-kpi-label">Productos registrados</div><div class="dash-kpi-value">'+(S.products||[]).length.toLocaleString('es-VE')+'</div><div class="dash-kpi-foot">'+low+' <span>en mínimo o agotados</span></div></article>'+
-  '<article class="dash-kpi"><span class="dash-kpi-icon red">◷</span><div class="dash-kpi-label">CxC pendientes</div><div class="dash-kpi-value">'+cxc.length+'</div><div class="dash-kpi-foot">Documentos por cobrar</div></article>'+
-  '<article class="dash-kpi"><span class="dash-kpi-icon teal">▣</span><div class="dash-kpi-label">Cajas registradas</div><div class="dash-kpi-value">'+boxes.length+'</div><div class="dash-kpi-foot">'+users.filter(u=>u.role==='cajero').length+' cajeros · '+openCount+' aperturas activas</div></article>'+
-  '</div><div class="dash-lower"><section class="dash-panel"><div class="dash-panel-head"><div><h2>Ventas · últimos 7 días</h2><p>Comparativo diario en US$</p></div><strong>'+usd(dayValues.reduce((a,n)=>a+n,0))+'</strong></div><div class="dash-chart">'+dayValues.map((v,i)=>'<div class="dash-bar-col" title="'+esc(dayLabels[i]+': '+usd(v))+'"><b>'+ (v?esc(usd(v)):'')+'</b><div class="dash-bar-track"><span style="height:'+Math.max(v?5:0,(v/maxDay)*100)+'%"></span></div><small>'+esc(dayLabels[i])+'</small></div>').join('')+'</div></section>'+
-  '<section class="dash-panel"><div class="dash-panel-head"><div><h2>Estado operativo</h2><p>Resumen de control</p></div><span class="dash-live-dot">EN VIVO</span></div><div class="dash-status-row"><span>Usuarios registrados</span><b>'+users.length+'</b></div><div class="dash-status-row"><span>Cajas configuradas</span><b>'+boxes.filter(b=>b.active!==false).length+' activas</b></div><div class="dash-status-row"><span>Cuentas por pagar</span><b>'+cxp.length+' pendientes</b></div><div class="dash-status-row"><span>Inventario bajo mínimo</span><b class="'+(low?'dash-warn':'dash-ok')+'">'+low+'</b></div><div class="dash-status-row"><span>Fondo/turno abierto en este equipo</span><b>'+(readActiveOpening()&&readActiveOpening().status==='abierta'?'Abierto':'Sin apertura')+'</b></div></section></div>'+
-  '<div class="dash-shortcuts"><button class="dash-shortcut" data-dash-action="users"><span>♙</span><b>Gestión de Usuarios</b><small>Crear usuarios, definir roles y asignar cajas</small></button><button class="dash-shortcut" data-dash-action="boxes"><span>▣</span><b>Gestión de Cajas</b><small>Crear, habilitar y administrar cajas</small></button><button class="dash-shortcut" data-dash-action="sales"><span>▤</span><b>Ventas del día</b><small>Consultar operaciones registradas</small></button><button class="dash-shortcut" data-dash-action="inventory"><span>▧</span><b>Inventario</b><small>Existencias, precios y catálogo</small></button></div>';
-  d.querySelectorAll('[data-dash-action]').forEach(b=>b.addEventListener('click',()=>{const act=b.dataset.dashAction;if(act==='users')usersManagementDlg();else if(act==='boxes')cashboxesManagementDlg();else{showPosScreen();if(act==='sales')salesDlg();else inventoryDlg();}}));
+  '<article class="dash-kpi"><span class="dash-kpi-icon blue">↗</span><div class="dash-kpi-label">Ventas del día</div><div class="dash-kpi-value">'+fmtMoney(todayTotal)+'</div><div class="dash-kpi-foot '+(change>=0?'positive':'negative')+'">'+fmtPct(change)+' <span>vs. día anterior</span></div></article>'+
+  '<article class="dash-kpi"><span class="dash-kpi-icon green">▤</span><div class="dash-kpi-label">Ventas del mes</div><div class="dash-kpi-value">'+fmtMoney(monthTotal)+'</div><div class="dash-kpi-foot">'+monthSales.length+' operaciones este mes</div></article>'+
+  '<article class="dash-kpi"><span class="dash-kpi-icon amber">◷</span><div class="dash-kpi-label">Total CxC pendiente</div><div class="dash-kpi-value">'+fmtMoney(totalCxc)+'</div><div class="dash-kpi-foot">'+cxc.length+' documentos con saldo</div></article>'+
+  '<article class="dash-kpi"><span class="dash-kpi-icon red">▤</span><div class="dash-kpi-label">Total CxP pendiente</div><div class="dash-kpi-value">'+fmtMoney(totalCxp)+'</div><div class="dash-kpi-foot">'+cxp.length+' obligaciones con saldo</div></article>'+
+  '<article class="dash-kpi"><span class="dash-kpi-icon violet">▦</span><div class="dash-kpi-label">Artículos en inventario</div><div class="dash-kpi-value">'+products.length.toLocaleString('es-VE')+'</div><div class="dash-kpi-foot">'+low+' <span>en mínimo o agotados</span></div></article>'+
+  '<article class="dash-kpi"><span class="dash-kpi-icon teal">▧</span><div class="dash-kpi-label">Unidades en existencia</div><div class="dash-kpi-value">'+products.reduce((a,p)=>a+Number(p.stock||0),0).toLocaleString('es-VE')+'</div><div class="dash-kpi-foot">Inventario registrado</div></article>'+
+  '</div><div class="dash-analytics-grid"><section class="dash-panel"><div class="dash-panel-head"><div><h2>Últimas 5 ventas</h2><p>Operaciones más recientes · montos en US$</p></div><strong>'+sales.length+'</strong></div><div class="dash-table-wrap"><table class="dash-table"><thead><tr><th>Fecha</th><th>Documento</th><th>Cliente</th><th class="r">Total</th></tr></thead><tbody>'+salesRows+'</tbody></table></div></section>'+
+  '<section class="dash-panel"><div class="dash-panel-head"><div><h2>Últimas 5 compras</h2><p>Entradas más recientes · montos en US$</p></div><strong>'+purchases.length+'</strong></div><div class="dash-table-wrap"><table class="dash-table"><thead><tr><th>Fecha</th><th>Documento</th><th>Proveedor</th><th class="r">Total</th></tr></thead><tbody>'+purchaseRows+'</tbody></table></div></section>'+
+  '<section class="dash-panel dash-chart-panel"><div class="dash-panel-head"><div><h2>Ventas de hoy por método de pago</h2><p>Distribución porcentual · vista tipo dona 3D</p></div></div><div class="dash-pie-layout"><div class="dash-pie-3d" style="--pie-gradient:conic-gradient('+gradient+')"><div class="dash-pie-hole"><b>'+fmtMoney(grand)+'</b><small>Total procesado</small></div></div><div class="dash-pie-legend">'+pieLegend+'</div></div></section>'+
+  '<section class="dash-panel dash-chart-panel"><div class="dash-panel-head"><div><h2>Resumen financiero</h2><p>Saldos pendientes y actividad</p></div><span class="dash-live-dot">ACTUAL</span></div><div class="dash-status-row"><span>Operaciones del día</span><b>'+todaySales.length+'</b></div><div class="dash-status-row"><span>Ticket promedio</span><b>'+fmtMoney(todaySales.length?todayTotal/todaySales.length:0)+'</b></div><div class="dash-status-row"><span>Ventas de ayer</span><b>'+fmtMoney(yesterdayTotal)+'</b></div><div class="dash-status-row"><span>Saldo total por cobrar</span><b>'+fmtMoney(totalCxc)+'</b></div><div class="dash-status-row"><span>Saldo total por pagar</span><b>'+fmtMoney(totalCxp)+'</b></div></section></div>';
 }
 function usersManagementDlg(editUsername){
   if(!window.SIFERAccess||!window.SIFERAccess.getUsers){msg('El servicio de usuarios no está disponible.','bad');return;}
