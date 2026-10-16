@@ -43,13 +43,13 @@ test('el administrador tiene panel para servidor y clientes LAN', () => {
   assert.match(ui, /Red y sincronización/);
   assert.match(ui, /Activar esta caja como servidor/);
   assert.match(ui, /Conectar esta caja como cliente/);
-  assert.match(ui, /IP DEL SERVIDOR/);
+  assert.match(ui, /IP DETECTADA/);
 });
 
 test('el panel explica límites de red y recomienda reserva de IP', () => {
-  assert.match(ui, /reserva DHCP/);
+  assert.match(ui, /Reserva esta IP en el router/);
   assert.match(ui, /no cifra el tráfico/);
-  assert.match(ui, /ventas simultáneas sin conexión requieren conciliación/);
+  assert.match(ui, /Las diferencias de inventario por ventas simultáneas requieren conciliación/);
 });
 
 test('el servidor anuncia descubrimiento LAN sin exigir IP fija', () => {
