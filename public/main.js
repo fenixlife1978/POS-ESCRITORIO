@@ -7819,7 +7819,7 @@ function showDashboardScreen(){
   const d=$('#adminDashboard'),main=$('.main'),left=$('.left');
   if(!d||!main)return;
   if(left)left.hidden=true;d.hidden=false;main.classList.add('dashboard-mode');
-  const b=$('#btnDashboard');if(b)b.setAttribute('aria-pressed','true');
+  const b=$('#btnDashboard');if(b){b.hidden=activeUser().role!=='admin';b.setAttribute('aria-pressed','true');}
   const today=new Date();today.setHours(0,0,0,0);
   const tomorrow=new Date(today.getTime()+86400000),prev=new Date(today.getTime()-86400000);
   const sales=(S.sales||[]).filter(x=>!x.void);
