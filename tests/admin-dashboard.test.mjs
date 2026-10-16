@@ -6,24 +6,37 @@ const main = readFileSync(new URL('../public/main.js', import.meta.url), 'utf8')
 const access = readFileSync(new URL('../public/access.js', import.meta.url), 'utf8');
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const css = readFileSync(new URL('../public/styles.css', import.meta.url), 'utf8');
+const dashboard = main.slice(main.indexOf('function showDashboardScreen(){'), main.indexOf('function usersManagementDlg', main.indexOf('function showDashboardScreen(){')));
 
-test('admin login goes straight to the business dashboard, not activity cards', () => {
+test('admin login goes straight to the business dashboard and can return from the header', () => {
   assert.match(access, /function renderDashboard\(u\)\{if\(u\.role==='admin'\)[\s\S]{0,350}window\.SIFERDashboard\.show\(\);return;/);
   assert.match(html, /id="adminDashboard"/);
   assert.match(html, /id="btnDashboard"/);
   assert.match(main, /window\.SIFERDashboard=\{show:showDashboardScreen/);
+  assert.match(main, /dashboardButton\.addEventListener\('click',\(\)=>showDashboardScreen\(\)\)/);
 });
 
-test('dashboard includes sales KPIs, percent comparison, seven-day trend and operational indicators', () => {
-  assert.match(main, /Ventas de hoy/);
-  assert.match(main, /vs\. día anterior/);
-  assert.match(main, /Ticket promedio/);
-  assert.match(main, /Ventas · últimos 7 días/);
-  assert.match(main, /Inventario bajo mínimo/);
-  assert.match(main, /Cuentas por pagar/);
+test('dashboard contains requested commercial and financial KPIs', () => {
+  assert.match(dashboard, /Ventas del día/);
+  assert.match(dashboard, /Ventas del mes/);
+  assert.match(dashboard, /Total CxC pendiente/);
+  assert.match(dashboard, /Total CxP pendiente/);
+  assert.match(dashboard, /Artículos en inventario/);
+  assert.match(dashboard, /Unidades en existencia/);
+  assert.match(dashboard, /Últimas 5 ventas/);
+  assert.match(dashboard, /Últimas 5 compras/);
 });
 
-test('administrator has user and cashbox management modules in the complete toolbar', () => {
+test('dashboard shows latest five transactions and a dimensional payment-method chart, without shortcut buttons', () => {
+  assert.match(dashboard, /slice\(0,5\)/);
+  assert.match(dashboard, /dash-pie-3d/);
+  assert.match(dashboard, /Ventas de hoy por método de pago/);
+  assert.doesNotMatch(dashboard, /dash-shortcut|data-dash-action|dash-head-actions/);
+  assert.match(css, /\.dash-pie-3d/);
+  assert.match(css, /\.dash-table/);
+});
+
+test('administrator has user and cashbox management modules in the toolbar', () => {
   assert.match(main, /\['usuarios','Usuarios'/);
   assert.match(main, /\['cajas','Gestión cajas'/);
   assert.match(access, /admin:\[[^\]]*'usuarios','cajas'/);
@@ -39,9 +52,13 @@ test('cashiers and administrators cannot share a box assignment; admins need an 
   assert.match(main, /No se puede deshabilitar una caja con turno abierto/);
 });
 
-test('dashboard returns through the header and management styles remain responsive', () => {
-  assert.match(main, /dashboardButton\.addEventListener\('click',\(\)=>showDashboardScreen\(\)\)/);
-  assert.match(main, /showPosScreen\(\);t\[3\]\(\)/);
+test('every user can end the session from the shared top header', () => {
+  assert.match(html, /id="btnLogout"[^>]*>⇥ Cerrar sesión/);
+  assert.match(main, /const logoutButton=\$\('#btnLogout'\);if\(logoutButton\)logoutButton\.addEventListener\('click'/);
+  assert.match(access, /function logout\(\)/);
+});
+
+test('dashboard and management layouts are responsive', () => {
   assert.match(css, /\.main\.dashboard-mode \.left\{display:none!important\}/);
-  assert.match(css, /@media\(max-width:560px\)\{\.main\.dashboard-mode/);
+  assert.match(css, /@media\(max-width:560px\)\{\.dash-pie-layout/);
 });
