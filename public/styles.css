@@ -380,3 +380,6 @@ button.sp:hover{background:var(--sel)}
 .user-admin-form .newgrid{margin:6px 0 12px}
 @media(max-width:900px){.dash-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.dash-lower{grid-template-columns:1fr}.dash-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.main.dashboard-mode{padding:10px}.dash-kpis{grid-template-columns:1fr}.dash-kpi{padding:14px}.dash-lower{grid-template-columns:minmax(0,1fr)}.dash-chart{gap:4px}.dash-bar-col>b{font-size:9px}.dash-head-actions{width:100%}.dash-head-actions .btn{flex:1}.dash-shortcuts{grid-template-columns:1fr 1fr}}
+
+/* Respetar los estados hidden de navegación por rol */
+#toolbar [hidden], .topr #btnDashboard[hidden]{display:none!important}
