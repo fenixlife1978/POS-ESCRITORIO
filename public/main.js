@@ -6012,19 +6012,23 @@ function casheaPrintVoucherDlg(m){
 }
 
 function casheaSettlementDlg(onDone){
-  const pendings = (S.casheaMovimientos || []).filter(m => m.estado === 'Pendiente Liquidación');
+  const allPendings = (S.casheaMovimientos || []).filter(m => m.estado === 'Pendiente Liquidación');
+  let pendings = allPendings.slice();
   if(!pendings.length){
     msg('No hay operaciones de Cashea pendientes de liquidación.', 'bad');
     return;
   }
   const rate = S.cfg.rate;
-  const totFinanciado = pendings.reduce((acc, m) => acc + (m.financiadoUsd || 0), 0);
+  let totFinanciado = pendings.reduce((acc, m) => acc + (m.financiadoUsd || 0), 0);
 
   const el = h('<div class="form" style="gap:12px">'+
     '<div style="background:#1E1B4B;border:1px solid #4338CA;border-radius:8px;padding:12px;color:#EEF2FF">'+
       '<b style="font-size:15px;color:#FBBF24">📥 Registrar Liquidación de Lote CASHEA</b>'+
-      '<div style="font-size:12px;color:#C7D2FE">Concilie las transferencias bancarias depositadas por Cashea en la cuenta del comercio</div>'+
+      '<div style="font-size:12px;color:#C7D2FE">Seleccione las operaciones incluidas en este depósito real de Cashea. Se puede liquidar un subconjunto y conciliar el resto posteriormente.</div>'+
     '</div>'+
+    '<div class="gridwrap" style="max-height:180px"><table class="grid"><thead><tr><th>Incluir</th><th>Factura</th><th>Cliente</th><th class="r">Financiado US$</th></tr></thead><tbody>'+
+      allPendings.map(m=>'<tr><td><input type="checkbox" data-liq-op="'+esc(m.id)+'" checked aria-label="Incluir operación '+esc(m.id)+'"></td><td>'+esc(m.ventaNo)+'</td><td>'+esc(m.clienteNombre||m.clienteCi||'—')+'</td><td class="r">'+esc(usd(m.financiadoUsd||0))+'</td></tr>').join('')+
+    '</tbody></table></div>'+
     '<div class="docgrid">'+
       '<div class="f"><label>Nº de Operaciones pendientes</label><input class="fld mono" value="'+pendings.length+' facturas" readonly></div>'+
       '<div class="f"><label>Total Bruto por Cobrar (US$)</label><input class="fld r mono" id="liqBruto" value="'+nf(totFinanciado)+'" readonly style="font-weight:700"></div>'+
@@ -6049,6 +6053,15 @@ function casheaSettlementDlg(onDone){
   const refInp = $('#liqRef', el);
   const depositInp = $('#liqDeposit', el);
   const bancoSel = $('#liqBanco', el);
+  el.addEventListener('change', e => {
+    const checkbox = e.target.closest('[data-liq-op]');
+    if(!checkbox)return;
+    const selected = new Set($$('#[data-liq-op]',el).filter(input=>input.checked).map(input=>input.dataset.liqOp));
+    pendings = allPendings.filter(m=>selected.has(String(m.id)));
+    totFinanciado = r2(pendings.reduce((acc,m)=>acc+Number(m.financiadoUsd||0),0));
+    $('#liqBruto',el).value=nf(totFinanciado);
+    recalc();
+  });
 
   function recalc(){
     const pct = Math.max(0, Number(comPctInp.value) || 0);
@@ -6094,6 +6107,7 @@ function casheaSettlementDlg(onDone){
           const ref = refInp.value.trim();
           const depositRaw = depositInp.value.trim();
           const pct = Number(comPctInp.value);
+          if(!pendings.length){msg('Seleccione al menos una operación pendiente para liquidar.','bad');return false;}
           const comUsd = r2(totFinanciado * (pct / 100));
           const netoUsd = r2(totFinanciado - comUsd);
           const depositUsd = depositRaw ? pn(depositRaw) : null;
@@ -6123,6 +6137,30 @@ function casheaSettlementDlg(onDone){
       }
     ]
   });
+}
+
+function reverseCasheaSettlement(movementId,onDone){
+  const movement=(S.casheaMovimientos||[]).find(m=>String(m.id)===String(movementId));
+  if(!movement||movement.estado!=='Liquidado'||!movement.loteLiquidacion){msg('La operación no tiene una liquidación activa que pueda revertirse.','bad');return false;}
+  const lot=(S.casheaLiquidaciones||[]).find(item=>item.id===movement.loteLiquidacion&&item.tipo!=='REVERSIÓN');
+  if(!lot||lot.estado==='Revertido'){msg('El lote ya fue revertido o no existe en el historial.','bad');return false;}
+  if(window.SIFERAccess&&typeof window.SIFERAccess.requestPin==='function'&&!window.SIFERAccess.requestPin('Revertir liquidación CASHEA '+lot.id))return false;
+  if(!confirm('¿Revertir el lote '+lot.id+'? Las operaciones volverán a pendientes, pero el lote y esta reversión quedarán registrados en auditoría.'))return false;
+  const now=Date.now(), revId='REV-CSH-'+now.toString(36).toUpperCase();
+  const affected=(S.casheaMovimientos||[]).filter(m=>m.estado==='Liquidado'&&m.loteLiquidacion===lot.id);
+  if(!affected.length){msg('No hay operaciones activas en ese lote.','bad');return false;}
+  lot.estado='Revertido';lot.revertidoAt=now;lot.revertidoPor=currentCajero();lot.reversionId=revId;
+  affected.forEach(m=>{
+    m.loteLiquidacionAnterior=lot.id;
+    m.estado='Pendiente Liquidación';
+    m.loteLiquidacion='';
+    delete m.bancoReceptor;delete m.refBancaria;delete m.comisionPct;delete m.comisionUsd;delete m.netoEsperadoUsd;delete m.tasaBcvLiquidacion;delete m.fechaLiquidacion;
+  });
+  S.casheaLiquidaciones.push({id:revId,tipo:'REVERSIÓN',fecha:now,loteOriginal:lot.id,operaciones:affected.map(m=>m.id),cantidad:affected.length,operador:currentCajero(),estado:'Registrada'});
+  save();
+  msg('Reversión '+revId+' registrada. '+affected.length+' operaciones regresaron a pendientes.');
+  if(onDone)onDone();
+  return true;
 }
 
 function casheaDlg(defaultTab){
@@ -6226,6 +6264,7 @@ function casheaDlg(defaultTab){
         '<td class="c">'+
           '<button class="btn mini2" data-csh-vouch="'+esc(m.id)+'" title="Ver Comprobante">Voucher</button> '+
           '<button class="btn mini2" data-csh-ticket="'+m.ventaNo+'" title="Ver Ticket Térmico 80mm">Ticket</button>'+
+          (isOk?'<button class="btn mini2" data-csh-reverse="'+esc(m.id)+'" title="Revertir lote conciliado">Revertir lote</button>':'')+
         '</td>'+
       '</tr>';
     }).join('');
@@ -6256,6 +6295,12 @@ function casheaDlg(defaultTab){
   });
 
   $('#cshRows', el).addEventListener('click', e => {
+    const bReverse = e.target.closest('[data-csh-reverse]');
+    if(bReverse){
+      const movement=(S.casheaMovimientos||[]).find(x=>x.id===bReverse.dataset.cshReverse);
+      if(movement)reverseCasheaSettlement(movement.id,()=>render());
+      return;
+    }
     const bVouch = e.target.closest('[data-csh-vouch]');
     if(bVouch){
       const m = (S.casheaMovimientos || []).find(x => x.id === bVouch.dataset.cshVouch);
