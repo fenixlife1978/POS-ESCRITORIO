@@ -130,3 +130,13 @@ test('el cierre explica visiblemente los requisitos y se habilita solo con arque
   assert.match(pos, /Arqueo completo\. Puede revisar la vista previa de 80 mm y confirmar el cierre/);
   assert.match(pos, /\$\('#zClose',el\)\.disabled=!opened\|\|!result\.total\.complete/);
 });
+
+test('el formulario de arqueo está destacado antes de movimientos de caja', () => {
+  const fn = pos.slice(pos.indexOf('function corteZDlg(){'), pos.indexOf('const TB='));
+  assert.match(fn, /id="zArqueoPanel"[\s\S]*?ARQUEO PREVIO POR MÉTODO DE PAGO/);
+  assert.ok(fn.indexOf('id="zArqueoPanel"') < fn.indexOf('Movimientos de efectivo físico'));
+  assert.match(fn, /id="zReconcile"/);
+  assert.match(fn, /id="zTotals"/);
+  assert.match(fn, /si no tuvo movimientos, escriba 0,00/i);
+  assert.doesNotMatch(fn, /\$\('#zClose',el\)\.disabled=!opened;\s*\$\('#zPreview',el\)\.disabled=!opened;/);
+});
