@@ -7833,7 +7833,7 @@ function showPosScreen(){
 function showDashboardScreen(){
   const d=$('#adminDashboard'),main=$('.main'),left=$('.left');
   if(!d||!main)return;
-  if(left)left.hidden=true;
+  if(left)left.hidden=false; // Mantener la toolbar completa visible también en el dashboard administrativo.
   d.hidden=false;main.classList.add('dashboard-mode');
   const b=$('#btnDashboard');if(b){b.hidden=activeUser().role!=='admin';b.setAttribute('aria-pressed','true');}
   renderHeader();
