@@ -8414,6 +8414,7 @@ function wire(){
   if(sbSeniat)sbSeniat.addEventListener('click',()=>seniatSudebanDlg());
 
   const dashboardButton=$('#btnDashboard');if(dashboardButton)dashboardButton.addEventListener('click',()=>showDashboardScreen());
+  const logoutButton=$('#btnLogout');if(logoutButton)logoutButton.addEventListener('click',()=>{if(confirm('¿Desea cerrar la sesión actual?')){if(window.SIFERAccess&&window.SIFERAccess.logout)window.SIFERAccess.logout();}});
   $('#toolbar').addEventListener('click',e=>{
     const b=e.target.closest('[data-tb]');if(!b)return;
     const t=TB.find(x=>x[0]===b.dataset.tb);if(t){if($('#adminDashboard')&&!$('#adminDashboard').hidden)showPosScreen();t[3]();}
