@@ -7828,7 +7828,12 @@ function zPayTotals(sales){
   return out;
 }
 function readActiveOpening(){
-  try{return JSON.parse(sessionStorage.getItem('sifer360_active_opening')||localStorage.getItem('sifer360_active_opening')||'null');}catch(e){return null;}
+  try{
+    const sessionValue=JSON.parse(sessionStorage.getItem('sifer360_active_opening')||'null');
+    if(sessionValue&&sessionValue.status==='abierta')return sessionValue;
+    const localValue=JSON.parse(localStorage.getItem('sifer360_active_opening')||'null');
+    return localValue||sessionValue||null;
+  }catch(e){return null;}
 }
 function writeActiveOpening(opening){
   const value=JSON.stringify(opening);
@@ -7877,10 +7882,10 @@ function printCorteZ(z,autoPrint){
   const recHtml=reconciliation.map(r=>'<div class="zrec"><b>'+esc(r.name)+' ('+esc(r.cur)+')</b><div class="zrecvals"><span>Sist. '+esc(nf(r.system))+'</span><span>Real '+esc(r.real==null?'—':nf(r.real))+'</span><b>Dif. '+esc(r.diff==null?'—':(r.diff>0?'+':'')+nf(r.diff))+'</b></div></div>').join('');
   const notes=z.observations?line('Observaciones',z.observations):'';
   const html='<div class="zpaper"><center><b>'+esc(S.cfg.empresa||'POS El Pistón')+'</b><br>REPORTE Z · CIERRE DE CAJA<br><small>REPORTE DE CONTROL INTERNO · NO FISCAL</small></center><hr>'+
-    line('Corte Z',z.id)+line('Fecha',fmtDT(z.closedAt))+line('Caja',z.cashbox)+line('Cajero',z.cashier)+line('Desde',z.openedAt?fmtDT(z.openedAt):'—')+line('Hasta factura',z.invoiceTo||'—')+
+    line('Corte Z',z.id)+line('Fecha',fmtDT(z.closedAt))+line('Caja',z.cashbox)+line('Cajero',z.cashier)+line('Desde',z.openedAt?fmtDT(z.openedAt):'—')+line('Desde factura',z.invoiceFrom||'—')+line('Hasta factura',z.invoiceTo||'—')+
     '<hr><b>RESUMEN DE VENTAS</b>'+line('Facturas válidas',String(z.salesCount))+line('Anulaciones',String(z.voidCount))+line('Ventas netas USD',usd(z.netUsd))+line('Ventas netas Bs.',bsf(z.netBs))+line('IVA USD',usd(z.ivaUsd))+line('IGTF USD',usd(z.igtfUsd))+
     '<hr><b>ARQUEO POR MÉTODO</b><div class="zrec-head">Sistema / Real / Diferencia</div>'+recHtml+
-    '<hr><b>RESULTADO DE CONCILIACIÓN</b>'+line('Estado',z.reconciliationStatus||zDiffStatus(reconciliation))+line('Faltante USD',usd(z.shortageUsd||0))+line('Sobrante USD',usd(z.surplusUsd||0))+line('Faltante Bs.',bsf(z.shortageBs||0))+line('Sobrante Bs.',bsf(z.surplusBs||0))+notes+
+    '<hr><b>RESULTADO DE CONCILIACIÓN</b>'+line('Estado',z.reconciliationStatus||(reconciliation.length?zDiffStatus(reconciliation):'SIN ARQUEO DETALLADO · CORTE ANTERIOR'))+line('Faltante USD',usd(z.shortageUsd||0))+line('Sobrante USD',usd(z.surplusUsd||0))+line('Faltante Bs.',bsf(z.shortageBs||0))+line('Sobrante Bs.',bsf(z.surplusBs||0))+notes+
     '<hr>'+line('Operador',z.cashier)+line('Generado',new Date(z.closedAt).toLocaleString('es-VE'))+'<hr><center>Conserve este reporte para auditoría interna.<br>La impresión no sustituye una factura fiscal ni registra una operación directamente en una impresora fiscal.</center></div>';
   const printScript=autoPrint?'window.onload=()=>{window.focus();window.print()}':'window.onload=()=>window.focus()';
   w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(z.id)+'</title><style>@page{size:80mm auto;margin:3mm}*{box-sizing:border-box}body{margin:0;color:#000;font:10px/1.3 "Courier New",monospace}.zpaper{width:74mm;margin:auto}.zr{display:flex;justify-content:space-between;align-items:flex-start;gap:5px;margin:3px 0}.zr span{max-width:48mm;overflow-wrap:anywhere}.zr b{text-align:right;overflow-wrap:anywhere}.zrec{margin:5px 0;border-bottom:1px dotted #777;padding-bottom:4px}.zrecvals{display:flex;justify-content:space-between;gap:3px;font-size:9px;flex-wrap:wrap}.zrec-head{font-size:9px;margin:4px 0}hr{border:0;border-top:1px dashed #333;margin:7px 0}center{line-height:1.5}small{font-size:8px}@media print{body{width:74mm}}</style></head><body>'+html+'<script>'+printScript+'<\/script></body></html>');
@@ -7893,6 +7898,7 @@ function corteZDlg(){
   const shiftStart=()=>active&&active.openedAt?new Date(active.openedAt).getTime():Date.now();
   const el=h('<div class="form"><div class="hint">Arqueo previo obligatorio: compare el saldo que registra el sistema con el importe real de cada método. La diferencia se calcula como Real − Sistema. El cierre guarda una fotografía inalterable del turno y después permite imprimir el reporte térmico de 80 mm.</div>'+
     '<section id="zOpenPanel" style="border:1px solid var(--lo);padding:10px;margin:8px 0;border-radius:6px"><b>Apertura de turno / fondo inicial</b><p class="hint">Si esta caja todavía no tiene un turno abierto, registre el fondo inicial antes de realizar el arqueo.</p><div class="row"><label>Fondo inicial Bs. <input class="fld r" id="zOpeningBs" value="0,00" inputmode="decimal" style="width:125px"></label><label>Fondo inicial US$ <input class="fld r" id="zOpeningUsd" value="0,00" inputmode="decimal" style="width:125px"></label><button class="btn primary" id="zOpenShift">Abrir turno</button></div><div class="hint" id="zOpenStatus"></div></section>'+
+    '<div class="gridwrap"><table class="grid"><thead><tr><th>Resumen del turno</th><th class="r">Total</th></tr></thead><tbody id="zSummary"></tbody></table></div>'+
     '<div class="gridwrap"><table class="grid" style="min-width:660px"><thead><tr><th>Método de pago</th><th>Moneda</th><th class="r">Saldo en sistema</th><th class="r">Monto real contado / conciliado</th><th class="r">Dif. (+/−)</th></tr></thead><tbody id="zReconcile"></tbody><tfoot id="zReconcileFoot"></tfoot></table></div>'+
     '<div class="gridwrap"><table class="grid"><thead><tr><th>Totales de arqueo</th><th class="r">US$</th><th class="r">Bs.</th></tr></thead><tbody id="zTotals"></tbody></table></div>'+
     '<label for="zObservations">Observaciones del cierre</label><textarea class="fld" id="zObservations" rows="2" placeholder="Explique faltantes, sobrantes, depósitos pendientes o incidencias."></textarea>'+
@@ -7941,6 +7947,8 @@ function corteZDlg(){
     $('#zOpenShift',el).disabled=opened;
     $('#zOpeningBs',el).disabled=opened;
     $('#zOpeningUsd',el).disabled=opened;
+    const period=getPeriodSales(),validSales=period.filter(s=>!s.void),voidSales=period.filter(s=>s.void);
+    $('#zSummary',el).innerHTML=[['Facturas válidas',String(validSales.length)],['Anulaciones',String(voidSales.length)],['Ventas netas USD',usd(moneyTotal(validSales,s=>Number(s.total||0)))],['Ventas netas Bs.',bsf(moneyTotal(validSales,s=>Number(s.total||0)*Number(s.rate||S.cfg.rate||0)))],['IVA USD',usd(moneyTotal(validSales,s=>Number(s.iva||0)))],['IGTF USD',usd(moneyTotal(validSales,s=>Number(s.igtf||0)))]] .map(r=>'<tr><td>'+esc(r[0])+'</td><td class="r"><b>'+esc(r[1])+'</b></td></tr>').join('');
     const oldReal=readReal();
     const rows=getRows();
     $('#zReconcile',el).innerHTML=rows.map(r=>{
