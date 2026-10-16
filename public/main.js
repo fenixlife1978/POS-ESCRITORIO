@@ -6304,7 +6304,7 @@ function payDlg(draft){
       '<label class="chk"><input type="checkbox" id="payCreditChk"> Enviar saldo pendiente a <b>Cuentas por Cobrar (CxC)</b></label>'+
       '<span id="payCreditDaysWrap" class="row" style="margin-left:auto" hidden><label for="payCreditDays">Plazo crédito (días):</label><input class="fld r" id="payCreditDays" value="15" style="width:64px" inputmode="numeric"></span>'+
     '</div>'+
-    '<div class="gridwrap paywrap"><table class="grid"><thead><tr><th>Forma de pago</th><th class="c">Moneda</th><th class="r">Monto recibido</th><th></th><th>Ref. Bancaria / Aprob.</th></tr></thead><tbody>'+rowsHtml+'</tbody></table></div><p class="hint">Los pagos en divisas (efectivo US$ y Zelle) generan IGTF de 3 %. Pagos en moneda nacional (Biopago, Punto, Pago Móvil) y Cashea (BNPL) están exentos de IGTF (0 %).</p></div>');
+    '<div class="gridwrap paywrap"><table class="grid"><thead><tr><th>Forma de pago</th><th class="c">Moneda</th><th class="r">Monto recibido</th><th></th><th>Ref. Bancaria / Aprob.</th></tr></thead><tbody>'+rowsHtml+'</tbody></table></div><p class="hint">Trazabilidad: Zelle, tarjeta/Punto, Biopago, Pago Móvil, transferencia y Cashea requieren referencia o autorización real. El efectivo no requiere referencia. Los pagos en divisas (efectivo US$ y Zelle) generan IGTF de 3 %; valide la aplicación fiscal según la operación real.</p></div>');
   const amts=()=>{const o={};METHODS.forEach(m=>{o[m.id]=pn($('#pm-'+m.id,el).value);});return o;};
   const refs=()=>{const o={};METHODS.forEach(m=>{const inp=$('#pref-'+m.id,el);o[m.id]=inp?inp.value.trim():'';});return o;};
   let last=null;
@@ -6315,7 +6315,7 @@ function payDlg(draft){
     el._casheaTx=draft.casheaTx;
     const prev=$('#casheaPayPreview',el);
     prev.hidden=false;
-    prev.innerHTML='<b>⚡ CASHEA:</b> Aprobación <b>'+esc(draft.casheaTx.aprobacion)+'</b> · Inicial: <b>'+usd(draft.casheaTx.inicialUsd)+'</b> · Financiado: <b>'+usd(draft.casheaTx.financiadoUsd)+'</b> ('+draft.casheaTx.cuotasCount+' cuota(s) de '+usd(draft.casheaTx.cuotaUsd)+' c/u)';
+    prev.innerHTML='<b>⚡ CASHEA aplicado:</b> Aprobación <b>'+esc(draft.casheaTx.aprobacion)+'</b> · Inicial: <b>'+usd(draft.casheaTx.inicialUsd)+'</b> · Financiado: <b>'+usd(draft.casheaTx.financiadoUsd)+'</b> ('+draft.casheaTx.cuotasCount+' cuota(s) de '+usd(draft.casheaTx.cuotaUsd)+' c/u). Confirme el cobro para finalizar la factura; luego registre la liquidación en el módulo Cashea.';
   }
   const upd=()=>{
     const st=calcPay(t.total,rate,amts());last=st;
@@ -6557,7 +6557,7 @@ function ticketText(s){
       L.push(row(' Inicial en caja:',usd(s.cashea.inicialUsd)));
     }
     L.push(row(' Financiado Cashea:',usd(s.cashea.financiadoUsd)));
-    L.push(row(' 3 Cuotas quincenales:',usd(s.cashea.cuotaUsd)+' c/u'));
+    L.push(row(' '+(s.cashea.cuotasCount||3)+' cuota(s) quincenales:',usd(s.cashea.cuotaUsd)+' c/u'));
   }
   L.push(ln,ctr('¡GRACIAS POR SU COMPRA!'),ctr('Impresora Térmica 80mm · Control Interno'));
   return L.join('\n');
