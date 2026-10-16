@@ -6145,18 +6145,20 @@ function reverseCasheaSettlement(movementId,onDone){
   const lot=(S.casheaLiquidaciones||[]).find(item=>item.id===movement.loteLiquidacion&&item.tipo!=='REVERSIÓN');
   if(!lot||lot.estado==='Revertido'){msg('El lote ya fue revertido o no existe en el historial.','bad');return false;}
   if(window.SIFERAccess&&typeof window.SIFERAccess.requestPin==='function'&&!window.SIFERAccess.requestPin('Revertir liquidación CASHEA '+lot.id))return false;
-  if(!confirm('¿Revertir el lote '+lot.id+'? Las operaciones volverán a pendientes, pero el lote y esta reversión quedarán registrados en auditoría.'))return false;
+  const motivo=window.prompt('Indique el motivo de la reversión del lote '+lot.id+':','');
+  if(!motivo||!motivo.trim()){msg('La reversión requiere un motivo para auditoría.','bad');return false;}
+  if(!confirm('¿Revertir el lote '+lot.id+'? Las operaciones volverán a pendientes y el motivo quedará registrado.'))return false;
   const now=Date.now(), revId='REV-CSH-'+now.toString(36).toUpperCase();
   const affected=(S.casheaMovimientos||[]).filter(m=>m.estado==='Liquidado'&&m.loteLiquidacion===lot.id);
   if(!affected.length){msg('No hay operaciones activas en ese lote.','bad');return false;}
-  lot.estado='Revertido';lot.revertidoAt=now;lot.revertidoPor=currentCajero();lot.reversionId=revId;
+  lot.estado='Revertido';lot.revertidoAt=now;lot.revertidoPor=currentCajero();lot.reversionId=revId;lot.motivoReversion=motivo.trim();
   affected.forEach(m=>{
     m.loteLiquidacionAnterior=lot.id;
     m.estado='Pendiente Liquidación';
     m.loteLiquidacion='';
     delete m.bancoReceptor;delete m.refBancaria;delete m.comisionPct;delete m.comisionUsd;delete m.netoEsperadoUsd;delete m.tasaBcvLiquidacion;delete m.fechaLiquidacion;
   });
-  S.casheaLiquidaciones.push({id:revId,tipo:'REVERSIÓN',fecha:now,loteOriginal:lot.id,operaciones:affected.map(m=>m.id),cantidad:affected.length,operador:currentCajero(),estado:'Registrada'});
+  S.casheaLiquidaciones.push({id:revId,tipo:'REVERSIÓN',fecha:now,loteOriginal:lot.id,operaciones:affected.map(m=>m.id),cantidad:affected.length,operador:currentCajero(),motivo:motivo.trim(),estado:'Registrada'});
   save();
   msg('Reversión '+revId+' registrada. '+affected.length+' operaciones regresaron a pendientes.');
   if(onDone)onDone();
