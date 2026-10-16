@@ -116,3 +116,28 @@ test('la liquidación CASHEA exige depósito real conciliado y guarda trazabilid
   assert.match(pos, /includeBatch\?batch\.depositadoUsd/);
   assert.match(pos, /Referencia_Bancaria/);
 });
+
+
+test('el cobro exige referencias reales para los métodos electrónicos', () => {
+  assert.match(pos, /const refPrompts=\{zelle:/);
+  assert.match(pos, /voucher o código de autorización de la tarjeta/);
+  assert.match(pos, /número de operación\/autorización de Biopago/);
+  assert.match(pos, /referencia del pago móvil/);
+  assert.match(pos, /referencia de la transferencia/);
+  assert.match(pos, /finalize\(last,enteredAmts,isCred,cDays,enteredRefs,el\)/);
+});
+
+test('el asistente Cashea vuelve al modal de pago y conserva el plan aplicado', () => {
+  assert.match(pos, /function payDlg\(draft\)/);
+  assert.match(pos, /Volver al pago/);
+  assert.match(pos, /payDlg\(draftNow\)/);
+  assert.match(pos, /Confirme el cobro para finalizar la factura/);
+  assert.match(pos, /Array\.from\(\{length:cuotasCount\}/);
+});
+
+test('Cashea no inventa una aprobación ni afirma conexión oficial inexistente', () => {
+  assert.doesNotMatch(pos, /placeholder="CSH-894120" value="CSH-/);
+  assert.doesNotMatch(pos, /const cRef=\(refs&&refs\.cashea\)\|\|\('CSH-'\+/);
+  assert.match(pos, /código real de aprobación Cashea/);
+  assert.match(pos, /no consulta ni confirma aprobaciones mediante la API oficial de Cashea/);
+});
