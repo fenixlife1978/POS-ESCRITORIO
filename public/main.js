@@ -6276,7 +6276,8 @@ function casheaDlg(defaultTab){
 }
 
 /* ---------- cobro (con soporte de CASHEA y Crédito / CxC) ---------- */
-function payDlg(){
+function payDlg(draft){
+  draft=draft||{};
   if(!S.cart.length){msg('Agregue productos antes de cobrar.','bad');return;}
   const t=totals(),rate=S.cfg.rate;
   const rowsHtml=METHODS.map(m=>{
@@ -6302,6 +6303,10 @@ function payDlg(){
   const amts=()=>{const o={};METHODS.forEach(m=>{o[m.id]=pn($('#pm-'+m.id,el).value);});return o;};
   const refs=()=>{const o={};METHODS.forEach(m=>{const inp=$('#pref-'+m.id,el);o[m.id]=inp?inp.value.trim():'';});return o;};
   let last=null;
+  METHODS.forEach(m=>{const a=$('#pm-'+m.id,el),r=$('#pref-'+m.id,el);if(a&&draft.amts&&draft.amts[m.id]>0)a.value=nf(draft.amts[m.id]);if(r&&draft.refs&&draft.refs[m.id])r.value=draft.refs[m.id];});
+  if(draft.credit)$('#payCreditChk',el).checked=true;
+  if(draft.cDays)$('#payCreditDays',el).value=String(draft.cDays);
+  if(draft.casheaTx)el._casheaTx=draft.casheaTx;
   const upd=()=>{
     const st=calcPay(t.total,rate,amts());last=st;
     const isCred=$('#payCreditChk',el).checked;
@@ -6320,25 +6325,18 @@ function payDlg(){
   el.addEventListener('change',e=>{if(e.target.id==='payCreditChk')upd();});
   el.addEventListener('click',e=>{
     if(e.target.id==='btnCasheaAssistantInPay'||e.target.closest('#btnCasheaAssistantInPay')){
+      const draftNow={amts:amts(),refs:refs(),credit:$('#payCreditChk',el).checked,cDays:Math.max(1,Math.round(pn($('#payCreditDays',el).value)||15)),casheaTx:el._casheaTx||null};
       casheaPaymentAssistantDlg(t.total,rate,(cData)=>{
-        const cInp=$('#pm-cashea',el);if(cInp)cInp.value=nf(cData.financiadoUsd);
-        const cRef=$('#pref-cashea',el);if(cRef)cRef.value=cData.aprobacion;
+        draftNow.casheaTx=cData;
+        draftNow.refs.cashea=cData.aprobacion;
+        draftNow.amts.cashea=cData.financiadoUsd;
         if(cData.inicialUsd>0&&cData.inicialMetodoId){
-          const initInp=$('#pm-'+cData.inicialMetodoId,el);
-          if(initInp){
-            const m=METHODS.find(x=>x.id===cData.inicialMetodoId);
-            const amt=m.cur==='USD'?cData.inicialUsd:r2(cData.inicialUsd*rate);
-            initInp.value=nf(amt);
-          }
+          const m=METHODS.find(x=>x.id===cData.inicialMetodoId);
+          const amt=m.cur==='USD'?cData.inicialUsd:r2(cData.inicialUsd*rate);
+          draftNow.amts[cData.inicialMetodoId]=amt;
         }
-        el._casheaTx=cData;
-        const prev=$('#casheaPayPreview',el);
-        if(prev){
-          prev.hidden=false;
-          prev.innerHTML='<b>⚡ CASHEA:</b> Aprobación <b>'+esc(cData.aprobacion)+'</b> · Inicial: <b>'+usd(cData.inicialUsd)+'</b> · Financiado: <b>'+usd(cData.financiadoUsd)+'</b> (3 cuotas de '+usd(cData.cuotaUsd)+' c/u)';
-        }
-        upd();
-      });
+        payDlg(draftNow);
+      },()=>payDlg(draftNow));
       return;
     }
     const b=e.target.closest('[data-fill]');if(!b)return;
