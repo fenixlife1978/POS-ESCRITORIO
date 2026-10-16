@@ -170,6 +170,7 @@ test('CASHEA permite seleccionar liquidaciones parciales y concilia solo el lote
 test('CASHEA registra reversión auditada, exige autorización y devuelve operaciones a pendientes', () => {
   assert.match(pos, /function reverseCasheaSettlement\(/);
   assert.match(pos, /requestPin\('Revertir liquidación CASHEA '\+lot\.id\)/);
+  assert.match(pos, /No se puede revertir: el servicio de autorización no está disponible/);
   assert.match(pos, /lot\.estado='Revertido'/);
   assert.match(pos, /tipo:'REVERSIÓN'/);
   assert.match(pos, /m\.estado='Pendiente Liquidación'/);
