@@ -355,7 +355,7 @@ button.sp:hover{background:var(--sel)}
 
 /* Dashboard administrativo, Gestión de Usuarios y Gestión de Cajas */
 .main.dashboard-mode{display:block;overflow:auto;padding:clamp(12px,2vw,24px);background:#edf1f4}
-.main.dashboard-mode #adminDashboard{display:flex;flex-direction:column;gap:18px;min-height:100%;max-width:1600px;margin:0 auto}
+.main.dashboard-mode .left{display:none!important}.main.dashboard-mode #adminDashboard{display:flex;flex-direction:column;gap:18px;min-height:100%;max-width:1600px;margin:0 auto}
 .admin-dashboard[hidden]{display:none!important}
 .admin-dash-head{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
 .admin-dash-head h1{font:700 clamp(24px,2.2vw,34px)/1.1 var(--disp);margin:6px 0;color:#10222b}
