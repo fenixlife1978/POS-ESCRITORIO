@@ -6056,7 +6056,7 @@ function casheaSettlementDlg(onDone){
   el.addEventListener('change', e => {
     const checkbox = e.target.closest('[data-liq-op]');
     if(!checkbox)return;
-    const selected = new Set($$('#[data-liq-op]',el).filter(input=>input.checked).map(input=>input.dataset.liqOp));
+    const selected = new Set($('[data-liq-op]',el).filter(input=>input.checked).map(input=>input.dataset.liqOp));
     pendings = allPendings.filter(m=>selected.has(String(m.id)));
     totFinanciado = r2(pendings.reduce((acc,m)=>acc+Number(m.financiadoUsd||0),0));
     $('#liqBruto',el).value=nf(totFinanciado);
