@@ -5785,7 +5785,7 @@ function casheaPaymentAssistantDlg(totalSale, rate, onApplied, onCancel){
   const initialSummary = $('#cshInitialSummary', el);
   const initialMethods = METHODS.filter(m=>m.id!=='cashea');
   const initialNeedsRef = new Set(['biopago','punto','pmovil','transf','zelle']);
-  initialRows.innerHTML=initialMethods.map(m=>'<tr><td><b>'+esc(m.name)+'</b></td><td class="c">'+(m.cur==='USD'?'US
+  initialRows.innerHTML=initialMethods.map(m=>'<tr><td><b>'+esc(m.name)+'</b></td><td class="c">'+(m.cur==='USD'?'US$':'Bs.')+'</td><td><input class="fld r" type="number" min="0" step="0.01" id="cshInitAmt-'+m.id+'" data-csh-initial-method="'+m.id+'" value="0" style="min-width:105px" aria-label="Importe inicial '+esc(m.name)+'"></td><td>'+(initialNeedsRef.has(m.id)?'<input class="fld mini mono" id="cshInitRef-'+m.id+'" placeholder="Referencia / autorización" style="min-width:150px">':'<span class="hint">No aplica</span>')+'</td></tr>').join('');
   const ciInp = $('#cshCi', el);
   const tokenInp = $('#cshToken', el);
 
