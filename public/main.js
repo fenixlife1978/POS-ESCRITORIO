@@ -1103,7 +1103,7 @@ function openWin(o){
     el.addEventListener('click',()=>{if(b.fn&&b.fn()===false)return;closeWin();});
     (b.left?footL:footR).appendChild(el);
   });
-  bd.addEventListener('click',e=>{if(e.target.closest('[data-close]'))closeWin();});
+  bd.addEventListener('click',e=>{if(e.target.closest('[data-close]')){if(o.onClose)o.onClose();else closeWin();}});
   bd.addEventListener('keydown',e=>{
     if(e.key==='Enter'&&e.target.tagName==='INPUT'&&(e.target.type==='text'||!e.target.type)){
       e.preventDefault();
@@ -5742,7 +5742,7 @@ function divisasDlg(filterType){
 
 
 /* ---------- Módulo de Gestión y Conciliación CASHEA (BNPL) ---------- */
-function casheaPaymentAssistantDlg(totalSale, rate, onApplied){
+function casheaPaymentAssistantDlg(totalSale, rate, onApplied, onCancel){
   const el = h('<div class="form" style="gap:12px">'+
     '<div style="background:#1E1B4B;border:1px solid #4338CA;border-radius:8px;padding:12px;color:#EEF2FF">'+
       '<div style="display:flex;align-items:center;justify-content:space-between">'+
@@ -5844,7 +5844,7 @@ function casheaPaymentAssistantDlg(totalSale, rate, onApplied){
     w: 640,
     body: el,
     foot: [
-      { label: 'Cancelar' },
+      { label: 'Volver al pago', fn:()=>{closeWin();if(onCancel)onCancel();return false;} },
       {
         label: 'Aplicar a la Venta',
         primary: true,
@@ -5860,7 +5860,7 @@ function casheaPaymentAssistantDlg(totalSale, rate, onApplied){
           const mOpt = initMethod.options[initMethod.selectedIndex];
           const nivelTxt = selLevel.options[selLevel.selectedIndex].textContent;
 
-          onApplied({
+          const result={
             aprobacion: token,
             ci,
             nivel: nivelTxt,
@@ -5871,11 +5871,14 @@ function casheaPaymentAssistantDlg(totalSale, rate, onApplied){
             financiadoUsd,
             cuotasCount: cuotas,
             cuotaUsd
-          });
-          return true;
+          };
+          closeWin();
+          onApplied(result);
+          return false;
         }
       }
-    ]
+    ],
+    onClose:()=>{closeWin();if(onCancel)onCancel();}
   });
 }
 
