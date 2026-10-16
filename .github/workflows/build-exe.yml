@@ -26,6 +26,9 @@ jobs:
       - name: Instalar dependencias
         run: npm install --legacy-peer-deps
 
+      - name: Ejecutar pruebas de regresión
+        run: npm test
+
       - name: Compilar aplicación web (Vite)
         run: npm run build
 
