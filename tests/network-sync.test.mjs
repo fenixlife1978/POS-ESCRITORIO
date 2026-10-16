@@ -141,3 +141,9 @@ test('Cashea no inventa una aprobación ni afirma conexión oficial inexistente'
   assert.match(pos, /código real de aprobación Cashea/);
   assert.match(pos, /no consulta ni confirma aprobaciones mediante la API oficial de Cashea/);
 });
+
+test('las liquidaciones CASHEA se encolan y se aceptan al sincronizar cajas', () => {
+  assert.match(pos, /\['casheaLiquidaciones','cashea-settlement'\]/);
+  assert.match(electron, /'casheaLiquidaciones'/);
+  assert.match(electron, /allowedCollections\.has\(collection\)/);
+});
