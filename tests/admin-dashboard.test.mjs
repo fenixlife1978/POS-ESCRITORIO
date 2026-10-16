@@ -62,3 +62,25 @@ test('dashboard and management layouts are responsive', () => {
   assert.match(css, /\.main\.dashboard-mode \.left\{display:none!important\}/);
   assert.match(css, /@media\(max-width:560px\)\{\.dash-pie-layout/);
 });
+
+
+test('CASHEA initial payment can be split across several real payment methods', () => {
+  const assistant = main.slice(main.indexOf('function casheaPaymentAssistantDlg'), main.indexOf('function casheaSimulatorDlg'));
+  assert.match(assistant, /Distribución del pago inicial entre varios métodos/);
+  assert.match(assistant, /data-csh-initial-method/);
+  assert.match(assistant, /initialPayments\.push\(\{id:m\.id,name:m\.name,cur:m\.cur,amount,ref\}\)/);
+  assert.match(assistant, /Math\.abs\(r2\(paidInitialUsd-inicialUsd\)\)>0\.01/);
+  assert.match(assistant, /initialNeedsRef\.has\(m\.id\)&&!ref/);
+  assert.match(main, /draftNow\.refs=\{cashea:cData\.aprobacion\}/);
+  assert.match(main, /\(cData\.initialPayments\|\|\[\]\)\.forEach\(p=>\{draftNow\.amts\[p\.id\]=p\.amount;if\(p\.ref\)draftNow\.refs\[p\.id\]=p\.ref;\}\)/);
+});
+
+test('admin POS button opens mandatory opening dialog and logout is visible and wired', () => {
+  assert.match(main, /\['pos','POS','',openCashboxDlg\]/);
+  assert.match(main, /function openCashboxDlg\(/);
+  assert.match(main, /function adminCajaRequiredDlg\(/);
+  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  assert.match(html, /id="btnLogout"/);
+  assert.match(main, /const logoutButton=\$\('#btnLogout'\);if\(logoutButton\)logoutButton\.addEventListener\('click'/);
+  assert.match(access, /function logout\(\)\{sessionStorage\.removeItem\(SESSION\)/);
+});
