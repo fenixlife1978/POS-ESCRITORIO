@@ -798,7 +798,7 @@ let operationCaptureBusy = false;
 const OPERATION_COLLECTIONS = [
   ['sales','sale'], ['purchases','purchase'], ['cxc','receivable'], ['cxp','payable'],
   ['cortesZ','cash-close'], ['kardex','inventory-movement'], ['counts','inventory-count'],
-  ['held','held-sale'], ['casheaMovimientos','cashea-operation'], ['cambiosDivisas','currency-movement'],
+  ['held','held-sale'], ['casheaMovimientos','cashea-operation'], ['casheaLiquidaciones','cashea-settlement'], ['cambiosDivisas','currency-movement'],
   ['retencionesIva','tax-retention'], ['retentions','tax-retention'], ['returns','return'], ['voids','void']
 ];
 function operationIdentity(item,index){
