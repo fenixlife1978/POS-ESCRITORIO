@@ -7813,13 +7813,14 @@ function showPosScreen(){
   if(d)d.hidden=true;if(left)left.hidden=false;
   if(main)main.classList.remove('dashboard-mode');
   const b=$('#btnDashboard');if(b)b.setAttribute('aria-pressed','false');
-  renderAll();
+  renderHeader();renderAll();
 }
 function showDashboardScreen(){
   const d=$('#adminDashboard'),main=$('.main'),left=$('.left');
   if(!d||!main)return;
   if(left)left.hidden=true;d.hidden=false;main.classList.add('dashboard-mode');
   const b=$('#btnDashboard');if(b){b.hidden=activeUser().role!=='admin';b.setAttribute('aria-pressed','true');}
+  renderHeader();
   const today=new Date();today.setHours(0,0,0,0);
   const tomorrow=new Date(today.getTime()+86400000),prev=new Date(today.getTime()-86400000);
   const sales=(S.sales||[]).filter(x=>!x.void);
@@ -8068,6 +8069,7 @@ function printCorteZ(z,autoPrint){
   w.document.close();
 }
 function corteZDlg(){
+  if(activeUser().role==='admin'&&currentCaja()==='SIN-ASIGNAR'){msg('Para abrir o cerrar una caja como administrador, cree una caja y asígnesela en Gestión de Usuarios.','bad');usersManagementDlg(activeUser().username);return;}
   let active=readActiveOpening();
   const box=currentCaja();
   const boxOpen=()=>!!(active&&String(active.cashbox)===box&&active.status==='abierta');
