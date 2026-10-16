@@ -53,5 +53,5 @@ test('reporte térmico incluye detalle de conciliación y aclara que no emite fi
   assert.match(pos, /@page\{size:80mm auto/);
   assert.match(pos, /ARQUEO POR MÉTODO/);
   assert.match(pos, /Diferencia/);
-  assert.match(pos, /no registra una operación directamente en una impresora fiscal/);
+  assert.match(pos, /ni registra una operación directamente en una impresora fiscal/);
 });
