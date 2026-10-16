@@ -1082,7 +1082,9 @@ const IC={
  divisas:'<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
  cashea:'<rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20M7 15h3M14 15h3"/>',
  basedatos:'<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>',
- documentos:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>'
+ documentos:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',
+ usuarios:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-4 2.5-6 6.5-6s6.5 2 6.5 6M17 8a3 3 0 0 1 0 6M18 15c2.5.5 3.5 2 3.5 5"/>',
+ cajas:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5M16 4v5M7 14h4M7 17h7"/>'
 };
 const ico=n=>'<svg viewBox="0 0 24 24" aria-hidden="true">'+(IC[n]||'')+'</svg>';
 
@@ -6330,6 +6332,12 @@ function casheaDlg(defaultTab){
 
 /* ---------- cobro (con soporte de CASHEA y Crédito / CxC) ---------- */
 function payDlg(draft){
+  const loginUser=activeUser();
+  if(loginUser.role==='admin'){
+    if(currentCaja()==='SIN-ASIGNAR'){msg('Para cobrar como administrador, cree una caja y asígnesela en Gestión de Usuarios.','bad');usersManagementDlg(loginUser.username);return;}
+    const opening=readActiveOpening();
+    if(!opening||opening.status!=='abierta'||String(opening.cashbox)!==currentCaja()){msg('Abra primero el turno de su caja desde Reporte Z antes de cobrar.','bad');corteZDlg();return;}
+  }
   draft=draft||{};
   if(!S.cart.length){msg('Agregue productos antes de cobrar.','bad');return;}
   const t=totals(),rate=S.cfg.rate;
@@ -7889,7 +7897,7 @@ window.SIFERDashboard={show:showDashboardScreen,showPos:showPosScreen,refresh:sh
 /* ---------- menús y barra de herramientas ---------- */
 const focusEntry=()=>$('#entry').focus();
 const MENUS={
- 'Archivo':[['Nueva venta','F2',newSale],['Suspender venta','F5',suspend],['Recuperar venta','F6',recoverDlg],'-',['Ventas del día y cierre…','F9',salesDlg],'-',['Restablecer datos de ejemplo…','',resetAll]],
+ 'Archivo':[['Dashboard','',showDashboardScreen],['Nueva venta','F2',newSale],['Suspender venta','F5',suspend],['Recuperar venta','F6',recoverDlg],'-',['Ventas del día y cierre…','F9',salesDlg],'-',['Gestión de usuarios','',usersManagementDlg],['Gestión de cajas','',cashboxesManagementDlg],['Cerrar sesión','',()=>window.SIFERAccess&&window.SIFERAccess.logout()],'-',['Restablecer datos de ejemplo…','',resetAll]],
  'Ventas':[['Cobrar','F12',payDlg],['Módulo de Pagos CASHEA (BNPL)…','',()=>casheaDlg()],['Descuento…','F7',discountDlg],['Quitar renglón','Supr',removeSel],['Vaciar venta…','',clearCart],'-',['Cuentas por Cobrar (CxC)…','',()=>cxcDlg()]],
  'Compras':[['Registrar compra de mercancía…','F10',()=>comprasDlg('new')],['Historial de compras…','',()=>comprasDlg('hist')],['Directorio de proveedores…','',()=>comprasDlg('sup')],'-',['Cuentas por Pagar (CxP)…','',()=>cxpDlg()]],
   'Inventario':[['Maestro de inventario…','F8',inventoryDlg],['Nuevo producto (Ficha avanzada)…','',()=>productFormDlg(null)],['Generador de etiquetas / Hablador SKU (US$)…','',()=>labelGeneratorDlg()],'-',['Conteo físico de inventario (masivo)…','F11',()=>conteoDlg()],['Ficha / Tarjeta Kardex Profesional…','',()=>kardexDlg()],'-',['Buscar producto','F3',focusEntry]],
@@ -8249,7 +8257,7 @@ function renderHeader(){
   const session=activeUser();
   const dashboardButton=$('#btnDashboard');if(dashboardButton)dashboardButton.hidden=session.role!=='admin';
   $('#winTitle').textContent=c.empresa;
-  if($('#winSub'))$('#winSub').textContent='Punto de venta · Caja '+c.caja;
+  if($('#winSub'))$('#winSub').textContent=currentCaja()==='SIN-ASIGNAR'?'Dashboard administrativo · Sin caja asignada':'Punto de venta · Caja '+currentCaja();
   document.title='POS '+c.empresa;
   $('#fNo').value=pad(currentCajaInvoice());
   $('#fDate').value=fmtDT(Date.now());
