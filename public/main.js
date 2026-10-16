@@ -6033,7 +6033,7 @@ function casheaSettlementDlg(onDone){
         '</select>'+
       '</div>'+
       '<div class="f"><label>Nº Referencia Transferencia Cashea</label><input class="fld mono" id="liqRef" placeholder="Referencia bancaria real" autocomplete="off"></div>'+
-      '<div class="f"><label>% Comisión Cashea (MDR)</label><input class="fld r" id="liqComPct" type="number" min="0" max="100" step="0.01" value="5.00"></div>'+
+      '<div class="f"><label>% Comisión Cashea (MDR)</label><input class="fld r" id="liqComPct" type="number" min="0" max="100" step="0.01" required placeholder="Según contrato"></div>'+
       '<div class="f wide"><label>Monto neto depositado según banco (US$ equivalente)</label><input class="fld r mono" id="liqDeposit" inputmode="decimal" autocomplete="off" placeholder="Registra el monto real del estado de cuenta"></div>'+
     '</div>'+
     '<div class="cashea-calc-box" id="liqCalcBox"></div>'+
@@ -6093,7 +6093,7 @@ function casheaSettlementDlg(onDone){
           const netoUsd = r2(totFinanciado - comUsd);
           const depositUsd = depositRaw ? pn(depositRaw) : null;
           if(!ref){ msg('Ingrese la referencia bancaria real de Cashea.', 'bad'); return false; }
-          if(!depositRaw || depositUsd===null || !Number.isFinite(pct) || pct<0 || pct>100){ msg('Registre el depósito real y una comisión válida entre 0 % y 100 %.', 'bad'); return false; }
+          if(!depositRaw || depositUsd===null || !comPctInp.value.trim() || !Number.isFinite(pct) || pct<0 || pct>100){ msg('Registre el depósito real y una comisión válida entre 0 % y 100 %.', 'bad'); return false; }
           if(Math.abs(depositUsd-netoUsd)>0.01){ msg('Liquidación rechazada: el depósito real ('+usd(depositUsd)+') no coincide con el neto esperado ('+usd(netoUsd)+'). Revise la comisión o el estado de cuenta.', 'bad'); return false; }
           const loteId = 'LIQ-CSH-' + Date.now().toString(36).toUpperCase();
           const now = Date.now();
