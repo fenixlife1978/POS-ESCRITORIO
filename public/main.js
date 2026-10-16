@@ -7885,7 +7885,7 @@ function zOperationalTotals(sales,start,end,box){
   sales.filter(s=>!s.void).forEach(s=>(s.pays||[]).forEach(p=>{if(p.id==='credito')out.creditSalesUsd=r2(out.creditSalesUsd+Number(p.amount||0));}));
   const saleNos=new Set(sales.filter(s=>!s.void&&String(s.cashbox||box)===String(box)).map(s=>String(s.no)));
   (S.casheaLiquidaciones||[]).forEach(lot=>{
-    if(lot.tipo==='REVERSIÓN'||!inPeriod(lot.fecha))return;
+    if(lot.tipo==='REVERSIÓN'||lot.estado==='Revertido'||!inPeriod(lot.fecha))return;
     const ops=Array.isArray(lot.operaciones)?lot.operaciones:[];
     if((S.casheaMovimientos||[]).some(m=>ops.includes(m.id)&&saleNos.has(String(m.ventaNo))))out.casheaUsd=r2(out.casheaUsd+Number(lot.depositadoUsd||0));
   });
