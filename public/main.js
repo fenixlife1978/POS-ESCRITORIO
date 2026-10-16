@@ -6292,7 +6292,7 @@ function payDlg(draft){
       '<td class="c mono" style="font-weight:600">'+(m.cur==='USD'?'US$':'Bs.')+'</td>'+
       '<td class="r"><input class="fld r pin" id="pm-'+m.id+'" data-m="'+m.id+'" inputmode="decimal" autocomplete="off" placeholder="0,00" aria-label="Monto recibido en '+esc(m.name)+'"></td>'+
       '<td><button class="btn mini2" data-fill="'+m.id+'" type="button">Saldo</button>'+(isCashea?' <button class="btn mini2" id="btnCasheaAssistantInPay" type="button" style="background:#312E81;color:#E0E7FF;border-color:#4338CA;font-weight:700">⚡ Asistente</button>':'')+'</td>'+
-      '<td>'+(hasRef?'<input class="fld mini mono pref" id="pref-'+m.id+'" data-m="'+m.id+'" placeholder="'+(isCashea?'Token CSH-...':'Ref. / Aprob.')+'" style="width:120px" title="'+(isCashea?'Nº de Aprobación o Token Cashea':'Nº de Referencia bancaria o Aprobación')+'">'
+      '<td>'+(hasRef?'<input class="fld mini mono pref" id="pref-'+m.id+'" data-m="'+m.id+'" placeholder="'+(m.id==='zelle'?'Confirmación Zelle':m.id==='punto'?'Voucher / autorización tarjeta':m.id==='biopago'?'Nº operación Biopago':m.id==='pmovil'?'Referencia pago móvil':m.id==='transf'?'Referencia transferencia':isCashea?'Aprobación real Cashea':'Referencia bancaria')+'" style="width:145px" title="'+(isCashea?'Código real de aprobación Cashea':'Referencia / autorización de '+m.name)+'">'
       :'<span class="hint" style="font-size:11px">—</span>')+'</td>'+
     '</tr>';
   }).join('');
@@ -6356,12 +6356,16 @@ function payDlg(draft){
     foot:[{label:'Cancelar'},{id:'btnConfirm',label:'Confirmar cobro',primary:true,fn:()=>{
       const isCred=$('#payCreditChk',el).checked;
       if(!last||(last.pending>=0.01&&!isCred))return false;
+      const enteredAmts=amts(),enteredRefs=refs();
+      const refPrompts={zelle:'confirmación o referencia de Zelle',punto:'voucher o código de autorización de la tarjeta',biopago:'número de operación/autorización de Biopago',pmovil:'referencia del pago móvil',transf:'referencia de la transferencia',cashea:'código real de aprobación de Cashea'};
+      for(const m of METHODS){if((enteredAmts[m.id]||0)>0&&refPrompts[m.id]&&!enteredRefs[m.id]){msg('Complete la '+refPrompts[m.id]+' para registrar la trazabilidad de '+m.name+'.','bad');const ri=$('#pref-'+m.id,el);if(ri)ri.focus();return false;}}
+      if(enteredAmts.cashea>0&&el._casheaTx&&Math.abs(enteredAmts.cashea-el._casheaTx.financiadoUsd)>0.01){msg('El importe financiado no coincide con el plan Cashea aplicado. Vuelva al asistente.','bad');return false;}
       if(isCred&&last.pending>=0.01&&S.client.rif==='V-00000000'){
         msg('Para ventas a crédito (CxC), seleccione o registre primero el cliente (F4).','bad');
         return false;
       }
       const cDays=Math.max(1,Math.round(pn($('#payCreditDays',el).value)||15));
-      finalize(last,amts(),isCred,cDays,refs(),el);return false;
+      finalize(last,enteredAmts,isCred,cDays,enteredRefs,el);return false;
     }}],
     onOpen:()=>{upd();$('#pm-efUSD',el).focus();}});
 }
@@ -6411,7 +6415,8 @@ function finalize(st,amts,isCred,cDays,refs,payEl){
 
   const casheaAmt=r2(amts.cashea||0);
   if(casheaAmt>0){
-    const cRef=(refs&&refs.cashea)||('CSH-'+Math.floor(100000+Math.random()*900000));
+    const cRef=(refs&&refs.cashea)||'';
+    if(!cRef){msg('Falta el código real de aprobación Cashea; no se generará una referencia ficticia.','bad');return;}
     const cTx=(payEl&&payEl._casheaTx)||{};
     const inicialUsd=cTx.inicialUsd!==undefined?cTx.inicialUsd:r2(t.total-casheaAmt);
     const nivel=cTx.nivel||'Nivel 3 (40% inicial / 60% financiado)';
