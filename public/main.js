@@ -7854,7 +7854,7 @@ function showDashboardScreen(){
   const latestSales=sales.slice().sort((a,b)=>stamp(b)-stamp(a)).slice(0,5);
   const latestPurchases=purchases.slice().sort((a,b)=>stamp(b)-stamp(a)).slice(0,5);
   const methodTotals={};
-  todaySales.forEach(sale=>(sale.pays||[]).forEach(p=>{const name=p.name||p.method||p.id||'Otros';const amount=Number(p.amountUsd??p.amount??p.amountBs??0);methodTotals[name]=(methodTotals[name]||0)+Math.max(0,amount);}));
+  todaySales.forEach(sale=>(sale.pays||[]).forEach(p=>{const name=p.name||p.method||p.id||'Otros';let amount=Number(p.amountUsd??p.amount??p.amountBs??0);if(p.cur==='VES'&&!p.amountUsd&&!p.amountBs)amount=amount/Math.max(1,Number(sale.rate||S.cfg.rate||1));methodTotals[name]=(methodTotals[name]||0)+Math.max(0,amount);}));
   const paymentSlices=Object.entries(methodTotals).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,5);
   const palette=['#2563eb','#10b981','#f59e0b','#8b5cf6','#ef4444'];
   const grand=paymentSlices.reduce((a,x)=>a+x[1],0);
