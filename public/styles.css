@@ -355,6 +355,7 @@ button.sp:hover{background:var(--sel)}
 
 /* Dashboard administrativo, Gestión de Usuarios y Gestión de Cajas */
 .main.dashboard-mode{display:block;overflow:auto;padding:clamp(12px,2vw,24px);background:#edf1f4}
+.main.dashboard-mode .left{display:none!important;visibility:hidden!important;pointer-events:none!important}
 .main.dashboard-mode #adminDashboard{display:flex;flex-direction:column;gap:18px;min-height:100%;max-width:1600px;margin:0 auto}
 .admin-dashboard[hidden]{display:none!important}
 .admin-dash-head{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
