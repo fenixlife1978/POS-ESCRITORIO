@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 
 const pos = readFileSync(new URL('../public/main.js', import.meta.url), 'utf8');
+const access = readFileSync(new URL('../public/access.js', import.meta.url), 'utf8');
 
 test('Corte Z carga la apertura antes de calcular el inicio del turno', () => {
   const fn = pos.slice(pos.indexOf('function corteZDlg(){'), pos.indexOf('const TB='));
@@ -147,6 +148,6 @@ test('Corte Z reutiliza la apertura de inicio de sesión y oculta la segunda ape
   assert.match(fn, /\$\('#zOpenPanel',el\)\.hidden=opened/);
   assert.match(fn, /La apertura de caja ya está registrada\. Se reutiliza el turno iniciado al entrar al POS/);
   assert.match(fn, /No se detectó una apertura válida para esta caja\. Registre el fondo inicial aquí solo si no se hizo al iniciar sesión/);
-  assert.match(pos, /sessionStorage\.setItem\('sifer360_active_opening',JSON\.stringify\(op\)\)/);
+  assert.match(access, /sessionStorage\.setItem\('sifer360_active_opening',JSON\.stringify\(op\)\)/);
   assert.match(pos, /const boxOpen=\(\)=>!!\(active&&String\(active\.cashbox\)===box&&active\.status==='abierta'\)/);
 });
