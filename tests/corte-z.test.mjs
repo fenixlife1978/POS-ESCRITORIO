@@ -140,3 +140,13 @@ test('el formulario de arqueo está destacado antes de movimientos de caja', () 
   assert.match(fn, /si no tuvo movimientos, escriba 0,00/i);
   assert.doesNotMatch(fn, /\$\('#zClose',el\)\.disabled=!opened;\s*\$\('#zPreview',el\)\.disabled=!opened;/);
 });
+
+
+test('Corte Z reutiliza la apertura de inicio de sesión y oculta la segunda apertura si ya existe turno', () => {
+  const fn = pos.slice(pos.indexOf('function corteZDlg(){'), pos.indexOf('const TB='));
+  assert.match(fn, /\$\('#zOpenPanel',el\)\.hidden=opened/);
+  assert.match(fn, /La apertura de caja ya está registrada\. Se reutiliza el turno iniciado al entrar al POS/);
+  assert.match(fn, /No se detectó una apertura válida para esta caja\. Registre el fondo inicial aquí solo si no se hizo al iniciar sesión/);
+  assert.match(pos, /sessionStorage\.setItem\('sifer360_active_opening',JSON\.stringify\(op\)\)/);
+  assert.match(pos, /const boxOpen=\(\)=>!!\(active&&String\(active\.cashbox\)===box&&active\.status==='abierta'\)/);
+});
