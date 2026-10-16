@@ -52,7 +52,8 @@ test('historial tiene acciones separadas para mostrar y reimprimir cada Corte Z'
 
 test('reporte térmico incluye detalle de conciliación y aclara que no emite fiscal', () => {
   assert.match(pos, /@page\{size:80mm auto/);
-  assert.match(pos, /ARQUEO POR MÉTODO/);
+  assert.match(pos, /ARQUEO DE CAJA · POR MÉTODO/);
+  assert.match(pos, /TOTALES COBRADOS · POR MÉTODO/);
   assert.match(pos, /Diferencia/);
   assert.match(pos, /ni registra una operación directamente en una impresora fiscal/);
 });
@@ -61,7 +62,7 @@ test('Corte Z abre vista previa térmica de 80 mm antes de imprimir al confirmar
   assert.match(pos, /Vista previa de impresión · Térmica 80 mm/);
   assert.match(pos, /onclick="window\.print\(\)"/);
   assert.match(pos, /\.zpreview-tools\{display:none!important\}/);
-  assert.match(pos, /msg\('Corte Z '\+z\.id\+' guardado\. Resultado: '\+status\+'\.'\);\s*printCorteZ\(z,false\);draw\(\);/);
+  assert.match(pos, /msg\('Corte Z '\+z\.id\+' guardado\. Resultado: '\+status\+'\. Se abrirá la vista previa de 80 mm para imprimir\.'\);\s*printCorteZ\(z,false\);draw\(\);/);
 });
 
 test('el reporte Z destaca el arqueo por método antes de detallar movimientos físicos', () => {
@@ -109,4 +110,16 @@ test('estado de conciliación distingue cuadra, faltante, sobrante y mezcla', ()
   assert.equal(status([{ diff: -3 }, { diff: 0 }]), 'FALTANTE');
   assert.equal(status([{ diff: 4 }, { diff: 0 }]), 'SOBRANTE');
   assert.equal(status([{ diff: -3 }, { diff: 4 }]), 'CON DIFERENCIAS · FALTANTES Y SOBRANTES');
+});
+
+test('la vista previa 80 mm está disponible antes de confirmar el cierre y no guarda el corte', () => {
+  const fn = pos.slice(pos.indexOf('function corteZDlg(){'), pos.indexOf('const TB='));
+  assert.match(fn, /id="zPreview">Vista previa del reporte Z · 80 mm/);
+  assert.match(fn, /id="zClose">Confirmar cierre e imprimir/);
+  assert.ok(fn.indexOf('id="zPreview"') < fn.indexOf('id="zClose"'));
+  assert.match(fn, /if\(e\.target\.id==='zPreview'\)[\s\S]*?const draft=\{/);
+  assert.match(fn, /payments:zPayTotals\(sales\)/);
+  assert.match(fn, /reconciliation:rec/);
+  assert.match(fn, /printCorteZ\(draft,false\);return;/);
+  assert.match(pos, /Object\.entries\(z\.payments\)\.map\(\(\[name,amount\]\)=>line\(name,name\.includes\('\(VES\)'\)\?bsf\(amount\):usd\(amount\)\)/);
 });
