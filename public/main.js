@@ -6106,8 +6106,6 @@ function casheaSettlementDlg(onDone){
             m.comisionPct = pct;
             m.comisionUsd = r2((m.financiadoUsd||0) * pct / 100);
             m.netoEsperadoUsd = r2((m.financiadoUsd||0) - m.comisionUsd);
-            m.depositadoLoteUsd = depositUsd;
-            m.diferenciaLoteUsd = r2(depositUsd-netoUsd);
             m.tasaBcvLiquidacion = rate;
           });
           if(!Array.isArray(S.casheaLiquidaciones))S.casheaLiquidaciones=[];
@@ -6237,8 +6235,12 @@ function casheaDlg(defaultTab){
     const list = S.casheaMovimientos || [];
     if(!list.length){ msg('No hay datos para exportar.', 'bad'); return; }
     let csv = 'ID;Venta;Fecha;Cliente;CI;Aprobacion;Total_USD;Inicial_USD;Financiado_USD;Cuotas;Cuota_USD;Estado;Lote_Liquidacion;Banco;Referencia_Bancaria;Comision_Pct;Comision_USD;Neto_Esperado_USD;Deposito_Lote_USD;Diferencia_Lote_USD;Tasa_BCV_Liquidacion\n';
+    const exportedLots = new Set();
     list.forEach(m => {
-      csv += [m.id, m.ventaNo, fmtDT(m.ts||0), m.clienteNombre, m.clienteCi, m.aprobacion, m.totalVenta, m.inicialUsd, m.financiadoUsd, m.cuotasCount, m.cuotaUsd, m.estado, m.loteLiquidacion||'', m.bancoReceptor||'', m.refBancaria||'', m.comisionPct??'', m.comisionUsd??'', m.netoEsperadoUsd??'', m.depositadoLoteUsd??'', m.diferenciaLoteUsd??'', m.tasaBcvLiquidacion??''].join(';') + '\n';
+      const batch=(S.casheaLiquidaciones||[]).find(l=>l.id===m.loteLiquidacion);
+      const includeBatch=!!batch&&!exportedLots.has(batch.id);
+      if(includeBatch)exportedLots.add(batch.id);
+      csv += [m.id, m.ventaNo, fmtDT(m.ts||0), m.clienteNombre, m.clienteCi, m.aprobacion, m.totalVenta, m.inicialUsd, m.financiadoUsd, m.cuotasCount, m.cuotaUsd, m.estado, m.loteLiquidacion||'', m.bancoReceptor||'', m.refBancaria||'', m.comisionPct??'', m.comisionUsd??'', m.netoEsperadoUsd??'', includeBatch?batch.depositadoUsd:'', includeBatch?batch.diferenciaUsd:'', m.tasaBcvLiquidacion??''].join(';') + '\n';
     });
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const a = document.createElement('a');
