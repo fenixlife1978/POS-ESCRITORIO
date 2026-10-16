@@ -269,7 +269,7 @@ function seed(){
       {id:'PRV-04',name:'Suministros Motopartes Venezuela, C.A.',rif:'J-41009988-1',tel:'0251-555-7730',cond:'15 días'}
     ],
     sales:[],held:[],purchases:[],cxc:[],cxp:[],cortesZ:[],kardex:[],counts:[],
-    lotesSudeban:[],retencionesIva:[],cambiosDivisas:[],casheaMovimientos:[],documents:[],
+    lotesSudeban:[],retencionesIva:[],cambiosDivisas:[],casheaMovimientos:[],casheaLiquidaciones:[],documents:[],
     invoice:1043,purchaseSeq:203,countSeq:102,
     cart:[],sel:-1,cat:'Todas',query:'',catSel:null
   };
@@ -472,23 +472,8 @@ function seed(){
       {supId:'PRV-02',rif:S.suppliers[1].rif,name:S.suppliers[1].name,barcode:'FRM-PH3600',cost:3.00,leadDays:2,minOrder:24,notes:'Precio especial por caja de 24'}
     ];
   }
-  /* 9. Registro y conciliación de Financiamientos CASHEA (BNPL) */
-  S.casheaMovimientos=[
-    {
-      id:'CSH-MOV-0001',ventaNo:1040,ctrlNo:'00-00001040',ts:now-dayMs,
-      clienteCi:'V-12345678',clienteNombre:'José Gregorio Pérez',
-      aprobacion:'CSH-782194',totalVenta:85.00,inicialUsd:34.00,inicialMetodo:'Punto de venta (débito / crédito)',
-      financiadoUsd:51.00,cuotasCount:3,cuotaUsd:17.00,
-      estado:'Pendiente Liquidación',loteLiquidacion:null,fechaLiquidacion:null
-    },
-    {
-      id:'CSH-MOV-0002',ventaNo:1036,ctrlNo:'00-00001036',ts:now-3*dayMs,
-      clienteCi:'V-18765432',clienteNombre:'Moto Servicio Rápido',
-      aprobacion:'CSH-651032',totalVenta:120.00,inicialUsd:48.00,inicialMetodo:'Biopago',
-      financiadoUsd:72.00,cuotasCount:3,cuotaUsd:24.00,
-      estado:'Liquidado',loteLiquidacion:'LIQ-CSH-2023-089',fechaLiquidacion:now-dayMs
-    }
-  ];
+  /* CASHEA inicia sin operaciones ficticias; se registran solo cobros confirmados. */
+  S.casheaMovimientos=[];
 
   S.cart=[{code:'7501001',qty:4,disc:5},{code:'7504001',qty:1,disc:0},{code:'7507004',qty:2,disc:0},{code:'7501009',qty:2.5,disc:0}];
   S.sel=0;
@@ -499,7 +484,7 @@ function stateSnapshot(){
     v:1,cfg:S.cfg,products:S.products,clients:S.clients,suppliers:S.suppliers,
     sales:S.sales,held:S.held,purchases:S.purchases,cxc:S.cxc,cxp:S.cxp,cortesZ:S.cortesZ||[],
     kardex:S.kardex,counts:S.counts,lotesSudeban:S.lotesSudeban,retencionesIva:S.retencionesIva,cambiosDivisas:S.cambiosDivisas,
-    casheaMovimientos:S.casheaMovimientos||[],documents:S.documents||[],
+    casheaMovimientos:S.casheaMovimientos||[],casheaLiquidaciones:S.casheaLiquidaciones||[],documents:S.documents||[],
     invoice:S.invoice,purchaseSeq:S.purchaseSeq,countSeq:S.countSeq
   };
 }
@@ -955,8 +940,17 @@ function load(){
     if(Array.isArray(d.retencionesIva))S.retencionesIva=d.retencionesIva;
     if(Array.isArray(d.documents))S.documents=d.documents;
     else if(!S.documents)S.documents=[];
-    if(Array.isArray(d.casheaMovimientos))S.casheaMovimientos=d.casheaMovimientos;
-    else if(!S.casheaMovimientos)S.casheaMovimientos=[];
+    if(Array.isArray(d.casheaMovimientos)){
+      const demoCasheaSignatures=[
+        {id:'CSH-MOV-0001',aprobacion:'CSH-782194',ventaNo:1040,clienteCi:'V-12345678',totalVenta:85,financiadoUsd:51},
+        {id:'CSH-MOV-0002',aprobacion:'CSH-651032',ventaNo:1036,clienteCi:'V-18765432',totalVenta:120,financiadoUsd:72}
+      ];
+      S.casheaMovimientos=d.casheaMovimientos.filter(m=>!demoCasheaSignatures.some(demo=>
+        m.id===demo.id&&m.aprobacion===demo.aprobacion&&Number(m.ventaNo)===demo.ventaNo&&m.clienteCi===demo.clienteCi&&Number(m.totalVenta)===demo.totalVenta&&Number(m.financiadoUsd)===demo.financiadoUsd
+      ));
+    } else if(!S.casheaMovimientos)S.casheaMovimientos=[];
+    if(Array.isArray(d.casheaLiquidaciones))S.casheaLiquidaciones=d.casheaLiquidaciones;
+    else if(!Array.isArray(S.casheaLiquidaciones))S.casheaLiquidaciones=[];
     if(Array.isArray(d.cambiosDivisas))S.cambiosDivisas=d.cambiosDivisas;
     else if(!S.cambiosDivisas)S.cambiosDivisas=[];
     if(!S.cfg.fiscalTipo)S.cfg.fiscalTipo='FORMA_LIBRE';
@@ -6038,8 +6032,9 @@ function casheaSettlementDlg(onDone){
           '<option value="Bancamiga Banco Universal">Bancamiga Banco Universal</option>'+
         '</select>'+
       '</div>'+
-      '<div class="f"><label>Nº Referencia Transferencia Cashea</label><input class="fld mono" id="liqRef" placeholder="Ej. TRF-9812401" value="TRF-'+Math.floor(100000+Math.random()*900000)+'"></div>'+
-      '<div class="f"><label>% Comisión Cashea (MDR)</label><input class="fld r" id="liqComPct" type="number" step="0.5" value="5.00"></div>'+
+      '<div class="f"><label>Nº Referencia Transferencia Cashea</label><input class="fld mono" id="liqRef" placeholder="Referencia bancaria real" autocomplete="off"></div>'+
+      '<div class="f"><label>% Comisión Cashea (MDR)</label><input class="fld r" id="liqComPct" type="number" min="0" max="100" step="0.01" value="5.00"></div>'+
+      '<div class="f wide"><label>Monto neto depositado según banco (US$ equivalente)</label><input class="fld r mono" id="liqDeposit" inputmode="decimal" autocomplete="off" placeholder="Registra el monto real del estado de cuenta"></div>'+
     '</div>'+
     '<div class="cashea-calc-box" id="liqCalcBox"></div>'+
   '</div>');
@@ -6047,12 +6042,16 @@ function casheaSettlementDlg(onDone){
   const comPctInp = $('#liqComPct', el);
   const calcBox = $('#liqCalcBox', el);
   const refInp = $('#liqRef', el);
+  const depositInp = $('#liqDeposit', el);
   const bancoSel = $('#liqBanco', el);
 
   function recalc(){
     const pct = Math.max(0, Number(comPctInp.value) || 0);
     const comUsd = r2(totFinanciado * (pct / 100));
     const netoUsd = r2(totFinanciado - comUsd);
+    const depositRaw=depositInp.value.trim();
+    const depositUsd=depositRaw?pn(depositRaw):null;
+    const diff=depositUsd===null?null:r2(depositUsd-netoUsd);
     calcBox.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:center">'+
       '<div style="background:rgba(255,255,255,0.06);padding:8px;border-radius:6px">'+
         '<small style="color:#C7D2FE;font-size:10px">TOTAL BRUTO</small>'+
@@ -6065,13 +6064,16 @@ function casheaSettlementDlg(onDone){
         '<small style="color:#94A3B8">'+bsf(comUsd*rate)+'</small>'+
       '</div>'+
       '<div style="background:rgba(255,255,255,0.06);padding:8px;border-radius:6px">'+
-        '<small style="color:#A7F3D0;font-size:10px">NETO DEPOSITADO</small>'+
+        '<small style="color:#A7F3D0;font-size:10px">NETO ESPERADO</small>'+
         '<div style="font-size:16px;font-weight:700;color:#A7F3D0">'+usd(netoUsd)+'</div>'+
         '<small style="color:#FBBF24">'+bsf(netoUsd*rate)+'</small>'+
       '</div>'+
+    '</div><div style="margin-top:10px;padding:10px;border:1px solid '+(diff===null?'#475569':Math.abs(diff)<=0.01?'#059669':'#B45309')+';border-radius:6px;font-size:12px;color:#E2E8F0">'+
+      (diff===null?'Registra el depósito real para comparar con el neto esperado.':'Diferencia bancaria: <b style="color:'+(Math.abs(diff)<=0.01?'#6EE7B7':'#FCD34D')+'">'+usd(diff)+'</b> · '+(Math.abs(diff)<=0.01?'Coincide con el neto esperado.':'No coincide; la liquidación no se confirmará.'))+
     '</div>';
   }
   comPctInp.addEventListener('input', recalc);
+  depositInp.addEventListener('input', recalc);
   recalc();
 
   openWin({
@@ -6085,7 +6087,14 @@ function casheaSettlementDlg(onDone){
         primary: true,
         fn: () => {
           const ref = refInp.value.trim();
-          if(!ref){ msg('Ingrese el número de referencia bancaria de Cashea.', 'bad'); return false; }
+          const depositRaw = depositInp.value.trim();
+          const pct = Number(comPctInp.value);
+          const comUsd = r2(totFinanciado * (pct / 100));
+          const netoUsd = r2(totFinanciado - comUsd);
+          const depositUsd = depositRaw ? pn(depositRaw) : null;
+          if(!ref){ msg('Ingrese la referencia bancaria real de Cashea.', 'bad'); return false; }
+          if(!depositRaw || depositUsd===null || !Number.isFinite(pct) || pct<0 || pct>100){ msg('Registre el depósito real y una comisión válida entre 0 % y 100 %.', 'bad'); return false; }
+          if(Math.abs(depositUsd-netoUsd)>0.01){ msg('Liquidación rechazada: el depósito real ('+usd(depositUsd)+') no coincide con el neto esperado ('+usd(netoUsd)+'). Revise la comisión o el estado de cuenta.', 'bad'); return false; }
           const loteId = 'LIQ-CSH-' + Date.now().toString(36).toUpperCase();
           const now = Date.now();
           pendings.forEach(m => {
@@ -6094,9 +6103,17 @@ function casheaSettlementDlg(onDone){
             m.fechaLiquidacion = now;
             m.bancoReceptor = bancoSel.value;
             m.refBancaria = ref;
+            m.comisionPct = pct;
+            m.comisionUsd = r2((m.financiadoUsd||0) * pct / 100);
+            m.netoEsperadoUsd = r2((m.financiadoUsd||0) - m.comisionUsd);
+            m.depositadoLoteUsd = depositUsd;
+            m.diferenciaLoteUsd = r2(depositUsd-netoUsd);
+            m.tasaBcvLiquidacion = rate;
           });
+          if(!Array.isArray(S.casheaLiquidaciones))S.casheaLiquidaciones=[];
+          S.casheaLiquidaciones.push({id:loteId,fecha:now,operaciones:pendings.map(m=>m.id),cantidad:pendings.length,banco:bancoSel.value,referencia:ref,brutoUsd:r2(totFinanciado),comisionPct:pct,comisionUsd:comUsd,netoEsperadoUsd:netoUsd,depositadoUsd:depositUsd,diferenciaUsd:r2(depositUsd-netoUsd),tasaBcv:rate});
           save();
-          msg('Lote '+loteId+' liquidado correctamente ('+pendings.length+' facturas conciliadas).');
+          msg('Lote '+loteId+' conciliado y guardado ('+pendings.length+' facturas).');
           if(onDone) onDone();
           return true;
         }
