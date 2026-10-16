@@ -123,3 +123,10 @@ test('la vista previa 80 mm está disponible antes de confirmar el cierre y no g
   assert.match(fn, /printCorteZ\(draft,false\);return;/);
   assert.match(pos, /Object\.entries\(z\.payments\)\.map\(\(\[name,amount\]\)=>line\(name,name\.includes\('\(VES\)'\)\?bsf\(amount\):usd\(amount\)\)/);
 });
+
+test('el cierre explica visiblemente los requisitos y se habilita solo con arqueo completo', () => {
+  assert.match(pos, /id="zActionStatus" role="status" aria-live="polite"/);
+  assert.match(pos, /Arqueo incompleto: ingrese el monto real de los 8 métodos de pago/);
+  assert.match(pos, /Arqueo completo\. Puede revisar la vista previa de 80 mm y confirmar el cierre/);
+  assert.match(pos, /\$\('#zClose',el\)\.disabled=!opened\|\|!result\.total\.complete/);
+});
