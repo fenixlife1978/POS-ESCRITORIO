@@ -408,3 +408,16 @@ button.sp:hover{background:var(--sel)}
 .dash-legend-dot{width:9px;height:9px;border-radius:3px}
 @media(max-width:900px){.dash-analytics-grid{grid-template-columns:minmax(0,1fr)}.dash-pie-layout{grid-template-columns:minmax(120px,.7fr) minmax(0,1.3fr)}}
 @media(max-width:560px){.dash-pie-layout{grid-template-columns:1fr;gap:18px}.dash-pie-3d{width:180px}.dash-table{min-width:460px}.admin-dash-head{align-items:flex-start}.dash-analytics-grid{gap:10px}}
+
+
+/* Confirmación centrada de venta y vuelto */
+.sale-completion{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:10px 4px 14px}
+.sale-completion-icon{display:grid;place-items:center;width:56px;height:56px;border-radius:50%;font-size:30px;font-weight:800}
+.sale-completion-icon.change{background:#fff0d2;color:#a65a00;border:1px solid #f0c46d}
+.sale-completion-icon.success{background:#dcfce7;color:#166534;border:1px solid #86efac}
+.sale-completion-label{font-size:15px;font-weight:900;letter-spacing:1.1px;color:var(--tx)}
+.sale-completion-amount{font-size:34px;line-height:1.15;font-weight:900;letter-spacing:-.7px;color:#a65a00;font-variant-numeric:tabular-nums}
+.sale-completion-equivalent{font-size:14px;color:var(--muted)}
+.sale-completion-note{font-size:12px;line-height:1.5;color:var(--muted);max-width:310px;margin:2px auto}
+.sale-completion-ticket{width:100%;padding:10px 12px;background:var(--alt);border:1px solid var(--lo);border-radius:7px;font-size:12px;color:var(--tx)}
+@media(max-width:480px){.sale-completion{padding:6px 0}.sale-completion-amount{font-size:29px}.sale-completion-label{font-size:13px}}
