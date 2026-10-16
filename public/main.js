@@ -5757,7 +5757,7 @@ function casheaPaymentAssistantDlg(totalSale, rate, onApplied){
     '<div class="docgrid">'+
       '<div class="f wide"><label>Cliente / Titular Cashea</label><input class="fld" id="cshClient" value="'+esc(S.client.name)+'" readonly></div>'+
       '<div class="f"><label>C.I. / RIF Cliente</label><input class="fld mono" id="cshCi" value="'+esc(S.client.rif)+'" placeholder="V-00000000"></div>'+
-      '<div class="f"><label>Token / Aprobación Cashea</label><input class="fld mono" id="cshToken" placeholder="CSH-894120" value="CSH-'+Math.floor(100000+Math.random()*900000)+'" style="font-weight:700;color:#6366F1"></div>'+
+      '<div class="f"><label>Token / Aprobación real de Cashea *</label><input class="fld mono" id="cshToken" placeholder="Ingrese el código aprobado en Cashea" value="" required style="font-weight:700;color:#6366F1"></div>'+
       '<div class="f wide"><label>Nivel de Usuario en Cashea</label>'+
         '<select class="fld" id="cshLevel">'+
           '<option value="40" data-cuotas="3" selected>Nivel 3, 4 y 5 (Inicial 40% / 60% Financiado en 3 cuotas) [Recomendado]</option>'+
