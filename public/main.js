@@ -7966,7 +7966,9 @@ function printCorteZ(z,autoPrint){
     '<hr><b>RESULTADO DE CONCILIACIÓN</b>'+line('Estado',z.reconciliationStatus||(reconciliation.length?zDiffStatus(reconciliation):'SIN ARQUEO DETALLADO · CORTE ANTERIOR'))+line('Faltante USD',usd(z.shortageUsd||0))+line('Sobrante USD',usd(z.surplusUsd||0))+line('Faltante Bs.',bsf(z.shortageBs||0))+line('Sobrante Bs.',bsf(z.surplusBs||0))+notes+
     '<hr>'+line('Operador',z.cashier)+line('Generado',new Date(z.closedAt).toLocaleString('es-VE'))+'<hr><center>Conserve este reporte para auditoría interna.<br>La impresión no sustituye una factura fiscal ni registra una operación directamente en una impresora fiscal.</center></div>';
   const printScript=autoPrint?'window.onload=()=>{window.focus();window.print()}':'window.onload=()=>window.focus()';
-  w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(z.id)+'</title><style>@page{size:80mm auto;margin:3mm}*{box-sizing:border-box}body{margin:0;color:#000;font:10px/1.3 "Courier New",monospace}.zpaper{width:74mm;margin:auto}.zr{display:flex;justify-content:space-between;align-items:flex-start;gap:5px;margin:3px 0}.zr span{max-width:48mm;overflow-wrap:anywhere}.zr b{text-align:right;overflow-wrap:anywhere}.zrec{margin:5px 0;border-bottom:1px dotted #777;padding-bottom:4px}.zrecvals{display:flex;justify-content:space-between;gap:3px;font-size:9px;flex-wrap:wrap}.zrec-head{font-size:9px;margin:4px 0}hr{border:0;border-top:1px dashed #333;margin:7px 0}center{line-height:1.5}small{font-size:8px}@media print{body{width:74mm}}</style></head><body>'+html+'<script>'+printScript+'<\/script></body></html>');
+  const previewToolbar='<div class="zpreview-tools"><b>Vista previa de impresión · Térmica 80 mm</b><button type="button" onclick="window.print()">Imprimir 80 mm</button><button type="button" onclick="window.close()">Cerrar vista previa</button></div>';
+  const previewCss='.zpreview-tools{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:10px;background:#f1f5f9;border-bottom:1px solid #cbd5e1;font:13px Arial,sans-serif}.zpreview-tools button{padding:8px 12px;cursor:pointer;border:1px solid #64748b;border-radius:5px;background:#fff;font-weight:600}';
+  w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(z.id)+'</title><meta name="viewport" content="width=device-width, initial-scale=1"><style>@page{size:80mm auto;margin:3mm}*{box-sizing:border-box}body{margin:0;color:#000;font:10px/1.3 "Courier New",monospace}.zpaper{width:74mm;margin:auto}.zr{display:flex;justify-content:space-between;align-items:flex-start;gap:5px;margin:3px 0}.zr span{max-width:48mm;overflow-wrap:anywhere}.zr b{text-align:right;overflow-wrap:anywhere}.zrec{margin:5px 0;border-bottom:1px dotted #777;padding-bottom:4px}.zrecvals{display:flex;justify-content:space-between;gap:3px;font-size:9px;flex-wrap:wrap}.zrec-head{font-size:9px;margin:4px 0}hr{border:0;border-top:1px dashed #333;margin:7px 0}center{line-height:1.5}small{font-size:8px}'+previewCss+'@media print{body{width:74mm}.zpreview-tools{display:none!important}}</style></head><body>'+(autoPrint?'':previewToolbar)+html+'<script>'+printScript+'<\/script></body></html>');
   w.document.close();
 }
 function corteZDlg(){
@@ -8099,7 +8101,7 @@ function corteZDlg(){
       const closedBox=Object.assign(cajaContext(),{cashbox:box,status:'cerrada',closedAt:z.closedAt,cutId:z.id});
       sessionStorage.setItem('sifer360_active_box',JSON.stringify(closedBox));localStorage.setItem('sifer360_active_box',JSON.stringify(closedBox));
       msg('Corte Z '+z.id+' guardado. Resultado: '+status+'.');
-      printCorteZ(z,true);draw();
+      printCorteZ(z,false);draw();
     }
   });
   openWin({title:'Corte Z · '+box,w:900,body:el,foot:[{label:'Cerrar',primary:true}],onOpen:draw});
