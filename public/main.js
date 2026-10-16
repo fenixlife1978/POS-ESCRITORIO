@@ -1084,7 +1084,8 @@ const IC={
  basedatos:'<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>',
  documentos:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',
  usuarios:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-4 2.5-6 6.5-6s6.5 2 6.5 6M17 8a3 3 0 0 1 0 6M18 15c2.5.5 3.5 2 3.5 5"/>',
- cajas:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5M16 4v5M7 14h4M7 17h7"/>'
+ cajas:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5M16 4v5M7 14h4M7 17h7"/>',
+ pos:'<rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 9h20M7 14h3M14 14h3M7 17h10"/>'
 };
 const ico=n=>'<svg viewBox="0 0 24 24" aria-hidden="true">'+(IC[n]||'')+'</svg>';
 
@@ -7899,18 +7900,50 @@ function cashboxesManagementDlg(){
   el.addEventListener('click',e=>{const b=e.target.closest('[data-cbx-toggle]');if(!b)return;boxes=cashboxList();const box=boxes.find(x=>String(x.id)===b.dataset.cbxToggle);if(!box)return;const assigned=users().filter(u=>String(u.cashbox)===String(box.id));const active=readActiveOpening();if(box.active!==false&&assigned.length){$('#cbxMsg',el).textContent='No se puede deshabilitar: está asignada a '+assigned.map(u=>u.name).join(', ')+'. Reasigne primero esos usuarios.';return;}if(box.active!==false&&active&&String(active.cashbox)===String(box.id)&&active.status==='abierta'){ $('#cbxMsg',el).textContent='No se puede deshabilitar una caja con turno abierto. Cierre primero el Corte Z.';return;}box.active=box.active===false;persistCashboxes(boxes);draw();});
   draw();openWin({title:'Gestión de Cajas',w:760,body:el,foot:[{label:'Cerrar',primary:true}]});
 }
-function addAdminToolbarItems(){
-  if(!TB.some(t=>Array.isArray(t)&&t[0]==='usuarios')){
-    const idx=TB.findIndex(t=>Array.isArray(t)&&t[0]==='basedatos');
-    TB.splice(idx<0?TB.length:idx,0,['usuarios','Usuarios','',usersManagementDlg],['cajas','Gestión cajas','',cashboxesManagementDlg],'-');
+
+function adminCajaRequiredDlg(moduleName){
+  const user=activeUser(),box=currentCaja(),assigned=box!=='SIN-ASIGNAR',active=readActiveOpening();
+  const opened=!!(active&&active.status==='abierta'&&String(active.cashbox)===box);
+  const body=h('<div class="form"><div style="font-size:34px;margin-bottom:8px">▣</div><h3 style="margin:0 0 8px">Para acceder a '+esc(moduleName)+' debes tener una caja abierta</h3><p class="hint">El flujo obligatorio es: crear una caja si aún no existe, asignártela en Gestión de Usuarios y abrir el turno desde el botón POS de la barra superior. El módulo Corte Z ya no abre turnos.</p><div class="gridwrap"><table class="grid"><tbody><tr><td>Usuario</td><td><b>'+esc(user.name||user.username||'Administrador')+'</b></td></tr><tr><td>Caja asignada</td><td><b>'+esc(assigned?box:'Ninguna')+'</b></td></tr><tr><td>Estado del turno</td><td><b>'+esc(opened?'Abierto':'No abierto')+'</b></td></tr></tbody></table></div><p class="hint">'+(assigned?(opened?'La caja ya está abierta; puedes volver al POS y continuar.':'Pulsa “Abrir caja (POS)” para registrar el fondo inicial.'):'Primero crea una caja en Gestión de Cajas y asígnatela en Gestión de Usuarios. Después abre la caja desde POS.')+'</p></div>');
+  const foot=[];
+  if(!assigned){foot.push({label:'Gestión de Cajas',fn:()=>{cashboxesManagementDlg();return false;}});foot.push({label:'Gestión de Usuarios',fn:()=>{usersManagementDlg(user.username);return false;}});}
+  foot.push({label:'Abrir caja (POS)',primary:true,fn:()=>{closeWin();openCashboxDlg();return false;}});
+  foot.push({label:'Cerrar'});
+  openWin({title:'Apertura obligatoria de caja',w:540,body,foot});
+}
+function openCashboxDlg(){
+  const user=activeUser();
+  if(!user||user.role!=='admin'){showPosScreen();return;}
+  if(currentCaja()==='SIN-ASIGNAR'){adminCajaRequiredDlg('Punto de venta');return;}
+  const box=currentCaja(),boxes=cashboxList(),boxMeta=boxes.find(b=>String(b.id)===box);
+  if(!boxMeta||boxMeta.active===false){msg('La caja asignada no existe o está deshabilitada. Revise Gestión de Cajas y Gestión de Usuarios.','bad');return;}
+  const existing=readActiveOpening();
+  if(existing&&existing.status==='abierta'&&String(existing.cashbox)===box){
+    openWin({title:'Caja ya abierta · '+box,w:430,body:h('<div class="form"><h3>El turno ya está abierto</h3><p class="hint">Caja '+esc(box)+' · Apertura '+esc(fmtDT(existing.openedAt))+'</p><p>Para hacer el arqueo y cerrar la jornada, entra a Corte Z.</p></div>'),foot:[{label:'Ir al POS',primary:true,fn:()=>{showPosScreen();return true;}},{label:'Cerrar'}]});return;
   }
+  const body=h('<div class="form"><div class="hint">Registra y confirma los fondos físicos reales antes de vender. La apertura se asociará exclusivamente al usuario y a la caja asignada.</div><div class="newgrid"><div class="f"><label>Administrador</label><input class="fld" value="'+esc(user.name||user.username)+'" readonly></div><div class="f"><label>Caja asignada</label><input class="fld" value="'+esc(boxMeta.name+' ('+box+')')+'" readonly></div><div class="f"><label for="posOpenBs">Fondo inicial en Bs.</label><input class="fld r" id="posOpenBs" value="0,00" inputmode="decimal"></div><div class="f"><label for="posOpenUsd">Fondo inicial en US$</label><input class="fld r" id="posOpenUsd" value="0,00" inputmode="decimal"></div><div class="f"><label for="posOpenRate">Tasa BCV (Bs./US$)</label><input class="fld r" id="posOpenRate" value="'+esc(nf(Number(S.cfg.rate)||0))+'" inputmode="decimal"></div></div><div class="hint" id="posOpenError" role="status"></div></div>');
+  openWin({title:'POS · Apertura de caja '+box,w:560,body,foot:[{label:'Cancelar'},{label:'Confirmar apertura e ingresar al POS',primary:true,fn:()=>{
+    const parse=v=>{const raw=String(v||'').trim().replace(/\\s/g,'').replace(/\\./g,'').replace(',','.');const n=Number(raw);return Number.isFinite(n)&&n>=0?n:null;};
+    const bs=parse($('#posOpenBs',body).value),usd=parse($('#posOpenUsd',body).value),rate=parse($('#posOpenRate',body).value);
+    if(bs===null||usd===null||rate===null||rate<=0){$('#posOpenError',body).textContent='Ingrese fondos válidos y una tasa BCV mayor que cero.';return false;}
+    const all=(()=>{try{return JSON.parse(localStorage.getItem('sifer360_openings')||'[]')||[];}catch(e){return [];}})();
+    const openedAt=new Date().toISOString(),op={id:'OPEN-'+Date.now(),invoiceStart:'FAC-'+String(currentCajaInvoice()).padStart(8,'0'),cashier:user.name||user.username,username:user.username,cashbox:box,bs,usd,rate,openedAt,status:'abierta'};
+    all.push(op);localStorage.setItem('sifer360_openings',JSON.stringify(all));localStorage.setItem('sifer360_bcv_rate',String(rate));
+    const context={username:user.username,name:user.name||user.username,role:user.role,cashbox:box,openingId:op.id,openedAt,bs,usd,rate,status:'abierta'};
+    sessionStorage.setItem('sifer360_active_box',JSON.stringify(context));localStorage.setItem('sifer360_active_box',JSON.stringify(context));sessionStorage.setItem('sifer360_active_opening',JSON.stringify(op));localStorage.setItem('sifer360_active_opening',JSON.stringify(op));S.cfg.rate=rate;save();
+    showPosScreen();msg('Apertura de caja '+box+' registrada. Ya puedes operar en el POS.','ok');return true;
+  }}]});
+}
+
+function addAdminToolbarItems(){
+  if(!TB.some(t=>Array.isArray(t)&&t[0]==='pos')){const idx=TB.findIndex(t=>Array.isArray(t)&&t[0]==='usuarios');TB.splice(idx<0?TB.length:idx,0,['pos','POS','',openCashboxDlg],['usuarios','Usuarios','',usersManagementDlg],['cajas','Gestión cajas','',cashboxesManagementDlg],'-');}
 }
 window.SIFERDashboard={show:showDashboardScreen,showPos:showPosScreen,refresh:showDashboardScreen};
 
 /* ---------- menús y barra de herramientas ---------- */
 const focusEntry=()=>$('#entry').focus();
 const MENUS={
- 'Archivo':[['Dashboard','',showDashboardScreen],['Nueva venta','F2',newSale],['Suspender venta','F5',suspend],['Recuperar venta','F6',recoverDlg],'-',['Ventas del día y cierre…','F9',salesDlg],'-',['Gestión de usuarios','',usersManagementDlg],['Gestión de cajas','',cashboxesManagementDlg],['Cerrar sesión','',()=>window.SIFERAccess&&window.SIFERAccess.logout()],'-',['Restablecer datos de ejemplo…','',resetAll]],
+ 'Archivo':[['Dashboard','',showDashboardScreen],['Abrir caja (POS)','',openCashboxDlg],['Nueva venta','F2',newSale],['Suspender venta','F5',suspend],['Recuperar venta','F6',recoverDlg],'-',['Ventas del día y cierre…','F9',salesDlg],'-',['Gestión de usuarios','',usersManagementDlg],['Gestión de cajas','',cashboxesManagementDlg],['Cerrar sesión','',()=>window.SIFERAccess&&window.SIFERAccess.logout()],'-',['Restablecer datos de ejemplo…','',resetAll]],
  'Ventas':[['Cobrar','F12',payDlg],['Módulo de Pagos CASHEA (BNPL)…','',()=>casheaDlg()],['Descuento…','F7',discountDlg],['Quitar renglón','Supr',removeSel],['Vaciar venta…','',clearCart],'-',['Cuentas por Cobrar (CxC)…','',()=>cxcDlg()]],
  'Compras':[['Registrar compra de mercancía…','F10',()=>comprasDlg('new')],['Historial de compras…','',()=>comprasDlg('hist')],['Directorio de proveedores…','',()=>comprasDlg('sup')],'-',['Cuentas por Pagar (CxP)…','',()=>cxpDlg()]],
   'Inventario':[['Maestro de inventario…','F8',inventoryDlg],['Nuevo producto (Ficha avanzada)…','',()=>productFormDlg(null)],['Generador de etiquetas / Hablador SKU (US$)…','',()=>labelGeneratorDlg()],'-',['Conteo físico de inventario (masivo)…','F11',()=>conteoDlg()],['Ficha / Tarjeta Kardex Profesional…','',()=>kardexDlg()],'-',['Buscar producto','F3',focusEntry]],
@@ -8090,13 +8123,15 @@ function printCorteZ(z,autoPrint){
   w.document.close();
 }
 function corteZDlg(){
-  if(activeUser().role==='admin'&&currentCaja()==='SIN-ASIGNAR'){msg('Para abrir o cerrar una caja como administrador, cree una caja y asígnesela en Gestión de Usuarios.','bad');usersManagementDlg(activeUser().username);return;}
+  const login=activeUser(),openingNow=readActiveOpening();
+  if(login.role==='admin'&&currentCaja()==='SIN-ASIGNAR'){adminCajaRequiredDlg('Corte Z');return;}
+  if(!openingNow||openingNow.status!=='abierta'||String(openingNow.cashbox)!==currentCaja()){adminCajaRequiredDlg('Corte Z');return;}
   let active=readActiveOpening();
   const box=currentCaja();
   const boxOpen=()=>!!(active&&String(active.cashbox)===box&&active.status==='abierta');
   const shiftStart=()=>active&&active.openedAt?new Date(active.openedAt).getTime():Date.now();
   const el=h('<div class="form"><div class="hint" id="zIntro">Arqueo previo obligatorio: compare el saldo que registra el sistema con el importe real de cada método. La diferencia se calcula como Real − Sistema. El cierre guarda una fotografía inalterable del turno y después permite imprimir el reporte térmico de 80 mm.</div>'+
-    '<section id="zOpenPanel" style="border:1px solid var(--lo);padding:10px;margin:8px 0;border-radius:6px"><b>Apertura de turno / fondo inicial</b><p class="hint">Si esta caja todavía no tiene un turno abierto, registre el fondo inicial antes de realizar el arqueo.</p><div class="row"><label>Fondo inicial Bs. <input class="fld r" id="zOpeningBs" value="0,00" inputmode="decimal" style="width:125px"></label><label>Fondo inicial US$ <input class="fld r" id="zOpeningUsd" value="0,00" inputmode="decimal" style="width:125px"></label><button class="btn primary" id="zOpenShift">Abrir turno</button></div><div class="hint" id="zOpenStatus"></div></section>'+
+    '<section id="zOpenPanel" hidden style="border:1px solid var(--lo);padding:10px;margin:8px 0;border-radius:6px"><b>Apertura de turno / fondo inicial</b><p class="hint">Si esta caja todavía no tiene un turno abierto, registre el fondo inicial antes de realizar el arqueo.</p><div class="row"><label>Fondo inicial Bs. <input class="fld r" id="zOpeningBs" value="0,00" inputmode="decimal" style="width:125px"></label><label>Fondo inicial US$ <input class="fld r" id="zOpeningUsd" value="0,00" inputmode="decimal" style="width:125px"></label><button class="btn primary" id="zOpenShift">Abrir turno</button></div><div class="hint" id="zOpenStatus"></div></section>'+
     '<div class="gridwrap"><table class="grid"><thead><tr><th>Resumen del turno</th><th class="r">Total</th></tr></thead><tbody id="zSummary"></tbody></table></div>'+
     '<section id="zArqueoPanel" style="border:2px solid var(--ac);padding:12px;margin:10px 0;border-radius:8px"><h3 style="margin:0 0 6px">ARQUEO PREVIO POR MÉTODO DE PAGO</h3><p class="hint" style="margin:4px 0 10px">Este formulario es obligatorio para el Corte Z. Abra el turno primero; luego escriba el monto real contado o conciliado en cada método. Si no tuvo movimientos, escriba 0,00. La diferencia se calcula automáticamente.</p><div class="gridwrap"><table class="grid" style="min-width:660px"><thead><tr><th>Método de pago</th><th>Moneda</th><th class="r">Saldo en sistema</th><th class="r">Monto real contado / conciliado</th><th class="r">Dif. (+/−)</th></tr></thead><tbody id="zReconcile"></tbody><tfoot id="zReconcileFoot"></tfoot></table></div><div class="gridwrap"><table class="grid"><thead><tr><th>Totales de arqueo</th><th class="r">US$</th><th class="r">Bs.</th></tr></thead><tbody id="zTotals"></tbody></table></div></section>'+
     '<section style="border:1px solid var(--lo);padding:10px;margin:8px 0;border-radius:6px"><b>Movimientos de efectivo físico (+ / −)</b><div class="row" style="flex-wrap:wrap"><label>Tipo <select class="fld" id="zMovDir"><option value="IN">Entrada (+)</option><option value="OUT">Salida (−)</option></select></label><label>Moneda <select class="fld" id="zMovCur"><option value="BS">Efectivo Bs.</option><option value="USD">Efectivo USD</option></select></label><label>Monto <input class="fld r" id="zMovAmount" inputmode="decimal" placeholder="0,00" style="width:110px"></label><label>Motivo <input class="fld" id="zMovReason" maxlength="160" placeholder="Ej. retiro para sencillo" style="min-width:190px"></label><button class="btn" id="zMovAdd">Registrar movimiento</button></div><div class="hint" id="zMovStatus">Registre entradas o salidas de efectivo físico para que aparezcan en el cierre.</div><div id="zMovRows"></div></section>'+
