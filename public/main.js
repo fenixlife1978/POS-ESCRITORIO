@@ -7790,6 +7790,101 @@ function resetAll(){
   });
 }
 
+
+/* ---------- dashboard administrativo + gestión de usuarios/cajas ---------- */
+const USERS_STORAGE_KEY='sifer360_access_v1', BOXES_STORAGE_KEY='sifer360_cashboxes';
+function activeUser(){
+  try{return JSON.parse(sessionStorage.getItem('sifer360_session_v1')||'null')||{};}catch(e){return {};}
+}
+function cashboxList(){
+  let boxes=[];
+  try{boxes=JSON.parse(localStorage.getItem(BOXES_STORAGE_KEY)||'[]')||[];}catch(e){}
+  const users=window.SIFERAccess&&window.SIFERAccess.getUsers?window.SIFERAccess.getUsers():[];
+  const legacy=[String(S.cfg.caja||'01'),...users.map(u=>String(u.cashbox||''))].filter(x=>x&&x!=='—'&&x!=='Todas'&&x!=='SIN-ASIGNAR');
+  legacy.forEach(id=>{if(!boxes.some(b=>String(b.id)===id))boxes.push({id,name:/^Caja\s/i.test(id)?id:'Caja '+id,active:true,createdAt:Date.now()});});
+  if(!boxes.length)boxes=[{id:'01',name:'Caja 01',active:true,createdAt:Date.now()}];
+  boxes=boxes.map(b=>Object.assign({name:'Caja '+b.id,active:true},b));
+  localStorage.setItem(BOXES_STORAGE_KEY,JSON.stringify(boxes));
+  return boxes;
+}
+function persistCashboxes(boxes){localStorage.setItem(BOXES_STORAGE_KEY,JSON.stringify(boxes));}
+function showPosScreen(){
+  const d=$('#adminDashboard'),main=$('.main'),left=$('.left');
+  if(d)d.hidden=true;if(left)left.hidden=false;
+  if(main)main.classList.remove('dashboard-mode');
+  const b=$('#btnDashboard');if(b)b.setAttribute('aria-pressed','false');
+  renderAll();
+}
+function showDashboardScreen(){
+  const d=$('#adminDashboard'),main=$('.main'),left=$('.left');
+  if(!d||!main)return;
+  if(left)left.hidden=true;d.hidden=false;main.classList.add('dashboard-mode');
+  const b=$('#btnDashboard');if(b)b.setAttribute('aria-pressed','true');
+  const today=new Date();today.setHours(0,0,0,0);
+  const tomorrow=new Date(today.getTime()+86400000),prev=new Date(today.getTime()-86400000);
+  const sales=(S.sales||[]).filter(x=>!x.void);
+  const stamp=x=>{const n=Number(x.ts||x.timestamp||0);if(n)return n;const parsed=Date.parse(x.date||x.fecha||'');return Number.isFinite(parsed)?parsed:0;};
+  const value=x=>Number(x.total||x.totalUsd||x.amount||0);
+  const todaySales=sales.filter(x=>stamp(x)>=today.getTime()&&stamp(x)<tomorrow.getTime());
+  const prevSales=sales.filter(x=>stamp(x)>=prev.getTime()&&stamp(x)<today.getTime());
+  const sum=list=>r2(list.reduce((a,x)=>a+value(x),0));
+  const todayTotal=sum(todaySales),prevTotal=sum(prevSales),change=prevTotal?((todayTotal-prevTotal)/prevTotal)*100:(todayTotal?100:0);
+  const avg=todaySales.length?todayTotal/todaySales.length:0;
+  const low=(S.products||[]).filter(p=>Number(p.stock||0)<=Number(p.min||0)).length;
+  const cxc=(S.cxc||[]).filter(x=>!['Pagada','Cerrada','Anulada','Pagado','Cerrado'].includes(String(x.status||x.estado||'')));
+  const cxp=(S.cxp||[]).filter(x=>!['Pagada','Cerrada','Anulada','Pagado','Cerrado'].includes(String(x.status||x.estado||'')));
+  const boxes=cashboxList(),users=window.SIFERAccess&&window.SIFERAccess.getUsers?window.SIFERAccess.getUsers():[];
+  const openings=(()=>{try{return JSON.parse(localStorage.getItem('sifer360_openings')||'[]')||[];}catch(e){return [];}})();
+  const openCount=boxes.filter(b=>{try{const o=JSON.parse(localStorage.getItem('sifer360_active_opening')||'null');return o&&o.status==='abierta'&&String(o.cashbox)===String(b.id);}catch(e){return false;}}).length;
+  const pct=change>0?'+':change<0?'':'';
+  const fmtPct=n=>(n>0?'+':'')+n.toFixed(1).replace('.',',')+'%';
+  const dayLabels=[],dayValues=[];
+  for(let i=6;i>=0;i--){const start=new Date(today.getTime()-i*86400000),end=new Date(start.getTime()+86400000);dayLabels.push(start.toLocaleDateString('es-VE',{weekday:'short'}).replace('.',''));dayValues.push(sum(sales.filter(x=>stamp(x)>=start.getTime()&&stamp(x)<end.getTime())));}
+  const maxDay=Math.max(1,...dayValues);
+  d.innerHTML='<div class="admin-dash-head"><div><div class="dash-eyebrow">PANEL DE CONTROL · SIFER 360</div><h1>Resumen del negocio</h1><p>Indicadores de operación y actividad comercial · '+esc(fmtDT(Date.now()))+'</p></div><div class="dash-head-actions"><button class="btn" data-dash-action="users">♙ Gestión de usuarios</button><button class="btn primary" data-dash-action="boxes">▣ Gestión de cajas</button></div></div>'+
+  '<div class="dash-kpis">'+
+  '<article class="dash-kpi"><span class="dash-kpi-icon blue">↗</span><div class="dash-kpi-label">Ventas de hoy</div><div class="dash-kpi-value">'+usd(todayTotal)+'</div><div class="dash-kpi-foot '+(change>=0?'positive':'negative')+'">'+fmtPct(change)+' <span>vs. día anterior</span></div></article>'+
+  '<article class="dash-kpi"><span class="dash-kpi-icon green">▤</span><div class="dash-kpi-label">Operaciones de hoy</div><div class="dash-kpi-value">'+todaySales.length+'</div><div class="dash-kpi-foot">'+(prevSales.length)+' ayer <span>· ventas cerradas</span></div></article>'+
+  '<article class="dash-kpi"><span class="dash-kpi-icon amber">◉</span><div class="dash-kpi-label">Ticket promedio</div><div class="dash-kpi-value">'+usd(avg)+'</div><div class="dash-kpi-foot">'+(todaySales.length?'Promedio de hoy':'Sin operaciones hoy')+'</div></article>'+
+  '<article class="dash-kpi"><span class="dash-kpi-icon violet">▦</span><div class="dash-kpi-label">Productos registrados</div><div class="dash-kpi-value">'+(S.products||[]).length.toLocaleString('es-VE')+'</div><div class="dash-kpi-foot">'+low+' <span>en mínimo o agotados</span></div></article>'+
+  '<article class="dash-kpi"><span class="dash-kpi-icon red">◷</span><div class="dash-kpi-label">CxC pendientes</div><div class="dash-kpi-value">'+cxc.length+'</div><div class="dash-kpi-foot">Documentos por cobrar</div></article>'+
+  '<article class="dash-kpi"><span class="dash-kpi-icon teal">▣</span><div class="dash-kpi-label">Cajas registradas</div><div class="dash-kpi-value">'+boxes.length+'</div><div class="dash-kpi-foot">'+users.filter(u=>u.role==='cajero').length+' cajeros · '+openCount+' aperturas activas</div></article>'+
+  '</div><div class="dash-lower"><section class="dash-panel"><div class="dash-panel-head"><div><h2>Ventas · últimos 7 días</h2><p>Comparativo diario en US$</p></div><strong>'+usd(dayValues.reduce((a,n)=>a+n,0))+'</strong></div><div class="dash-chart">'+dayValues.map((v,i)=>'<div class="dash-bar-col" title="'+esc(dayLabels[i]+': '+usd(v))+'"><b>'+ (v?esc(usd(v)):'')+'</b><div class="dash-bar-track"><span style="height:'+Math.max(v?5:0,(v/maxDay)*100)+'%"></span></div><small>'+esc(dayLabels[i])+'</small></div>').join('')+'</div></section>'+
+  '<section class="dash-panel"><div class="dash-panel-head"><div><h2>Estado operativo</h2><p>Resumen de control</p></div><span class="dash-live-dot">EN VIVO</span></div><div class="dash-status-row"><span>Usuarios registrados</span><b>'+users.length+'</b></div><div class="dash-status-row"><span>Cajas configuradas</span><b>'+boxes.filter(b=>b.active!==false).length+' activas</b></div><div class="dash-status-row"><span>Cuentas por pagar</span><b>'+cxp.length+' pendientes</b></div><div class="dash-status-row"><span>Inventario bajo mínimo</span><b class="'+(low?'dash-warn':'dash-ok')+'">'+low+'</b></div><div class="dash-status-row"><span>Fondo/turno abierto en este equipo</span><b>'+(readActiveOpening()&&readActiveOpening().status==='abierta'?'Abierto':'Sin apertura')+'</b></div></section></div>'+
+  '<div class="dash-shortcuts"><button class="dash-shortcut" data-dash-action="users"><span>♙</span><b>Gestión de Usuarios</b><small>Crear usuarios, definir roles y asignar cajas</small></button><button class="dash-shortcut" data-dash-action="boxes"><span>▣</span><b>Gestión de Cajas</b><small>Crear, habilitar y administrar cajas</small></button><button class="dash-shortcut" data-dash-action="sales"><span>▤</span><b>Ventas del día</b><small>Consultar operaciones registradas</small></button><button class="dash-shortcut" data-dash-action="inventory"><span>▧</span><b>Inventario</b><small>Existencias, precios y catálogo</small></button></div>';
+  d.querySelectorAll('[data-dash-action]').forEach(b=>b.addEventListener('click',()=>{const act=b.dataset.dashAction;if(act==='users')usersManagementDlg();else if(act==='boxes')cashboxesManagementDlg();else{showPosScreen();if(act==='sales')salesDlg();else inventoryDlg();}}));
+}
+function usersManagementDlg(editUsername){
+  if(!window.SIFERAccess||!window.SIFERAccess.getUsers){msg('El servicio de usuarios no está disponible.','bad');return;}
+  let users=window.SIFERAccess.getUsers(),boxes=cashboxList(),editing=editUsername||'';
+  const roleOptions=[['admin','Administrador'],['cajero','Cajero'],['contador','Contador']];
+  const el=h('<div class="form user-admin-form"><div class="hint">Cada usuario tiene un perfil y una caja asignada. El administrador puede quedarse sin caja asignada para operar solo desde el dashboard; para vender debe tener una caja creada y asignada.</div><input id="uaOriginal" type="hidden"><div class="newgrid"><div class="f"><label for="uaName">Nombre completo</label><input class="fld" id="uaName" required></div><div class="f"><label for="uaUsername">Usuario</label><input class="fld" id="uaUsername" required autocomplete="off"></div><div class="f"><label for="uaCode">Contraseña / código</label><input class="fld" id="uaCode" type="password" autocomplete="new-password" placeholder="Obligatorio para usuario nuevo"></div><div class="f"><label for="uaRole">Rol</label><select class="fld" id="uaRole">'+roleOptions.map(r=>'<option value="'+r[0]+'">'+r[1]+'</option>').join('')+'</select></div><div class="f"><label for="uaBox">Caja asignada</label><select class="fld" id="uaBox"><option value="">Sin caja asignada</option>'+boxes.filter(b=>b.active!==false).map(b=>'<option value="'+esc(b.id)+'">'+esc(b.name)+' ('+esc(b.id)+')</option>').join('')+'</select></div></div><div class="row" style="flex-wrap:wrap"><button class="btn primary" id="uaSave">Guardar usuario</button><button class="btn" id="uaClear" type="button">Limpiar</button><span class="hint" id="uaMsg"></span></div><div class="gridwrap" style="max-height:360px;flex:none"><table class="grid"><thead><tr><th>Nombre / usuario</th><th>Rol</th><th>Caja asignada</th><th>Acciones</th></tr></thead><tbody id="uaRows"></tbody></table></div></div>');
+  const clear=()=>{editing='';$('#uaOriginal',el).value='';$('#uaName',el).value='';$('#uaUsername',el).value='';$('#uaUsername',el).disabled=false;$('#uaCode',el).value='';$('#uaCode',el).placeholder='Obligatorio para usuario nuevo';$('#uaRole',el).value='cajero';$('#uaBox',el).value=boxes.find(b=>b.active!==false)?.id||'';$('#uaMsg',el).textContent='';};
+  const draw=()=>{users=window.SIFERAccess.getUsers();$('#uaRows',el).innerHTML=users.map(u=>'<tr><td><b>'+esc(u.name)+'</b><div class="sub">'+esc(u.username)+'</div></td><td>'+esc((roleOptions.find(r=>r[0]===u.role)||[u.role,u.role])[1])+'</td><td>'+esc(u.cashbox||'—')+'</td><td><button class="btn mini2" data-ua-edit="'+esc(u.username)+'">Editar</button> <button class="btn mini2" data-ua-delete="'+esc(u.username)+'" '+(u.username===activeUser().username||users.filter(x=>x.role==='admin').length<=1&&u.role==='admin'?'disabled':'')+'>Desactivar/eliminar</button></td></tr>').join('');};
+  const edit=u=>{editing=u.username;$('#uaOriginal',el).value=u.username;$('#uaName',el).value=u.name||'';$('#uaUsername',el).value=u.username;$('#uaUsername',el).disabled=true;$('#uaCode',el).value='';$('#uaCode',el).placeholder='Vacío = conservar contraseña actual';$('#uaRole',el).value=u.role;$('#uaBox',el).value=u.cashbox&&u.cashbox!=='Todas'?u.cashbox:'';$('#uaMsg',el).textContent='Editando '+u.username;};
+  $('#uaSave',el).addEventListener('click',()=>{const name=$('#uaName',el).value.trim(),username=$('#uaUsername',el).value.trim(),code=$('#uaCode',el).value,role=$('#uaRole',el).value,cashbox=$('#uaBox',el).value||'—';if(!name||!username){$('#uaMsg',el).textContent='Nombre y usuario son obligatorios.';return;}users=window.SIFERAccess.getUsers();const idx=users.findIndex(u=>u.username===editing);if(idx<0&&!code){$('#uaMsg',el).textContent='La contraseña/código es obligatorio para crear el usuario.';return;}if(idx<0&&users.some(u=>u.username.toLowerCase()===username.toLowerCase())){$('#uaMsg',el).textContent='Ese nombre de usuario ya existe.';return;}if(role==='cajero'&&cashbox==='—'){$('#uaMsg',el).textContent='Asigne una caja a todo cajero.';return;}if(idx>=0){users[idx]=Object.assign({},users[idx],{name,role,cashbox});if(code)users[idx].code=code;}else users.push({username,code,name,role,cashbox});if(!window.SIFERAccess.setUsers(users)){$('#uaMsg',el).textContent='No se pudo guardar la lista de usuarios.';return;}if(activeUser().username===username){const sess=Object.assign({},activeUser(),{name,role,cashbox});sessionStorage.setItem('sifer360_session_v1',JSON.stringify(sess));if(role==='admin'&&!cashbox||cashbox==='—'){sessionStorage.removeItem('sifer360_active_box');localStorage.removeItem('sifer360_active_box');}else{const ctx=Object.assign({},JSON.parse(localStorage.getItem('sifer360_active_box')||'{}'),{username,name,role,cashbox});sessionStorage.setItem('sifer360_active_box',JSON.stringify(ctx));localStorage.setItem('sifer360_active_box',JSON.stringify(ctx));}}$('#uaMsg',el).textContent='Usuario guardado correctamente.';clear();draw();showDashboardScreen();});
+  $('#uaClear',el).addEventListener('click',clear);
+  el.addEventListener('click',e=>{const eb=e.target.closest('[data-ua-edit]'),db=e.target.closest('[data-ua-delete]');if(eb){const u=window.SIFERAccess.getUsers().find(x=>x.username===eb.dataset.uaEdit);if(u)edit(u);}if(db){const u=db.dataset.uaDelete;if(u===activeUser().username){$('#uaMsg',el).textContent='No puedes eliminar el usuario de la sesión actual.';return;}if(!confirm('¿Eliminar el usuario '+u+'?'))return;users=window.SIFERAccess.getUsers();if(users.filter(x=>x.role==='admin').length===1&&users.find(x=>x.username===u)?.role==='admin'){msg('Debe conservarse al menos un administrador.','bad');return;}window.SIFERAccess.setUsers(users.filter(x=>x.username!==u));draw();}});
+  clear();draw();
+  openWin({title:'Gestión de Usuarios',w:820,body:el,foot:[{label:'Cerrar',primary:true}],onOpen:()=>{if(editing){const u=users.find(x=>x.username===editing);if(u)edit(u);}}});
+}
+function cashboxesManagementDlg(){
+  let boxes=cashboxList();
+  const users=()=>window.SIFERAccess&&window.SIFERAccess.getUsers?window.SIFERAccess.getUsers():[];
+  const el=h('<div class="form"><div class="hint">Cree cajas independientes y luego asígnelas a los usuarios desde Gestión de Usuarios. No se puede eliminar una caja que tenga usuarios asignados o historial de aperturas; puede deshabilitarla.</div><div class="newgrid"><div class="f"><label for="cbxId">Código de caja</label><input class="fld" id="cbxId" placeholder="02" maxlength="12"></div><div class="f"><label for="cbxName">Nombre visible</label><input class="fld" id="cbxName" placeholder="Caja 02"></div><div class="f"><label>&nbsp;</label><button class="btn primary" id="cbxCreate">Crear caja</button></div></div><div id="cbxMsg" class="hint"></div><div class="gridwrap" style="max-height:420px;flex:none"><table class="grid"><thead><tr><th>Código</th><th>Nombre</th><th>Usuarios asignados</th><th>Estado</th><th>Acción</th></tr></thead><tbody id="cbxRows"></tbody></table></div></div>');
+  const draw=()=>{boxes=cashboxList();const us=users();$('#cbxRows',el).innerHTML=boxes.map(b=>{const assigned=us.filter(u=>String(u.cashbox)===String(b.id));const isOpen=(()=>{const a=readActiveOpening();return !!(a&&String(a.cashbox)===String(b.id)&&a.status==='abierta');})();return '<tr><td><b>'+esc(b.id)+'</b></td><td>'+esc(b.name)+'</td><td>'+assigned.map(u=>esc(u.name)).join(', ')+' ('+assigned.length+')</td><td><span class="'+(b.active===false?'dash-warn':'dash-ok')+'">'+(b.active===false?'Deshabilitada':isOpen?'Turno abierto':'Activa')+'</span></td><td><button class="btn mini2" data-cbx-toggle="'+esc(b.id)+'">'+(b.active===false?'Habilitar':'Deshabilitar')+'</button></td></tr>';}).join('');};
+  $('#cbxCreate',el).addEventListener('click',()=>{const id=$('#cbxId',el).value.trim(),name=$('#cbxName',el).value.trim()||('Caja '+id);if(!id||! /^[A-Za-z0-9_-]{1,12}$/.test(id)){$('#cbxMsg',el).textContent='Use un código de 1 a 12 caracteres: letras, números, guion o guion bajo.';return;}if(cashboxList().some(b=>String(b.id).toLowerCase()===id.toLowerCase())){$('#cbxMsg',el).textContent='Ya existe una caja con ese código.';return;}boxes=cashboxList();boxes.push({id,name,active:true,createdAt:Date.now()});persistCashboxes(boxes);$('#cbxId',el).value='';$('#cbxName',el).value='';$('#cbxMsg',el).textContent='Caja creada. Ahora puede asignarla en Gestión de Usuarios.';draw();});
+  el.addEventListener('click',e=>{const b=e.target.closest('[data-cbx-toggle]');if(!b)return;boxes=cashboxList();const box=boxes.find(x=>String(x.id)===b.dataset.cbxToggle);if(!box)return;const assigned=users().filter(u=>String(u.cashbox)===String(box.id));const active=readActiveOpening();if(box.active!==false&&(assigned.length||active&&String(active.cashbox)===String(box.id)&&active.status==='abierta')){if(!confirm('Esta caja tiene usuarios asignados o turno abierto. ¿Deshabilitarla sin borrar historial?'))return;}box.active=box.active===false;persistCashboxes(boxes);draw();});
+  draw();openWin({title:'Gestión de Cajas',w:760,body:el,foot:[{label:'Cerrar',primary:true}]});
+}
+function addAdminToolbarItems(){
+  if(!TB.some(t=>Array.isArray(t)&&t[0]==='usuarios')){
+    const idx=TB.findIndex(t=>Array.isArray(t)&&t[0]==='basedatos');
+    TB.splice(idx<0?TB.length:idx,0,['usuarios','Usuarios','',usersManagementDlg],['cajas','Gestión cajas','',cashboxesManagementDlg],'-');
+  }
+}
+window.SIFERDashboard={show:showDashboardScreen,showPos:showPosScreen,refresh:showDashboardScreen};
+
 /* ---------- menús y barra de herramientas ---------- */
 const focusEntry=()=>$('#entry').focus();
 const MENUS={
@@ -7843,6 +7938,7 @@ function cajaContext(){
 }
 function currentCaja(){
   const c=cajaContext();
+  if(c.role==='admin'&&(!c.cashbox||c.cashbox==='Todas'||c.cashbox==='—'))return 'SIN-ASIGNAR';
   return String(!c.cashbox||c.cashbox==='Todas'?(S.cfg.caja||'01'):c.cashbox);
 }
 function currentCajero(){
@@ -8134,6 +8230,7 @@ const TB=[
  '-',['ventas','Ventas día','F9',salesDlg],['cortez','Corte Z','',corteZDlg],['seniat','Fiscal','',()=>seniatSudebanDlg()],['documentos','Documentos','',()=>fiscalDocumentsDlg()],['basedatos','Base de datos','',()=>databaseSettingsDlg()],['tasa','Tasa','',()=>cfgDlg('cRate')]
 ];
 function buildChrome(){
+  addAdminToolbarItems();
   $('#toolbar').innerHTML=TB.map(t=>t==='-'?'<span class="tsep"></span>':'<button class="tb" data-tb="'+t[0]+'" title="'+esc(t[1])+(t[2]?' ('+t[2]+')':'')+'">'+ico(t[0])+'<b>'+esc(t[1])+'</b><kbd>'+esc(t[2]||' ')+'</kbd>'+(t[0]==='recuperar'?'<span class="badge" id="heldBadge" hidden></span>':'')+(t[0]==='conteo'?'<span class="badge warn" id="conteoBadge" hidden></span>':'')+'</button>').join('');
 }
 
@@ -8146,6 +8243,8 @@ function ensureVisible(tr,wrap){
 }
 function renderHeader(){
   const c=S.cfg;
+  const session=activeUser();
+  const dashboardButton=$('#btnDashboard');if(dashboardButton)dashboardButton.hidden=session.role!=='admin';
   $('#winTitle').textContent=c.empresa;
   if($('#winSub'))$('#winSub').textContent='Punto de venta · Caja '+c.caja;
   document.title='POS '+c.empresa;
@@ -8154,7 +8253,7 @@ function renderHeader(){
   $('#fClient').value=S.client.name;
   $('#fRif').value=S.client.rif;
   $('#fCajero').value=c.cajero;
-  if($('#whoUser'))$('#whoUser').textContent='Cajero: '+c.cajero;
+  if($('#whoUser'))$('#whoUser').textContent=(session.name||c.cajero)+(session.role==='admin'?' · Administrador':'')+(session.cashbox&&session.cashbox!=='—'&&session.cashbox!=='Todas'?' · Caja '+session.cashbox:'');
 }
 function renderCatOptions(){}
 function renderCart(){
@@ -8303,9 +8402,10 @@ function wire(){
   const sbSeniat=$('#sbSeniat');
   if(sbSeniat)sbSeniat.addEventListener('click',()=>seniatSudebanDlg());
 
+  const dashboardButton=$('#btnDashboard');if(dashboardButton)dashboardButton.addEventListener('click',()=>showDashboardScreen());
   $('#toolbar').addEventListener('click',e=>{
     const b=e.target.closest('[data-tb]');if(!b)return;
-    const t=TB.find(x=>x[0]===b.dataset.tb);if(t)t[3]();
+    const t=TB.find(x=>x[0]===b.dataset.tb);if(t){if($('#adminDashboard')&&!$('#adminDashboard').hidden)showPosScreen();t[3]();}
   });
   document.addEventListener('pointerdown',e=>{
     if(menuEl&&!e.target.closest('.menu')&&!e.target.closest('#btnMenu'))closeMenu();
