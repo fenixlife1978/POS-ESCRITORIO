@@ -14,6 +14,7 @@ const paymentsModule = readFileSync(new URL('../public/payments-module.js', impo
 const fiscalModule = readFileSync(new URL('../public/fiscal-reports.js', import.meta.url), 'utf8');
 const databaseModule = readFileSync(new URL('../public/database-settings-module.js', import.meta.url), 'utf8');
 const indexHtml = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+const buildMainScript = readFileSync(new URL('../scripts/build-main.mjs', import.meta.url), 'utf8');
 const operationalSource = [pos, inventoryModule, purchasingModule, paymentsModule, fiscalModule, cashZ, databaseModule].join('\n');
 const options = readFileSync(new URL('../public/pos-options.js', import.meta.url), 'utf8');
 const operationOptions = readFileSync(new URL('../public/operation-options.js', import.meta.url), 'utf8');
@@ -214,7 +215,9 @@ test('main.js queda reducido y las responsabilidades operativas viven en módulo
   assert.doesNotMatch(pos, /function downloadBlob/); assert.match(fiscalModule, /function downloadBlob/);
   assert.doesNotMatch(pos, /function getZHistory/); assert.match(cashZ, /function getZHistory/);
   assert.doesNotMatch(pos, /function databaseSettingsDlg/); assert.match(databaseModule, /function databaseSettingsDlg/);
-  for (const src of ['/inventory-module.js','/purchasing-module.js','/payments-module.js','/fiscal-reports.js','/cash-z-module.js','/database-settings-module.js']) assert.ok(indexHtml.includes('<script src="'+src+'"></script>'));
+  for (const src of ['inventory-module.js','purchasing-module.js','payments-module.js','fiscal-reports.js','cash-z-module.js','database-settings-module.js']) assert.ok(buildMainScript.includes("'"+src+"'"), 'el ensamblador debe incluir '+src);
+  assert.ok(indexHtml.includes('<script src="/main.bundle.js"></script>'));
+  assert.ok(!indexHtml.includes('<script src="/inventory-module.js"></script>'), 'los fragmentos no se ejecutan fuera del ámbito del POS');
 });
 test('el arqueo Z calcula fondos, vuelto y movimientos solo de la caja y turno correctos', () => {
   const zSource = pos + '\n' + cashZ;
