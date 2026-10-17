@@ -225,9 +225,9 @@ test('los atajos de teclado conservan contenido, orden e inmutabilidad', async (
     { window: {} }
   );
   assert.equal(result.shortcuts.length, 17);
-  assert.deepEqual(result.shortcuts[0], ['F1', 'Control SENIAT/SUDEBAN']);
-  assert.deepEqual(result.shortcuts[11], ['F12', 'Cobrar']);
-  assert.deepEqual(result.shortcuts[16], ['Esc', 'Cerrar ventana o limpiar la búsqueda']);
+  assert.equal(JSON.stringify(result.shortcuts[0]), JSON.stringify(['F1', 'Control SENIAT/SUDEBAN']));
+  assert.equal(JSON.stringify(result.shortcuts[11]), JSON.stringify(['F12', 'Cobrar']));
+  assert.equal(JSON.stringify(result.shortcuts[16]), JSON.stringify(['Esc', 'Cerrar ventana o limpiar la búsqueda']));
   assert.equal(result.frozen, true);
   assert.equal(result.rowsFrozen, true);
 
