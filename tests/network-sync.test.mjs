@@ -7,6 +7,13 @@ const electron = readFileSync(new URL('../electron/main.cjs', import.meta.url), 
 const preload = readFileSync(new URL('../electron/preload.cjs', import.meta.url), 'utf8');
 const ui = readFileSync(new URL('../public/access.js', import.meta.url), 'utf8');
 const pos = readFileSync(new URL('../public/main.js', import.meta.url), 'utf8');
+const cashZ = readFileSync(new URL('../public/cash-z-module.js', import.meta.url), 'utf8');
+const inventoryModule = readFileSync(new URL('../public/inventory-module.js', import.meta.url), 'utf8');
+const purchasingModule = readFileSync(new URL('../public/purchasing-module.js', import.meta.url), 'utf8');
+const paymentsModule = readFileSync(new URL('../public/payments-module.js', import.meta.url), 'utf8');
+const fiscalModule = readFileSync(new URL('../public/fiscal-reports.js', import.meta.url), 'utf8');
+const databaseModule = readFileSync(new URL('../public/database-settings-module.js', import.meta.url), 'utf8');
+const indexHtml = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const options = readFileSync(new URL('../public/pos-options.js', import.meta.url), 'utf8');
 const operationOptions = readFileSync(new URL('../public/operation-options.js', import.meta.url), 'utf8');
 
@@ -198,11 +205,22 @@ test('SQLite valida integridad antes de guardar y mantiene respaldo recuperable'
 });
 
 
+test('main.js queda reducido y las responsabilidades operativas viven en módulos separados', () => {
+  assert.ok(pos.length < 220000, 'main.js debe quedar por debajo de 220 KB tras extraer módulos funcionales');
+  assert.doesNotMatch(pos, /function recoverDlg/); assert.match(inventoryModule, /function recoverDlg/);
+  assert.doesNotMatch(pos, /function comprasDlg/); assert.match(purchasingModule, /function comprasDlg/);
+  assert.doesNotMatch(pos, /function casheaPaymentAssistantDlg/); assert.match(paymentsModule, /function casheaPaymentAssistantDlg/);
+  assert.doesNotMatch(pos, /function downloadBlob/); assert.match(fiscalModule, /function downloadBlob/);
+  assert.doesNotMatch(pos, /function getZHistory/); assert.match(cashZ, /function getZHistory/);
+  assert.doesNotMatch(pos, /function databaseSettingsDlg/); assert.match(databaseModule, /function databaseSettingsDlg/);
+  for (const src of ['/inventory-module.js','/purchasing-module.js','/payments-module.js','/fiscal-reports.js','/cash-z-module.js','/database-settings-module.js']) assert.ok(indexHtml.includes('<script src="'+src+'"></script>'));
+});
 test('el arqueo Z calcula fondos, vuelto y movimientos solo de la caja y turno correctos', () => {
-  const start = pos.indexOf('function zExpectedByMethod(sales,opening)');
-  const end = pos.indexOf('\nfunction zDiffStatus', start);
+  const zSource = pos + '\n' + cashZ;
+  const start = zSource.indexOf('function zExpectedByMethod(sales,opening)');
+  const end = zSource.indexOf('\nfunction zDiffStatus', start);
   assert.ok(start >= 0 && end > start, 'debe existir el cálculo puro del arqueo Z');
-  const calc = vm.runInNewContext(pos.slice(start, end) + '\n;zExpectedByMethod', {
+  const calc = vm.runInNewContext(zSource.slice(start, end) + '\n;zExpectedByMethod', {
     METHODS: [{ id: 'efBs' }, { id: 'efUSD' }, { id: 'pmovil' }],
     S: { cfg: { rate: 10 }, movimientosCaja: [
       { id: 'M1', cashbox: '01', ts: 200, currency: 'USD', amount: 3, direction: 'IN' },
