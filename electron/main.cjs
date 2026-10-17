@@ -93,14 +93,14 @@ function mergeStateRecords(base, incoming) {
   if (!base || typeof base !== 'object') return incoming;
   if (!incoming || typeof incoming !== 'object') return base;
   const out = { ...base, ...incoming };
-  const arrays = new Set(['sales','purchases','cxc','cxp','cortesZ','kardex','counts','held','movements','returns','voids','openings','retentions','divisas','cashea','customers','clients','suppliers','documents','products','casheaMovimientos','casheaLiquidaciones','cambiosDivisas','retencionesIva','lotesSudeban']);
+  const arrays = new Set(['sales','purchases','cxc','cxp','cortesZ','kardex','counts','held','movements','movimientosCaja','returns','voids','openings','retentions','divisas','cashea','customers','clients','suppliers','documents','products','casheaMovimientos','casheaLiquidaciones','cambiosDivisas','retencionesIva','lotesSudeban']);
   for (const key of arrays) {
     if (!Array.isArray(base[key]) && !Array.isArray(incoming[key])) continue;
     const map = new Map();
     for (const item of [...(base[key] || []), ...(incoming[key] || [])]) {
       const id = item && (item.id ?? item.uuid ?? item.eventId ?? item.no ?? item.number ?? item.code ?? item.sku);
       if (id === undefined || id === null) { map.set(crypto.createHash('sha256').update(JSON.stringify(item)).digest('hex'), item); continue; }
-      const boxScoped = ['sales','cxc','cortesZ','openings','movements','returns','voids'].includes(key) ? String(item.cashbox || 'sin-caja') + ':' : '';
+      const boxScoped = ['sales','cxc','cortesZ','openings','movements','movimientosCaja','returns','voids'].includes(key) ? String(item.cashbox || 'sin-caja') + ':' : '';
       const k = boxScoped + String(id);
       const old = map.get(k);
       if (!old || recordVersion(item) >= recordVersion(old)) map.set(k, item);
