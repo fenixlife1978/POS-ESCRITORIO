@@ -88,3 +88,26 @@ test('el mapeo de sincronización conserva las colecciones y se carga antes del 
   const html = await readFile(path.join(root, 'index.html'), 'utf8');
   assert.ok(html.indexOf('<script src="/operation-options.js"></script>') < html.indexOf('<script src="/main.js"></script>'));
 });
+
+test('las etiquetas cambiarias conservan tipos, clases y nombres visibles', async () => {
+  const result = await evaluatePublicData(
+    'currency-options.js',
+    'window.POS_CURRENCY_OPTIONS',
+    [],
+    { window: {} }
+  );
+  const expectedTypes = ['ZELLE_PROV', 'USD_EFECTIVO', 'ZELLE_PROPIO', 'VENTA_USD'];
+  assert.deepEqual(Object.keys(result.tipoLabel), expectedTypes);
+  assert.deepEqual(Object.keys(result.tagClass), expectedTypes);
+  assert.deepEqual(Object.keys(result.tagShort), expectedTypes);
+  assert.equal(result.tipoLabel.ZELLE_PROV, 'COMPRA USD ZELLE PARA PAGO DIRECTO A PROVEEDOR (TRIANGULACIÓN)');
+  assert.equal(result.tagClass.VENTA_USD, 'cambio-tag vta');
+  assert.equal(result.tagShort.VENTA_USD, 'Venta USD');
+  assert.ok(Object.isFrozen(result));
+  assert.ok(Object.isFrozen(result.tipoLabel));
+  assert.ok(Object.isFrozen(result.tagClass));
+  assert.ok(Object.isFrozen(result.tagShort));
+
+  const html = await readFile(path.join(root, 'index.html'), 'utf8');
+  assert.ok(html.indexOf('<script src="/currency-options.js"></script>') < html.indexOf('<script src="/main.js"></script>'));
+});
