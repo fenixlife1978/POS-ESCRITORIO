@@ -70,7 +70,7 @@ test('las opciones estáticas del POS se cargan antes de main.js y conservan sus
   assert.ok(result.TICKET_FONTS.some(v => v.id === 'ibm'));
 
   const html = await readFile(path.join(root, 'index.html'), 'utf8');
-  assert.ok(html.indexOf('<script src="/pos-options.js"></script>') < html.indexOf('<script src="/main.js"></script>'));
+  assert.ok(html.indexOf('<script src="/pos-options.js"></script>') < html.indexOf('<script src="/main.bundle.js"></script>'));
 });
 
 test('el mapeo de sincronización conserva las colecciones y se carga antes del POS', async () => {
@@ -87,7 +87,7 @@ test('el mapeo de sincronización conserva las colecciones y se carga antes del 
   assert.ok(result.every(entry => Object.isFrozen(entry)));
 
   const html = await readFile(path.join(root, 'index.html'), 'utf8');
-  assert.ok(html.indexOf('<script src="/operation-options.js"></script>') < html.indexOf('<script src="/main.js"></script>'));
+  assert.ok(html.indexOf('<script src="/operation-options.js"></script>') < html.indexOf('<script src="/main.bundle.js"></script>'));
 });
 
 test('las etiquetas cambiarias conservan tipos, clases y nombres visibles', async () => {
@@ -110,7 +110,7 @@ test('las etiquetas cambiarias conservan tipos, clases y nombres visibles', asyn
   assert.ok(Object.isFrozen(result.tagShort));
 
   const html = await readFile(path.join(root, 'index.html'), 'utf8');
-  assert.ok(html.indexOf('<script src="/currency-options.js"></script>') < html.indexOf('<script src="/main.js"></script>'));
+  assert.ok(html.indexOf('<script src="/currency-options.js"></script>') < html.indexOf('<script src="/main.bundle.js"></script>'));
 });
 
 test('los datos iniciales conservan sus 44 productos y orden de carga', async () => {
@@ -127,7 +127,7 @@ test('los datos iniciales conservan sus 44 productos y orden de carga', async ()
   assert.equal(result[43][1], 'Bandeja Recolectora de Aceite 15 L');
 
   const html = await readFile(path.join(root, 'index.html'), 'utf8');
-  assert.ok(html.indexOf('<script src="/seed-data.js"></script>') < html.indexOf('<script src="/main.js"></script>'));
+  assert.ok(html.indexOf('<script src="/seed-data.js"></script>') < html.indexOf('<script src="/main.bundle.js"></script>'));
 });
 
 test('las operaciones semilla conservan ventas, compras y referencias', async () => {
@@ -209,7 +209,7 @@ test('los encabezados de exportación fiscal conservan nombres y orden', async (
   assert.equal(result.frozen, true);
 
   const html = await readFile(path.join(root, 'index.html'), 'utf8');
-  assert.ok(html.indexOf('<script src="/fiscal-export-headers.js"></script>') < html.indexOf('<script src="/main.js"></script>'));
+  assert.ok(html.indexOf('<script src="/fiscal-export-headers.js"></script>') < html.indexOf('<script src="/main.bundle.js"></script>'));
   assert.ok(!html.includes('\\n<script src="/access.js"></script>'), 'no debe quedar texto literal \\n antes del script de acceso');
   const reports = await readFile(path.join(root, 'public', 'fiscal-reports.js'), 'utf8');
   assert.ok(reports.includes('window.POS_FISCAL_EXPORT_HEADERS.sales'));
@@ -232,7 +232,7 @@ test('los atajos de teclado conservan contenido, orden e inmutabilidad', async (
   assert.equal(result.rowsFrozen, true);
 
   const html = await readFile(path.join(root, 'index.html'), 'utf8');
-  assert.ok(html.indexOf('<script src="/help-shortcuts.js"></script>') < html.indexOf('<script src="/main.js"></script>'));
+  assert.ok(html.indexOf('<script src="/help-shortcuts.js"></script>') < html.indexOf('<script src="/main.bundle.js"></script>'));
   const main = await readFile(path.join(root, 'public', 'main.js'), 'utf8');
   assert.ok(main.includes('const rows=window.POS_HELP_SHORTCUTS;'));
 });
@@ -251,8 +251,8 @@ test('todos los scripts locales del HTML existen y los módulos de datos precede
   })));
   assert.ok(files.every(file => file.exists), 'todos los scripts locales referenciados deben existir');
 
-  const mainIndex = sources.indexOf('/main.js');
-  assert.ok(mainIndex >= 0, 'main.js debe estar referenciado');
+  const mainIndex = sources.indexOf('/main.bundle.js');
+  assert.ok(mainIndex >= 0, 'main.bundle.js debe estar referenciado');
   const dataModules = [
     '/catalog-oem.js',
     '/lubricant-presentations.js',
@@ -267,9 +267,9 @@ test('todos los scripts locales del HTML existen y los módulos de datos precede
   ];
   for (const modulePath of dataModules) {
     assert.ok(sources.indexOf(modulePath) >= 0, modulePath + ' debe estar referenciado');
-    assert.ok(sources.indexOf(modulePath) < mainIndex, modulePath + ' debe cargarse antes de main.js');
+    assert.ok(sources.indexOf(modulePath) < mainIndex, modulePath + ' debe cargarse antes del bundle principal');
   }
-  assert.ok(sources.indexOf('/access.js') > mainIndex, 'access.js debe conservar su posición posterior a main.js');
+  assert.ok(sources.indexOf('/access.js') > mainIndex, 'access.js debe conservar su posición posterior al bundle principal');
   assert.ok(!html.includes('\\n<script src="/access.js"></script>'), 'no debe reaparecer el texto literal \\n');
 });
 
