@@ -67,6 +67,10 @@
       Object.freeze({code:'7501001',desc:'Castrol GTX Aceite 20W-50 Mineral 1 L',qty:24,cost:3.35}),
       Object.freeze({code:'7501002',desc:'Castrol GTX Aceite 20W-50 Mineral Galón 4 L',qty:8,cost:12.60})
     ]),
+    purchaseFormDefaults: Object.freeze([
+      Object.freeze({code:'7501008',qty:12,cost:4.85,price:7.50}),
+      Object.freeze({code:'7504004',qty:10,cost:3.45,price:5.40})
+    ]),
     purchaseLines: Object.freeze([
       Object.freeze({code:'7504001',desc:'Fram Filtro de Aceite PH3600',qty:20,cost:3.00,sub:60.00}),
       Object.freeze({code:'7504002',desc:'Mann Filtro de Aceite W 712/75',qty:10,cost:5.10,sub:51.00}),
