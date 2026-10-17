@@ -73,7 +73,7 @@ function mergeStateRecords(base, incoming) {
   if (!base || typeof base !== 'object') return incoming;
   if (!incoming || typeof incoming !== 'object') return base;
   const out = { ...base, ...incoming };
-  const arrays = new Set(['sales','purchases','cxc','cxp','cortesZ','kardex','counts','held','movements','returns','voids','openings','retentions','divisas','cashea','customers','clients','suppliers','documents','products']);
+  const arrays = new Set(['sales','purchases','cxc','cxp','cortesZ','kardex','counts','held','movements','returns','voids','openings','retentions','divisas','cashea','customers','clients','suppliers','documents','products','casheaMovimientos','casheaLiquidaciones','cambiosDivisas','retencionesIva','lotesSudeban']);
   for (const key of arrays) {
     if (!Array.isArray(base[key]) && !Array.isArray(incoming[key])) continue;
     const map = new Map();
