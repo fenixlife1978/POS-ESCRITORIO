@@ -170,3 +170,27 @@ test('las presentaciones de lubricantes conservan sus cuatro configuraciones', a
   const html = await readFile(path.join(root, 'index.html'), 'utf8');
   assert.ok(html.indexOf('<script src="/lubricant-presentations.js"></script>') < html.indexOf('<script src="/catalog-master-data.js"></script>'));
 });
+
+test('los encabezados de exportación fiscal conservan nombres y orden', async () => {
+  const result = await evaluatePublicData(
+    'fiscal-export-headers.js',
+    '({ sales: window.POS_FISCAL_EXPORT_HEADERS.sales, purchases: window.POS_FISCAL_EXPORT_HEADERS.purchases, igtf: window.POS_FISCAL_EXPORT_HEADERS.igtf, frozen: Object.isFrozen(window.POS_FISCAL_EXPORT_HEADERS) })',
+    [],
+    { window: {} }
+  );
+  assert.equal(result.sales.length, 22);
+  assert.equal(result.sales[0], 'Nro_Operacion');
+  assert.equal(result.sales[21], 'Tasa_BCV');
+  assert.equal(result.purchases.length, 15);
+  assert.equal(result.purchases[2], 'RIF_Proveedor');
+  assert.equal(result.igtf.length, 11);
+  assert.equal(result.igtf[8], 'Alicuota_IGTF');
+  assert.equal(result.frozen, true);
+
+  const html = await readFile(path.join(root, 'index.html'), 'utf8');
+  assert.ok(html.indexOf('<script src="/fiscal-export-headers.js"></script>') < html.indexOf('<script src="/main.js"></script>'));
+  const main = await readFile(path.join(root, 'public', 'main.js'), 'utf8');
+  assert.ok(main.includes('window.POS_FISCAL_EXPORT_HEADERS.sales'));
+  assert.ok(main.includes('window.POS_FISCAL_EXPORT_HEADERS.purchases'));
+  assert.ok(main.includes('window.POS_FISCAL_EXPORT_HEADERS.igtf'));
+});
