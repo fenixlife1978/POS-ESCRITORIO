@@ -385,7 +385,7 @@ function seed(){
 function stateSnapshot(){
   return {
     v:1,cfg:S.cfg,products:S.products,clients:S.clients,suppliers:S.suppliers,
-    sales:S.sales,held:S.held,purchases:S.purchases,cxc:S.cxc,cxp:S.cxp,cortesZ:S.cortesZ||[],
+    sales:S.sales,held:S.held,purchases:S.purchases,cxc:S.cxc,cxp:S.cxp,cortesZ:S.cortesZ||[],movimientosCaja:S.movimientosCaja||[],
     kardex:S.kardex,counts:S.counts,lotesSudeban:S.lotesSudeban,retencionesIva:S.retencionesIva,cambiosDivisas:S.cambiosDivisas,
     casheaMovimientos:S.casheaMovimientos||[],casheaLiquidaciones:S.casheaLiquidaciones||[],documents:S.documents||[],
     invoice:S.invoice,purchaseSeq:S.purchaseSeq,countSeq:S.countSeq
@@ -794,6 +794,7 @@ function load(){
     const seedMap={};SEED.forEach(sp=>{seedMap[sp.code]=sp;});
     S.cfg=Object.assign(S.cfg,d.cfg);
     S.cortesZ=Array.isArray(d.cortesZ)?d.cortesZ:[];
+    S.movimientosCaja=Array.isArray(d.movimientosCaja)?d.movimientosCaja:(Array.isArray(S.movimientosCaja)?S.movimientosCaja:[]);
     const legacyCaja=String(S.cfg.caja||'01');
     (S.sales||[]).forEach(x=>{if(!x.cashbox)x.cashbox=legacyCaja;if(!x.cashier)x.cashier=x.user||S.cfg.cajero||'Cajero';});
     (S.cxc||[]).forEach(x=>{if(!x.cashbox)x.cashbox=legacyCaja;});
