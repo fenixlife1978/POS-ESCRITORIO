@@ -62,6 +62,11 @@
     ]),
     purchases: Object.freeze({
       '7501001':24,'7501002':8,'7504001':20,'7504002':10,'7505001':6
-    })
+    }),
+    purchaseLines: Object.freeze([
+      Object.freeze({code:'7504001',desc:'Fram Filtro de Aceite PH3600',qty:20,cost:3.00,sub:60.00}),
+      Object.freeze({code:'7504002',desc:'Mann Filtro de Aceite W 712/75',qty:10,cost:5.10,sub:51.00}),
+      Object.freeze({code:'7505001',desc:'Bendix Pastillas Delanteras Cerámicas',qty:6,cost:15.60,sub:93.60})
+    ])
   });
 })(window);
