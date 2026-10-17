@@ -69,6 +69,18 @@ function localAddresses() {
 }
 function sendJson(res, status, data) { res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'Access-Control-Allow-Origin': 'null' }); res.end(JSON.stringify(data)); }
 function readBody(req) { return new Promise((resolve, reject) => { let raw = ''; req.on('data', chunk => { raw += chunk; if (raw.length > MAX_SYNC_BODY) { reject(new Error('La carga de sincronización excede 8 MB.')); req.destroy(); } }); req.on('end', () => { try { resolve(JSON.parse(raw || '{}')); } catch { reject(new Error('JSON inválido.')); } }); req.on('error', reject); }); }
+function recordVersion(item) {
+  if (!item || typeof item !== 'object') return 0;
+  for (const value of [item.updatedAt, item.ts, item.createdAt]) {
+    if (value === undefined || value === null || value === '') continue;
+    const numeric = Number(value);
+    if (Number.isFinite(numeric)) return numeric;
+    const parsed = Date.parse(String(value));
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return 0;
+}
+
 function mergeStateRecords(base, incoming) {
   if (!base || typeof base !== 'object') return incoming;
   if (!incoming || typeof incoming !== 'object') return base;
@@ -83,7 +95,7 @@ function mergeStateRecords(base, incoming) {
       const boxScoped = ['sales','cxc','cortesZ','openings','movements','returns','voids'].includes(key) ? String(item.cashbox || 'sin-caja') + ':' : '';
       const k = boxScoped + String(id);
       const old = map.get(k);
-      if (!old || Number(item.updatedAt || item.ts || item.createdAt || 0) >= Number(old.updatedAt || old.ts || old.createdAt || 0)) map.set(k, item);
+      if (!old || recordVersion(item) >= recordVersion(old)) map.set(k, item);
     }
     out[key] = [...map.values()];
   }
