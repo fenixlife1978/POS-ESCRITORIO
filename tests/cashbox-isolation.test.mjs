@@ -2,7 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const main = readFileSync(new URL('../public/main.js', import.meta.url), 'utf8');
+const main = [
+  readFileSync(new URL('../public/main.js', import.meta.url), 'utf8'),
+  readFileSync(new URL('../public/inventory-module.js', import.meta.url), 'utf8'),
+  readFileSync(new URL('../public/purchasing-module.js', import.meta.url), 'utf8'),
+  readFileSync(new URL('../public/payments-module.js', import.meta.url), 'utf8'),
+  readFileSync(new URL('../public/fiscal-reports.js', import.meta.url), 'utf8'),
+  readFileSync(new URL('../public/cash-z-module.js', import.meta.url), 'utf8'),
+  readFileSync(new URL('../public/database-settings-module.js', import.meta.url), 'utf8')
+].join('\n');
 const access = readFileSync(new URL('../public/access.js', import.meta.url), 'utf8');
 
 test('las secuencias operativas se indexan por caja', () => {

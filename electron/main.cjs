@@ -69,21 +69,41 @@ function localAddresses() {
 }
 function sendJson(res, status, data) { res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'Access-Control-Allow-Origin': 'null' }); res.end(JSON.stringify(data)); }
 function readBody(req) { return new Promise((resolve, reject) => { let raw = ''; req.on('data', chunk => { raw += chunk; if (raw.length > MAX_SYNC_BODY) { reject(new Error('La carga de sincronización excede 8 MB.')); req.destroy(); } }); req.on('end', () => { try { resolve(JSON.parse(raw || '{}')); } catch { reject(new Error('JSON inválido.')); } }); req.on('error', reject); }); }
+function recordVersion(item) {
+  if (!item || typeof item !== 'object') return 0;
+  for (const value of [item.updatedAt, item.ts, item.createdAt]) {
+    if (value === undefined || value === null || value === '') continue;
+    const numeric = Number(value);
+    if (Number.isFinite(numeric)) return numeric;
+    const parsed = Date.parse(String(value));
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return 0;
+}
+
+const BOX_SCOPED_SYNC_COLLECTIONS = new Set(['sales','cxc','cortesZ','openings','movements','returns','voids']);
+function syncRecordKey(item, collection) {
+  if (!item || typeof item !== 'object') return '';
+  const id = item.id ?? item.uuid ?? item.eventId ?? item.no ?? item.number ?? item.ctrlNo ?? item.code;
+  if (id === undefined || id === null) return '';
+  return (BOX_SCOPED_SYNC_COLLECTIONS.has(collection) ? String(item.cashbox || 'sin-caja') + ':' : '') + String(id);
+}
+
 function mergeStateRecords(base, incoming) {
   if (!base || typeof base !== 'object') return incoming;
   if (!incoming || typeof incoming !== 'object') return base;
   const out = { ...base, ...incoming };
-  const arrays = new Set(['sales','purchases','cxc','cxp','cortesZ','kardex','counts','held','movements','returns','voids','openings','retentions','divisas','cashea','customers','clients','suppliers','documents','products']);
+  const arrays = new Set(['sales','purchases','cxc','cxp','cortesZ','kardex','counts','held','movements','movimientosCaja','returns','voids','openings','retentions','divisas','cashea','customers','clients','suppliers','documents','products','casheaMovimientos','casheaLiquidaciones','cambiosDivisas','retencionesIva','lotesSudeban']);
   for (const key of arrays) {
     if (!Array.isArray(base[key]) && !Array.isArray(incoming[key])) continue;
     const map = new Map();
     for (const item of [...(base[key] || []), ...(incoming[key] || [])]) {
       const id = item && (item.id ?? item.uuid ?? item.eventId ?? item.no ?? item.number ?? item.code ?? item.sku);
       if (id === undefined || id === null) { map.set(crypto.createHash('sha256').update(JSON.stringify(item)).digest('hex'), item); continue; }
-      const boxScoped = ['sales','cxc','cortesZ','openings','movements','returns','voids'].includes(key) ? String(item.cashbox || 'sin-caja') + ':' : '';
+      const boxScoped = ['sales','cxc','cortesZ','openings','movements','movimientosCaja','returns','voids'].includes(key) ? String(item.cashbox || 'sin-caja') + ':' : '';
       const k = boxScoped + String(id);
       const old = map.get(k);
-      if (!old || Number(item.updatedAt || item.ts || item.createdAt || 0) >= Number(old.updatedAt || old.ts || old.createdAt || 0)) map.set(k, item);
+      if (!old || recordVersion(item) >= recordVersion(old)) map.set(k, item);
     }
     out[key] = [...map.values()];
   }
@@ -268,7 +288,7 @@ async function startLanServer(requestedPort) {
               const state = stateRow ? JSON.parse(stateRow.payload) : {};
               const records = Array.isArray(state[collection]) ? state[collection] : [];
               const recordId = String(ev.entityId);
-              const existingRecord = records.find(item => item && String(item.id ?? item.uuid ?? item.eventId ?? item.no ?? item.number ?? item.ctrlNo ?? item.code ?? '') === recordId);
+              const existingRecord = records.find(item => syncRecordKey(item, collection) === recordId);
               if (!existingRecord) {
                 state[collection] = [...records, record];
                 run('INSERT INTO app_state(id,payload,updated_at) VALUES(1,?,CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload,updated_at=CURRENT_TIMESTAMP', [JSON.stringify(state)]);
