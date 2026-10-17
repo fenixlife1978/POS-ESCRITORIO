@@ -198,6 +198,22 @@ test('SQLite valida integridad antes de guardar y mantiene respaldo recuperable'
 });
 
 
+test('la identidad de operaciones LAN separa facturas de cajas distintas con el mismo número', () => {
+  const start = electron.indexOf('const BOX_SCOPED_SYNC_COLLECTIONS');
+  const end = electron.indexOf('\nfunction mergeStateRecords', start);
+  assert.ok(start >= 0 && end > start, 'el servidor debe definir identidad de registro con ámbito de caja');
+  const syncRecordKey = vm.runInNewContext(electron.slice(start, end) + '\n;syncRecordKey');
+  assert.notEqual(
+    syncRecordKey({ no: 1, cashbox: '01' }, 'sales'),
+    syncRecordKey({ no: 1, cashbox: '02' }, 'sales'),
+    'dos cajas pueden emitir la misma secuencia de factura sin colisionar'
+  );
+  assert.equal(syncRecordKey({ id: 'RET-1' }, 'retentions'), 'RET-1', 'las colecciones globales conservan su identidad normal');
+  assert.match(pos, /function operationEntityId\(item,collection\)/);
+  assert.match(pos, /operationIdentity\(item,index,collection\)/);
+  assert.match(pos, /operationIdentity\(item,i,key\)/);
+});
+
 test('la fusión LAN compara correctamente versiones ISO y numéricas sin resucitar datos antiguos', () => {
   const start = electron.indexOf('function recordVersion(');
   const end = electron.indexOf('\nfunction userDbPath()', start);
