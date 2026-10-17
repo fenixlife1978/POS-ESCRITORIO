@@ -137,7 +137,7 @@ test('las operaciones semilla conservan ventas, compras y referencias', async ()
     { window: {} }
   );
   assert.equal(result.sales.length, 5);
-  assert.deepEqual(Array.from(result.sales[0]), [1038, 8, 12, 0, [['7501001', 1, 0]], 'pm']);
+  assert.equal(JSON.stringify(result.sales[0]), JSON.stringify([1038, 8, 12, 0, [['7501001', 1, 0]], 'pm']));
   assert.deepEqual(
     Object.keys(result.purchases).sort(),
     ['7501001', '7501002', '7504001', '7504002', '7505001']
