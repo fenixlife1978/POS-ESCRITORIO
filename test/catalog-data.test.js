@@ -128,3 +128,27 @@ test('los datos iniciales conservan sus 44 productos y orden de carga', async ()
   const html = await readFile(path.join(root, 'index.html'), 'utf8');
   assert.ok(html.indexOf('<script src="/seed-data.js"></script>') < html.indexOf('<script src="/main.js"></script>'));
 });
+
+test('las operaciones semilla conservan ventas, compras y referencias', async () => {
+  const result = await evaluatePublicData(
+    'seed-data.js',
+    'window.POS_SEED_OPERATIONS',
+    [],
+    { window: {} }
+  );
+  assert.equal(result.sales.length, 5);
+  assert.deepEqual(Array.from(result.sales[0]), [1038, 8, 12, 0, [['7501001', 1, 0]], 'pm']);
+  assert.deepEqual(
+    Object.keys(result.purchases).sort(),
+    ['7501001', '7501002', '7504001', '7504002', '7505001']
+  );
+  assert.equal(result.purchases['7501001'], 24);
+  assert.ok(Object.isFrozen(result));
+  assert.ok(Object.isFrozen(result.sales));
+  assert.ok(result.sales.every(row => Object.isFrozen(row) && Object.isFrozen(row[4])));
+  assert.ok(Object.isFrozen(result.purchases));
+
+  const main = await readFile(path.join(root, 'public', 'main.js'), 'utf8');
+  assert.ok(main.includes('const seedSalesSpec=window.POS_SEED_OPERATIONS.sales;'));
+  assert.ok(main.includes('const purchSpec=window.POS_SEED_OPERATIONS.purchases;'));
+});
