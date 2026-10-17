@@ -59,6 +59,11 @@ test('las opciones estáticas del POS se cargan antes de main.js y conservan sus
   assert.equal(result.UM_OPTIONS.length, 10);
   assert.equal(result.TAX_OPTIONS.length, 5);
   assert.equal(result.TICKET_FONTS.length, 6);
+  assert.equal(result.METHODS.length, 8);
+  assert.ok(result.METHODS.some(v => v.id === 'pmovil'));
+  assert.ok(result.METHODS.some(v => v.id === 'cashea' && v.isCashea));
+  assert.ok(Object.keys(result.IC).length > 20);
+  assert.ok(typeof result.IC.inventario === 'string');
   assert.ok(result.UM_OPTIONS.some(v => v.id === 'und'));
   assert.ok(result.TAX_OPTIONS.some(v => v.type === 'E' && v.rate === 0));
   assert.ok(result.TICKET_FONTS.some(v => v.id === 'ibm'));
