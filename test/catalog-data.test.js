@@ -216,3 +216,23 @@ test('los encabezados de exportación fiscal conservan nombres y orden', async (
   assert.ok(main.includes('window.POS_FISCAL_EXPORT_HEADERS.purchases'));
   assert.ok(main.includes('window.POS_FISCAL_EXPORT_HEADERS.igtf'));
 });
+
+test('los atajos de teclado conservan contenido, orden e inmutabilidad', async () => {
+  const result = await evaluatePublicData(
+    'help-shortcuts.js',
+    '({ shortcuts: window.POS_HELP_SHORTCUTS, frozen: Object.isFrozen(window.POS_HELP_SHORTCUTS), rowsFrozen: window.POS_HELP_SHORTCUTS.every(Object.isFrozen) })',
+    [],
+    { window: {} }
+  );
+  assert.equal(result.shortcuts.length, 17);
+  assert.deepEqual(result.shortcuts[0], ['F1', 'Control SENIAT/SUDEBAN']);
+  assert.deepEqual(result.shortcuts[11], ['F12', 'Cobrar']);
+  assert.deepEqual(result.shortcuts[16], ['Esc', 'Cerrar ventana o limpiar la búsqueda']);
+  assert.equal(result.frozen, true);
+  assert.equal(result.rowsFrozen, true);
+
+  const html = await readFile(path.join(root, 'index.html'), 'utf8');
+  assert.ok(html.indexOf('<script src="/help-shortcuts.js"></script>') < html.indexOf('<script src="/main.js"></script>'));
+  const main = await readFile(path.join(root, 'public', 'main.js'), 'utf8');
+  assert.ok(main.includes('const rows=window.POS_HELP_SHORTCUTS;'));
+});

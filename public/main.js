@@ -6140,12 +6140,7 @@ function cfgDlg(focusId){
   }}],onOpen:()=>{const f=$('#'+(focusId||'cEmp'),el);f.focus();if(f.select)f.select();}});
 }
 function helpDlg(){
-  const rows=[
-    ['F1','Control SENIAT/SUDEBAN'],['F2','Nueva venta'],['F3','Ir a código / búsqueda'],['F4','Seleccionar cliente'],['F5','Suspender venta'],['F6','Recuperar venta en espera'],
-    ['F7','Descuento'],['F8','Maestro de Inventario'],['F9','Ventas del día y cierre'],['F10','Módulo de Compras'],['F11','Conteo físico masivo'],['F12','Cobrar'],
-    ['↑ ↓','Moverse por el catálogo (en la caja de búsqueda) o por la venta'],['+ / −','Sumar o restar una unidad al renglón seleccionado'],
-    ['Supr','Quitar el renglón seleccionado'],['3*texto','Agregar 3 unidades del producto buscado'],['Esc','Cerrar ventana o limpiar la búsqueda']
-  ];
+  const rows=window.POS_HELP_SHORTCUTS;
   openWin({title:'Atajos de teclado',w:540,body:h('<div class="gridwrap" style="flex:none"><table class="grid"><thead><tr><th style="width:90px">Tecla</th><th>Acción</th></tr></thead><tbody>'+rows.map(r=>'<tr><td><b>'+esc(r[0])+'</b></td><td>'+esc(r[1])+'</td></tr>').join('')+'</tbody></table></div>'),foot:[{label:'Cerrar',primary:true}]});
 }
 function aboutDlg(){
