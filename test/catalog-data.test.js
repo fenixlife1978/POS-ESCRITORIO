@@ -64,5 +64,5 @@ test('las opciones estáticas del POS se cargan antes de main.js y conservan sus
   assert.ok(result.TICKET_FONTS.some(v => v.id === 'ibm'));
 
   const html = await readFile(path.join(root, 'index.html'), 'utf8');
-  assert.match(html, /<script src="\\/pos-options\\.js"><\\/script>[\\s\\S]*?<script src="\\/main\\.js"><\\/script>/);
+  assert.ok(html.indexOf('<script src="/pos-options.js"></script>') < html.indexOf('<script src="/main.js"></script>'));
 });
