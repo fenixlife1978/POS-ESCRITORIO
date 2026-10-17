@@ -148,6 +148,14 @@ test('las operaciones semilla conservan ventas, compras y referencias', async ()
   assert.ok(Object.isFrozen(result.sales));
   assert.ok(result.sales.every(row => Object.isFrozen(row) && Object.isFrozen(row[4])));
   assert.ok(Object.isFrozen(result.purchases));
+  assert.equal(result.purchaseLines.length, 3);
+  assert.equal(JSON.stringify(result.purchaseLines.map(line => [line.code, line.qty, line.cost, line.sub])), JSON.stringify([
+    ['7504001', 20, 3, 60],
+    ['7504002', 10, 5.1, 51],
+    ['7505001', 6, 15.6, 93.6]
+  ]));
+  assert.ok(Object.isFrozen(result.purchaseLines));
+  assert.ok(result.purchaseLines.every(line => Object.isFrozen(line)));
 
   const main = await readFile(path.join(root, 'public', 'main.js'), 'utf8');
   assert.ok(main.includes('const seedSalesSpec=window.POS_SEED_OPERATIONS.sales;'));
