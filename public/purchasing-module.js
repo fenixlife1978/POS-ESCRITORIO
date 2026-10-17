@@ -1,4 +1,4 @@
-/* Purchases, receivables, and payables workflows. Dependencias compartidas: estado y utilidades globales de main.js. */
+/* Compras, cuentas por cobrar y cuentas por pagar. Fragmento ensamblado dentro del IIFE de main.js por scripts/build-main.mjs. */
 function comprasDlg(initialTab){
   let tab=initialTab||'new';
   let supIdx=0;

@@ -1,5 +1,5 @@
-/* Database and storage settings. Dependencias compartidas: estado y utilidades globales de main.js. */
-function databaseSettingsDlg(){
+/* Configuración de base de datos y almacenamiento. Fragmento ensamblado dentro del IIFE de main.js por scripts/build-main.mjs. */
+async function databaseSettingsDlg(){
   const isDesktop = !!window.posDesktop;
   const salesCount = S.sales ? S.sales.length : 0;
   const prodCount = S.products ? S.products.length : 0;
@@ -111,5 +111,3 @@ function databaseSettingsDlg(){
     foot: [{ label: 'Cerrar', primary: true }]
   });
 }
-
-async

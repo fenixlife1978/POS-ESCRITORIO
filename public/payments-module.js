@@ -1,4 +1,4 @@
-/* Payment, Cashea, and sale completion workflows. Dependencias compartidas: estado y utilidades globales de main.js. */
+/* Pagos, Cashea y finalización de ventas. Fragmento ensamblado dentro del IIFE de main.js por scripts/build-main.mjs. */
 function casheaPaymentAssistantDlg(totalSale, rate, onApplied, onCancel){
   const el = h('<div class="form" style="gap:12px">'+
     '<div style="background:#1E1B4B;border:1px solid #4338CA;border-radius:8px;padding:12px;color:#EEF2FF">'+

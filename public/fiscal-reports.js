@@ -1,4 +1,4 @@
-/* Fiscal reports and exports. Dependencias compartidas: estado y utilidades globales de main.js. */
+/* Reportes y exportaciones fiscales. Fragmento ensamblado dentro del IIFE de main.js por scripts/build-main.mjs. */
 function downloadBlob(filename, content, mimeType){
   const blob=new Blob([content],{type:mimeType||'text/csv;charset=utf-8;'});
   const url=URL.createObjectURL(blob);

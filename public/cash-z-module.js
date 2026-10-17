@@ -1,4 +1,4 @@
-/* Cashbox, opening, reconciliation, and Z close workflows. Dependencias compartidas: estado y utilidades globales de main.js. */
+/* Caja, aperturas, conciliación y Corte Z. Fragmento ensamblado dentro del IIFE de main.js por scripts/build-main.mjs. */
 function getZHistory(){
   if(!Array.isArray(S.cortesZ))S.cortesZ=[];
   return S.cortesZ;

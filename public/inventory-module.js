@@ -1,4 +1,4 @@
-/* Inventory, catalog, and stock workflows. Dependencias compartidas: estado y utilidades globales de main.js. */
+/* Inventario, catálogo y conteos. Fragmento ensamblado dentro del IIFE de main.js por scripts/build-main.mjs. */
 function recoverDlg(){
   if(!S.held.length){msg('No hay ventas en espera.');return;}
   const busy=S.cart.length>0;
