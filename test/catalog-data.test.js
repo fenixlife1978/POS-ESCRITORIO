@@ -160,7 +160,7 @@ test('las presentaciones de lubricantes conservan sus cuatro configuraciones', a
     [],
     { window: {} }
   );
-  assert.deepEqual(result.keys, ['litro', 'galon', 'paila', 'grasa']);
+  assert.equal(JSON.stringify(result.keys), JSON.stringify(['litro', 'galon', 'paila', 'grasa']));
   assert.equal(result.litro.length, 5);
   assert.equal(result.litro[0].barcode, 'ABC');
   assert.equal(result.galon[0].barcode, 'XYZ');
