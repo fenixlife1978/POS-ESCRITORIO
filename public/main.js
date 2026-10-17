@@ -3750,12 +3750,7 @@ function newCxpManualDlg(){
    ========================================================================== */
 
 function printComprobanteDivisas(op){
-  const tipoLabel={
-    'ZELLE_PROV':'COMPRA USD ZELLE PARA PAGO DIRECTO A PROVEEDOR (TRIANGULACIÓN)',
-    'USD_EFECTIVO':'COMPRA DE USD EN EFECTIVO FÍSICO A PERSONA NATURAL',
-    'ZELLE_PROPIO':'COMPRA DE USD ZELLE PARA TESORERÍA / CUENTA PROPIA',
-    'VENTA_USD':'CANJE DE USD EFECTIVO A BOLÍVARES (SALIDA DE CAJA)'
-  }[op.tipo]||'OPERACIÓN CAMBIARIA / TRAZABILIDAD';
+  const tipoLabel=window.POS_CURRENCY_OPTIONS.tipoLabel[op.tipo]||'OPERACIÓN CAMBIARIA / TRAZABILIDAD';
 
   const rateBcv=op.tasaBcv||S.cfg.rate;
   const difTasa=op.tasa&&rateBcv?r2(op.tasa-rateBcv):0;
@@ -4097,18 +4092,8 @@ function divisasDlg(filterType){
       return true;
     }).slice().reverse();
 
-    const tagClass={
-      'ZELLE_PROV':'cambio-tag zel-prv',
-      'USD_EFECTIVO':'cambio-tag usd-efe',
-      'ZELLE_PROPIO':'cambio-tag zel-own',
-      'VENTA_USD':'cambio-tag vta'
-    };
-    const tagShort={
-      'ZELLE_PROV':'Zelle Proveedor',
-      'USD_EFECTIVO':'USD Efectivo',
-      'ZELLE_PROPIO':'Zelle Propio',
-      'VENTA_USD':'Venta USD'
-    };
+    const tagClass=window.POS_CURRENCY_OPTIONS.tagClass;
+    const tagShort=window.POS_CURRENCY_OPTIONS.tagShort;
 
     const rows=filtered.map(x=>{
       return '<tr>'+
