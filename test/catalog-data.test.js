@@ -27,7 +27,8 @@ test('el catálogo maestro conserva productos y presentaciones', async () => {
   const result = await evaluatePublicData(
     'catalog-master-data.js',
     '({ count: MASTER_CURATED_CATALOG.length, first: MASTER_CURATED_CATALOG[0], configKeys: Object.keys(LUBRICANT_PRES_CONFIG) })',
-    ['lubricant-presentations.js', 'catalog-oem.js']
+    ['lubricant-presentations.js', 'catalog-oem.js'],
+    { window: {} }
   );
   assert.ok(result.count > 30, 'el catálogo maestro no debe quedar vacío ni truncado');
   assert.equal(typeof result.first.code, 'string');
