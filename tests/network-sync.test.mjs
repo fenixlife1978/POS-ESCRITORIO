@@ -178,19 +178,19 @@ test('CASHEA permite seleccionar liquidaciones parciales y concilia solo el lote
 });
 
 test('CASHEA registra reversión auditada, exige autorización y devuelve operaciones a pendientes', () => {
-  assert.match(pos, /function reverseCasheaSettlement\(/);
-  assert.match(pos, /requestPin\('Revertir liquidación CASHEA '\+lot\.id\)/);
-  assert.match(pos, /No se puede revertir: el servicio de autorización no está disponible/);
-  assert.match(pos, /lot\.estado='Revertido'/);
-  assert.match(pos, /tipo:'REVERSIÓN'/);
-  assert.match(pos, /m\.estado='Pendiente Liquidación'/);
-  assert.match(pos, /data-csh-reverse=/);
+  assert.match(paymentsModule, /function reverseCasheaSettlement\(/);
+  assert.match(paymentsModule, /requestPin\('Revertir liquidación CASHEA '\+lot\.id\)/);
+  assert.match(paymentsModule, /No se puede revertir: el servicio de autorización no está disponible/);
+  assert.match(paymentsModule, /lot\.estado='Revertido'/);
+  assert.match(paymentsModule, /tipo:'REVERSIÓN'/);
+  assert.match(paymentsModule, /m\.estado='Pendiente Liquidación'/);
+  assert.match(paymentsModule, /data-csh-reverse=/);
 });
 
 test('la liquidación CASHEA guarda referencia bancaria y el depósito real conciliado', () => {
-  assert.match(pos, /refBancaria = ref/);
-  assert.match(pos, /depositadoUsd:depositUsd/);
-  assert.match(pos, /diferenciaUsd:r2\(depositUsd-netoUsd\)/);
+  assert.match(paymentsModule, /refBancaria = ref/);
+  assert.match(paymentsModule, /depositadoUsd:depositUsd/);
+  assert.match(paymentsModule, /diferenciaUsd:r2\(depositUsd-netoUsd\)/);
 });
 
 test('SQLite valida integridad antes de guardar y mantiene respaldo recuperable', () => {
