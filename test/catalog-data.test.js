@@ -276,7 +276,7 @@ test('todos los scripts locales del HTML existen y los módulos de datos precede
 
 test('todos los módulos estáticos coexisten en el orden real del navegador', async () => {
   const html = await readFile(path.join(root, 'index.html'), 'utf8');
-  const scriptSources = [...html.matchAll(/<script\\s+src=["']([^"']+)["']/g)].map(match => match[1]);
+  const scriptSources = [...html.matchAll(/<script\s+src=["']([^"']+)["']/g)].map(match => match[1]);
   const modulePaths = [
     '/catalog-oem.js',
     '/lubricant-presentations.js',
