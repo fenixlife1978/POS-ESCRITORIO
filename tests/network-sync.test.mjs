@@ -1,4 +1,5 @@
 import test from 'node:test';
+import vm from 'node:vm';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
@@ -196,6 +197,23 @@ test('SQLite valida integridad antes de guardar y mantiene respaldo recuperable'
   assert.match(electron, /integrity_check/);
 });
 
+
+test('la fusión LAN compara correctamente versiones ISO y numéricas sin resucitar datos antiguos', () => {
+  const start = electron.indexOf('function recordVersion(');
+  const end = electron.indexOf('\nfunction userDbPath()', start);
+  assert.ok(start >= 0 && end > start, 'deben existir las funciones de versión y fusión del servidor');
+  const helpers = vm.runInNewContext(electron.slice(start, end) + '\n;({ recordVersion, mergeStateRecords })');
+  const isoMerged = helpers.mergeStateRecords(
+    { sales: [{ id: 'F-1', updatedAt: '2026-10-17T10:00:00.000Z', status: 'updated' }] },
+    { sales: [{ id: 'F-1', updatedAt: '2026-10-17T09:00:00.000Z', status: 'stale' }] }
+  );
+  assert.equal(isoMerged.sales[0].status, 'updated', 'una fecha ISO más antigua no debe reemplazar la versión actual');
+  const numericMerged = helpers.mergeStateRecords(
+    { sales: [{ id: 'F-2', ts: 200, status: 'old' }] },
+    { sales: [{ id: 'F-2', ts: 300, status: 'new' }] }
+  );
+  assert.equal(numericMerged.sales[0].status, 'new', 'una versión numérica más reciente debe prevalecer');
+});
 
 test('la fusión del servidor conserva todas las colecciones operativas del snapshot del POS', () => {
   const mergeBlock = electron.match(/function mergeStateRecords\(base, incoming\) \{[\s\S]*?const arrays = new Set\(\[([^\]]+)\]\)/);
