@@ -211,10 +211,10 @@ test('los encabezados de exportación fiscal conservan nombres y orden', async (
   const html = await readFile(path.join(root, 'index.html'), 'utf8');
   assert.ok(html.indexOf('<script src="/fiscal-export-headers.js"></script>') < html.indexOf('<script src="/main.js"></script>'));
   assert.ok(!html.includes('\\n<script src="/access.js"></script>'), 'no debe quedar texto literal \\n antes del script de acceso');
-  const main = await readFile(path.join(root, 'public', 'main.js'), 'utf8');
-  assert.ok(main.includes('window.POS_FISCAL_EXPORT_HEADERS.sales'));
-  assert.ok(main.includes('window.POS_FISCAL_EXPORT_HEADERS.purchases'));
-  assert.ok(main.includes('window.POS_FISCAL_EXPORT_HEADERS.igtf'));
+  const reports = await readFile(path.join(root, 'public', 'fiscal-reports.js'), 'utf8');
+  assert.ok(reports.includes('window.POS_FISCAL_EXPORT_HEADERS.sales'));
+  assert.ok(reports.includes('window.POS_FISCAL_EXPORT_HEADERS.purchases'));
+  assert.ok(reports.includes('window.POS_FISCAL_EXPORT_HEADERS.igtf'));
 });
 
 test('los atajos de teclado conservan contenido, orden e inmutabilidad', async () => {
