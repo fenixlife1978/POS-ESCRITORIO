@@ -198,6 +198,26 @@ test('SQLite valida integridad antes de guardar y mantiene respaldo recuperable'
 });
 
 
+test('el arqueo Z calcula fondos, vuelto y movimientos solo de la caja y turno correctos', () => {
+  const start = pos.indexOf('function zExpectedByMethod(sales,opening)');
+  const end = pos.indexOf('\nfunction zDiffStatus', start);
+  assert.ok(start >= 0 && end > start, 'debe existir el cálculo puro del arqueo Z');
+  const calc = vm.runInNewContext(pos.slice(start, end) + '\n;zExpectedByMethod', {
+    METHODS: [{ id: 'efBs' }, { id: 'efUSD' }, { id: 'pmovil' }],
+    S: { cfg: { rate: 10 }, movimientosCaja: [
+      { id: 'M1', cashbox: '01', ts: 200, currency: 'USD', amount: 3, direction: 'IN' },
+      { id: 'M2', cashbox: '01', ts: 201, currency: 'BS', amount: 10, direction: 'OUT' },
+      { id: 'M3', cashbox: '02', ts: 202, currency: 'USD', amount: 100, direction: 'IN' },
+      { id: 'M4', cashbox: '01', ts: 99, currency: 'USD', amount: 100, direction: 'IN' }
+    ] },
+    r2: n => Math.round((Number(n) + Number.EPSILON) * 100) / 100
+  });
+  const result = calc([{ pays: [{ id: 'efUSD', amount: 10 }, { id: 'pmovil', amount: 50 }], change: 5, rate: 10 }], { cashbox: '01', openedAt: 100, bs: 100, usd: 20 });
+  assert.equal(result.efUSD, 28, 'USD debe incluir apertura, cobro, vuelto y movimiento de caja vigente');
+  assert.equal(result.efBs, 90, 'Bs debe descontar las salidas de efectivo del turno');
+  assert.equal(result.pmovil, 50, 'pagos electrónicos no deben mezclarse con el efectivo físico');
+});
+
 test('los movimientos físicos de caja se guardan, se restauran y se incluyen en sincronización', () => {
   const snapshotStart = pos.indexOf('function stateSnapshot()');
   const snapshotEnd = pos.indexOf('\nfunction persistenceError', snapshotStart);
