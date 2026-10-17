@@ -7,9 +7,11 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-async function evaluatePublicData(file, expression) {
-  const source = await readFile(path.join(root, 'public', file), 'utf8');
-  return runInNewContext(`${source}\n${expression}`, {});
+async function evaluatePublicData(file, expression, dependencies = []) {
+  const sources = await Promise.all(
+    [...dependencies, file].map(name => readFile(path.join(root, 'public', name), 'utf8'))
+  );
+  return runInNewContext(`${sources.join('\n')}\n${expression}`, {});
 }
 
 test('el mapa OEM se carga como datos no vacíos', async () => {
@@ -24,7 +26,8 @@ test('el mapa OEM se carga como datos no vacíos', async () => {
 test('el catálogo maestro conserva productos y presentaciones', async () => {
   const result = await evaluatePublicData(
     'catalog-master-data.js',
-    '({ count: MASTER_CURATED_CATALOG.length, first: MASTER_CURATED_CATALOG[0], configKeys: Object.keys(LUBRICANT_PRES_CONFIG) })'
+    '({ count: MASTER_CURATED_CATALOG.length, first: MASTER_CURATED_CATALOG[0], configKeys: Object.keys(LUBRICANT_PRES_CONFIG) })',
+    ['catalog-oem.js']
   );
   assert.ok(result.count > 30, 'el catálogo maestro no debe quedar vacío ni truncado');
   assert.equal(typeof result.first.code, 'string');
