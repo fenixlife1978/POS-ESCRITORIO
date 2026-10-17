@@ -240,7 +240,7 @@ test('los atajos de teclado conservan contenido, orden e inmutabilidad', async (
 
 test('todos los scripts locales del HTML existen y los módulos de datos preceden al núcleo', async () => {
   const html = await readFile(path.join(root, 'index.html'), 'utf8');
-  const sources = [...html.matchAll(/<script\\s+src=["']([^"']+)["']/g)].map(match => match[1]);
+  const sources = [...html.matchAll(/<script\s+src=["']([^"']+)["']/g)].map(match => match[1]);
   assert.ok(sources.length > 0, 'debe haber scripts de aplicación');
   assert.equal(new Set(sources).size, sources.length, 'no debe cargar un script local más de una vez');
 
@@ -270,5 +270,5 @@ test('todos los scripts locales del HTML existen y los módulos de datos precede
     assert.ok(sources.indexOf(modulePath) < mainIndex, modulePath + ' debe cargarse antes de main.js');
   }
   assert.ok(sources.indexOf('/access.js') > mainIndex, 'access.js debe conservar su posición posterior a main.js');
-  assert.ok(!html.includes('\\\\n<script src="/access.js"></script>'), 'no debe reaparecer el texto literal \\n');
+  assert.ok(!html.includes('\\n<script src="/access.js"></script>'), 'no debe reaparecer el texto literal \\n');
 });
