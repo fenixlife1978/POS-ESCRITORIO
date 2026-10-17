@@ -236,3 +236,39 @@ test('los atajos de teclado conservan contenido, orden e inmutabilidad', async (
   const main = await readFile(path.join(root, 'public', 'main.js'), 'utf8');
   assert.ok(main.includes('const rows=window.POS_HELP_SHORTCUTS;'));
 });
+
+
+test('todos los scripts locales del HTML existen y los módulos de datos preceden al núcleo', async () => {
+  const html = await readFile(path.join(root, 'index.html'), 'utf8');
+  const sources = [...html.matchAll(/<script\\s+src=["']([^"']+)["']/g)].map(match => match[1]);
+  assert.ok(sources.length > 0, 'debe haber scripts de aplicación');
+  assert.equal(new Set(sources).size, sources.length, 'no debe cargar un script local más de una vez');
+
+  const localSources = sources.filter(src => src.startsWith('/'));
+  const files = await Promise.all(localSources.map(async src => ({
+    src,
+    exists: await readFile(path.join(root, 'public', src.slice(1)), 'utf8').then(() => true, () => false)
+  })));
+  assert.ok(files.every(file => file.exists), 'todos los scripts locales referenciados deben existir');
+
+  const mainIndex = sources.indexOf('/main.js');
+  assert.ok(mainIndex >= 0, 'main.js debe estar referenciado');
+  const dataModules = [
+    '/catalog-oem.js',
+    '/lubricant-presentations.js',
+    '/catalog-master-data.js',
+    '/catalog-automotive-data.js',
+    '/pos-options.js',
+    '/operation-options.js',
+    '/currency-options.js',
+    '/seed-data.js',
+    '/fiscal-export-headers.js',
+    '/help-shortcuts.js'
+  ];
+  for (const modulePath of dataModules) {
+    assert.ok(sources.indexOf(modulePath) >= 0, modulePath + ' debe estar referenciado');
+    assert.ok(sources.indexOf(modulePath) < mainIndex, modulePath + ' debe cargarse antes de main.js');
+  }
+  assert.ok(sources.indexOf('/access.js') > mainIndex, 'access.js debe conservar su posición posterior a main.js');
+  assert.ok(!html.includes('\\\\n<script src="/access.js"></script>'), 'no debe reaparecer el texto literal \\n');
+});
