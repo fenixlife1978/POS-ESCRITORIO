@@ -71,3 +71,20 @@ test('las opciones estáticas del POS se cargan antes de main.js y conservan sus
   const html = await readFile(path.join(root, 'index.html'), 'utf8');
   assert.ok(html.indexOf('<script src="/pos-options.js"></script>') < html.indexOf('<script src="/main.js"></script>'));
 });
+
+test('el mapeo de sincronización conserva las colecciones y se carga antes del POS', async () => {
+  const result = await evaluatePublicData(
+    'operation-options.js',
+    'window.POS_OPERATION_COLLECTIONS',
+    [],
+    { window: {} }
+  );
+  assert.equal(result.length, 15);
+  assert.ok(result.some(([collection, type]) => collection === 'sales' && type === 'sale'));
+  assert.ok(result.some(([collection, type]) => collection === 'casheaMovimientos' && type === 'cashea-operation'));
+  assert.ok(result.some(([collection, type]) => collection === 'retentions' && type === 'tax-retention'));
+  assert.ok(result.every(entry => Object.isFrozen(entry)));
+
+  const html = await readFile(path.join(root, 'index.html'), 'utf8');
+  assert.ok(html.indexOf('<script src="/operation-options.js"></script>') < html.indexOf('<script src="/main.js"></script>'));
+});
