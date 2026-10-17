@@ -153,6 +153,12 @@ test('las operaciones semilla conservan ventas, compras y referencias', async ()
     ['7501001', 'Castrol GTX Aceite 20W-50 Mineral 1 L', 24, 3.35],
     ['7501002', 'Castrol GTX Aceite 20W-50 Mineral Galón 4 L', 8, 12.6]
   ]));
+  assert.equal(JSON.stringify(result.purchaseFormDefaults), JSON.stringify([
+    {code:'7501008',qty:12,cost:4.85,price:7.5},
+    {code:'7504004',qty:10,cost:3.45,price:5.4}
+  ]));
+  assert.ok(Object.isFrozen(result.purchaseFormDefaults));
+  assert.ok(result.purchaseFormDefaults.every(line => Object.isFrozen(line)));
   assert.ok(Object.isFrozen(result.initialPurchaseLines));
   assert.ok(result.initialPurchaseLines.every(line => Object.isFrozen(line)));
   assert.equal(result.purchaseLines.length, 3);
