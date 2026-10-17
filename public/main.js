@@ -243,11 +243,7 @@ function seed(){
   });
 
   const p2Ts=now-2*dayMs;
-  const p2Lines=[
-    {code:'7504001',desc:'Fram Filtro de Aceite PH3600',qty:20,cost:3.00,sub:60.00},
-    {code:'7504002',desc:'Mann Filtro de Aceite W 712/75',qty:10,cost:5.10,sub:51.00},
-    {code:'7505001',desc:'Bendix Pastillas Delanteras Cerámicas',qty:6,cost:15.60,sub:93.60}
-  ];
+  const p2Lines=window.POS_SEED_OPERATIONS.purchaseLines.map(line=>({...line}));
   p2Lines.forEach(l=>{
     const p=prod(l.code),sold=soldQty[l.code]||0;
     addKardex({ts:p2Ts,code:l.code,type:'COMPRA',dir:'IN',doc:'COM-00000202',party:S.suppliers[1].name+' (Fac. Prov. B-10492)',qty:l.qty,stockAfter:r2(p.stock+sold),cost:l.cost,user:'Mariela G.'});
