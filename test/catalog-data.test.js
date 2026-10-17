@@ -272,3 +272,51 @@ test('todos los scripts locales del HTML existen y los módulos de datos precede
   assert.ok(sources.indexOf('/access.js') > mainIndex, 'access.js debe conservar su posición posterior a main.js');
   assert.ok(!html.includes('\\n<script src="/access.js"></script>'), 'no debe reaparecer el texto literal \\n');
 });
+
+
+test('todos los módulos estáticos coexisten en el orden real del navegador', async () => {
+  const html = await readFile(path.join(root, 'index.html'), 'utf8');
+  const scriptSources = [...html.matchAll(/<script\\s+src=["']([^"']+)["']/g)].map(match => match[1]);
+  const modulePaths = [
+    '/catalog-oem.js',
+    '/lubricant-presentations.js',
+    '/catalog-master-data.js',
+    '/catalog-automotive-data.js',
+    '/pos-options.js',
+    '/operation-options.js',
+    '/currency-options.js',
+    '/seed-data.js',
+    '/fiscal-export-headers.js',
+    '/help-shortcuts.js'
+  ];
+  const orderedPaths = modulePaths.slice().sort((a, b) => scriptSources.indexOf(a) - scriptSources.indexOf(b));
+  assert.ok(orderedPaths.every((modulePath, index) => index === 0 || scriptSources.indexOf(orderedPaths[index - 1]) < scriptSources.indexOf(modulePath)));
+
+  const sources = await Promise.all(orderedPaths.map(modulePath =>
+    readFile(path.join(root, 'public', modulePath.slice(1)), 'utf8')
+  ));
+  const result = runInNewContext(
+    sources.join('\\n') + '\\n' + `({
+      oemCount: Object.keys(VERIFIED_OEM_MAP).length,
+      masterCount: MASTER_CURATED_CATALOG.length,
+      vehicleCount: AUTO_MODELS_MATRIX.length,
+      componentCount: COMPONENT_TYPES.length,
+      methodCount: window.POS_OPTIONS.METHODS.length,
+      operationCount: window.POS_OPERATION_COLLECTIONS.length,
+      seedCount: window.POS_SEED_FACTORY((...args) => args).length,
+      fiscalHeaders: Object.keys(window.POS_FISCAL_EXPORT_HEADERS).length,
+      shortcutCount: window.POS_HELP_SHORTCUTS.length
+    })`,
+    { window: {} }
+  );
+
+  assert.ok(result.oemCount > 10);
+  assert.ok(result.masterCount > 30);
+  assert.ok(result.vehicleCount > 20);
+  assert.ok(result.componentCount > 10);
+  assert.equal(result.methodCount, 8);
+  assert.equal(result.operationCount, 15);
+  assert.equal(result.seedCount, 44);
+  assert.equal(result.fiscalHeaders, 3);
+  assert.equal(result.shortcutCount, 17);
+});
