@@ -81,6 +81,14 @@ function recordVersion(item) {
   return 0;
 }
 
+const BOX_SCOPED_SYNC_COLLECTIONS = new Set(['sales','cxc','cortesZ','openings','movements','returns','voids']);
+function syncRecordKey(item, collection) {
+  if (!item || typeof item !== 'object') return '';
+  const id = item.id ?? item.uuid ?? item.eventId ?? item.no ?? item.number ?? item.ctrlNo ?? item.code;
+  if (id === undefined || id === null) return '';
+  return (BOX_SCOPED_SYNC_COLLECTIONS.has(collection) ? String(item.cashbox || 'sin-caja') + ':' : '') + String(id);
+}
+
 function mergeStateRecords(base, incoming) {
   if (!base || typeof base !== 'object') return incoming;
   if (!incoming || typeof incoming !== 'object') return base;
@@ -280,7 +288,7 @@ async function startLanServer(requestedPort) {
               const state = stateRow ? JSON.parse(stateRow.payload) : {};
               const records = Array.isArray(state[collection]) ? state[collection] : [];
               const recordId = String(ev.entityId);
-              const existingRecord = records.find(item => item && String(item.id ?? item.uuid ?? item.eventId ?? item.no ?? item.number ?? item.ctrlNo ?? item.code ?? '') === recordId);
+              const existingRecord = records.find(item => syncRecordKey(item, collection) === recordId);
               if (!existingRecord) {
                 state[collection] = [...records, record];
                 run('INSERT INTO app_state(id,payload,updated_at) VALUES(1,?,CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload,updated_at=CURRENT_TIMESTAMP', [JSON.stringify(state)]);
