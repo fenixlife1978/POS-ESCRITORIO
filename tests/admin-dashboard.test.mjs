@@ -60,7 +60,8 @@ test('every user can end the session from the shared top header', () => {
 
 test('dashboard and management layouts are responsive', () => {
   assert.doesNotMatch(css, /\.main\.dashboard-mode \.left\{display:none!important\}/);
-  assert.match(main, /if\(left\)left\.hidden=false; \/\/ Mantener la toolbar completa visible también en el dashboard administrativo/);
+  assert.match(main, /if\(left\)left\.hidden=true; \/\/ Ocultar toda el área de venta/);
+  assert.match(html, /<nav class="toolbar" id="toolbar"[^>]*><\/nav>[\s\S]*?<div class="main">/);
   assert.match(css, /@media\(max-width:560px\)\{\.dash-pie-layout/);
 });
 
