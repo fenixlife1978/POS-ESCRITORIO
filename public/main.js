@@ -194,18 +194,10 @@ function seed(){
   S.client=S.clients[0];
 
   /* Calcular ventas semilla para reconstruir Kardex exacto */
-  const seedSalesSpec=[
-    [1038,8,12,0,[['7501001',1,0]],'pm'],
-    [1039,9,5,4,[['7510002',1,0],['7510003',1,0]],'usd'],
-    [1040,10,31,1,[['7501006',2,5],['7504002',2,5],['7505003',1,0]],'pv'],
-    [1041,12,48,2,[['7502002',6,0],['7503003',2,0]],'bio'],
-    [1042,16,20,0,[['7506001',4,0],['7507002',1,0]],'usd']
-  ];
+  const seedSalesSpec=window.POS_SEED_OPERATIONS.sales;
   const soldQty={};
   seedSalesSpec.forEach(sp=>sp[4].forEach(it=>{soldQty[it[0]]=(soldQty[it[0]]||0)+it[1];}));
-  const purchSpec={
-    '7501001':24,'7501002':8,'7504001':20,'7504002':10,'7505001':6
-  };
+  const purchSpec=window.POS_SEED_OPERATIONS.purchases;
 
   /* 1. Kardex Saldo Inicial para cada producto */
   S.products.forEach(p=>{
