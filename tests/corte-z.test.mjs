@@ -5,7 +5,12 @@ import { runInNewContext } from 'node:vm';
 
 const pos = readFileSync(new URL('../public/main.js', import.meta.url), 'utf8');
 const cashZ = readFileSync(new URL('../public/cash-z-module.js', import.meta.url), 'utf8');
-const source = cashZ + '\n' + pos;
+const fiscalModule = readFileSync(new URL('../public/fiscal-reports.js', import.meta.url), 'utf8');
+const inventoryModule = readFileSync(new URL('../public/inventory-module.js', import.meta.url), 'utf8');
+const purchasingModule = readFileSync(new URL('../public/purchasing-module.js', import.meta.url), 'utf8');
+const paymentsModule = readFileSync(new URL('../public/payments-module.js', import.meta.url), 'utf8');
+const databaseModule = readFileSync(new URL('../public/database-settings-module.js', import.meta.url), 'utf8');
+const source = [cashZ, fiscalModule, inventoryModule, purchasingModule, paymentsModule, databaseModule, pos].join('\n');
 const access = readFileSync(new URL('../public/access.js', import.meta.url), 'utf8');
 
 test('Corte Z carga la apertura antes de calcular el inicio del turno', () => {
