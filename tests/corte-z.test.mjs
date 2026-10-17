@@ -76,7 +76,7 @@ test('Corte Z abre vista previa térmica de 80 mm antes de imprimir al confirmar
 test('el reporte Z destaca el arqueo por método antes de detallar movimientos físicos', () => {
   const printStart = source.indexOf('function printCorteZ(');
   const printEnd = source.indexOf('function corteZDlg(', printStart);
-  const report = pos.slice(printStart, printEnd);
+  const report = source.slice(printStart, printEnd);
   assert.match(report, /ARQUEO DE CAJA · POR MÉTODO/);
   assert.match(report, /RESULTADO DEL ARQUEO/);
   assert.match(report, /SISTEMA/);
