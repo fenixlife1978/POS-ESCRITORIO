@@ -14,7 +14,7 @@ const modules = [
   'cash-z-module.js',
   'database-settings-module.js'
 ];
-const marker = '    /* ---------- arranque ---------- */';
+const marker = '/* ---------- arranque ---------- */';
 const core = readFileSync(sourceFile, 'utf8');
 if (core.split(marker).length !== 2) {
   throw new Error('No se encontró exactamente una marca de arranque en public/main.js');
