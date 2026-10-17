@@ -758,12 +758,7 @@ const posSqliteDriver = {
 let networkSyncTimer=null,networkSyncBusy=false,networkLastStatus='local';
 let operationBaseline = null;
 let operationCaptureBusy = false;
-const OPERATION_COLLECTIONS = [
-  ['sales','sale'], ['purchases','purchase'], ['cxc','receivable'], ['cxp','payable'],
-  ['cortesZ','cash-close'], ['kardex','inventory-movement'], ['counts','inventory-count'],
-  ['held','held-sale'], ['casheaMovimientos','cashea-operation'], ['casheaLiquidaciones','cashea-settlement'], ['cambiosDivisas','currency-movement'],
-  ['retencionesIva','tax-retention'], ['retentions','tax-retention'], ['returns','return'], ['voids','void']
-];
+const OPERATION_COLLECTIONS = window.POS_OPERATION_COLLECTIONS;
 function operationIdentity(item,index){
   if(!item||typeof item!=='object')return String(index)+':'+JSON.stringify(item);
   const id=item.id??item.uuid??item.eventId??item.no??item.number??item.ctrlNo??item.code;
