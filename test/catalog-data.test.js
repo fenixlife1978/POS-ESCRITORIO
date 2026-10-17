@@ -27,7 +27,7 @@ test('el catálogo maestro conserva productos y presentaciones', async () => {
   const result = await evaluatePublicData(
     'catalog-master-data.js',
     '({ count: MASTER_CURATED_CATALOG.length, first: MASTER_CURATED_CATALOG[0], configKeys: Object.keys(LUBRICANT_PRES_CONFIG) })',
-    ['catalog-oem.js']
+    ['lubricant-presentations.js', 'catalog-oem.js']
   );
   assert.ok(result.count > 30, 'el catálogo maestro no debe quedar vacío ni truncado');
   assert.equal(typeof result.first.code, 'string');
@@ -151,4 +151,21 @@ test('las operaciones semilla conservan ventas, compras y referencias', async ()
   const main = await readFile(path.join(root, 'public', 'main.js'), 'utf8');
   assert.ok(main.includes('const seedSalesSpec=window.POS_SEED_OPERATIONS.sales;'));
   assert.ok(main.includes('const purchSpec=window.POS_SEED_OPERATIONS.purchases;'));
+});
+
+test('las presentaciones de lubricantes conservan sus cuatro configuraciones', async () => {
+  const result = await evaluatePublicData(
+    'lubricant-presentations.js',
+    '({ keys: Object.keys(window.POS_LUBRICANT_PRES_CONFIG), litro: window.POS_LUBRICANT_PRES_CONFIG.litro("ABC"), galon: window.POS_LUBRICANT_PRES_CONFIG.galon("XYZ"), frozen: Object.isFrozen(window.POS_LUBRICANT_PRES_CONFIG) })',
+    [],
+    { window: {} }
+  );
+  assert.deepEqual(result.keys, ['litro', 'galon', 'paila', 'grasa']);
+  assert.equal(result.litro.length, 5);
+  assert.equal(result.litro[0].barcode, 'ABC');
+  assert.equal(result.galon[0].barcode, 'XYZ');
+  assert.equal(result.frozen, true);
+
+  const html = await readFile(path.join(root, 'index.html'), 'utf8');
+  assert.ok(html.indexOf('<script src="/lubricant-presentations.js"></script>') < html.indexOf('<script src="/catalog-master-data.js"></script>'));
 });
