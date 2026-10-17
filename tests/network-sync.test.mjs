@@ -198,6 +198,18 @@ test('SQLite valida integridad antes de guardar y mantiene respaldo recuperable'
 });
 
 
+test('los movimientos físicos de caja se guardan, se restauran y se incluyen en sincronización', () => {
+  const snapshotStart = pos.indexOf('function stateSnapshot()');
+  const snapshotEnd = pos.indexOf('\nfunction persistenceError', snapshotStart);
+  assert.ok(snapshotStart >= 0 && snapshotEnd > snapshotStart, 'debe existir un snapshot de estado persistible');
+  const snapshot = pos.slice(snapshotStart, snapshotEnd);
+  assert.match(snapshot, /movimientosCaja:S\.movimientosCaja\|\|\[\]/);
+  const loadStart = pos.indexOf('function load()');
+  const loadEnd = pos.indexOf('\nfunction ', loadStart + 20);
+  assert.ok(loadStart >= 0 && loadEnd > loadStart, 'debe existir la restauración del estado');
+  assert.match(pos.slice(loadStart, loadEnd), /S\.movimientosCaja=Array\.isArray\(d\.movimientosCaja\)/);
+});
+
 test('la identidad de operaciones LAN separa facturas de cajas distintas con el mismo número', () => {
   const start = electron.indexOf('const BOX_SCOPED_SYNC_COLLECTIONS');
   const end = electron.indexOf('\nfunction mergeStateRecords', start);
