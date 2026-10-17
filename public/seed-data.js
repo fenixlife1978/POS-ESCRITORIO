@@ -52,4 +52,16 @@
     ];
   };
   root.POS_SEED_FACTORY = seedFactory;
+  root.POS_SEED_OPERATIONS = Object.freeze({
+    sales: Object.freeze([
+      Object.freeze([1038,8,12,0,Object.freeze([Object.freeze(['7501001',1,0])]),'pm']),
+      Object.freeze([1039,9,5,4,Object.freeze([Object.freeze(['7510002',1,0]),Object.freeze(['7510003',1,0])]),'usd']),
+      Object.freeze([1040,10,31,1,Object.freeze([Object.freeze(['7501006',2,5]),Object.freeze(['7504002',2,5]),Object.freeze(['7505003',1,0])]),'pv']),
+      Object.freeze([1041,12,48,2,Object.freeze([Object.freeze(['7502002',6,0]),Object.freeze(['7503003',2,0])]),'bio']),
+      Object.freeze([1042,16,20,0,Object.freeze([Object.freeze(['7506001',4,0]),Object.freeze(['7507002',1,0])]),'usd'])
+    ]),
+    purchases: Object.freeze({
+      '7501001':24,'7501002':8,'7504001':20,'7504002':10,'7505001':6
+    })
+  });
 })(window);
