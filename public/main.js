@@ -795,9 +795,6 @@ function load(){
     S.cfg=Object.assign(S.cfg,d.cfg);
     S.cortesZ=Array.isArray(d.cortesZ)?d.cortesZ:[];
     S.movimientosCaja=Array.isArray(d.movimientosCaja)?d.movimientosCaja:(Array.isArray(S.movimientosCaja)?S.movimientosCaja:[]);
-    const legacyCaja=String(S.cfg.caja||'01');
-    (S.sales||[]).forEach(x=>{if(!x.cashbox)x.cashbox=legacyCaja;if(!x.cashier)x.cashier=x.user||S.cfg.cajero||'Cajero';});
-    (S.cxc||[]).forEach(x=>{if(!x.cashbox)x.cashbox=legacyCaja;});
     /* Enriquecer productos guardados con SKU, U.M., motores de venta, presentaciones, impuestos, proveedores y kits */
     S.products=d.products.map((p,idx)=>{
       const sp=seedMap[p.code]||{};
@@ -840,6 +837,9 @@ function load(){
     S.held=Array.isArray(d.held)?d.held:[];
     if(Array.isArray(d.purchases))S.purchases=d.purchases;
     if(Array.isArray(d.cxc))S.cxc=d.cxc;
+    const legacyCaja=String(S.cfg.caja||'01');
+    S.sales.forEach(x=>{if(!x.cashbox)x.cashbox=legacyCaja;if(!x.cashier)x.cashier=x.user||S.cfg.cajero||'Cajero';});
+    S.cxc.forEach(x=>{if(!x.cashbox)x.cashbox=legacyCaja;});
     if(Array.isArray(d.cxp))S.cxp=d.cxp;
     if(Array.isArray(d.kardex)&&d.kardex.length)S.kardex=d.kardex;
     if(Array.isArray(d.counts))S.counts=d.counts;
