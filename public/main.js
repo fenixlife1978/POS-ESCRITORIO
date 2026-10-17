@@ -220,10 +220,7 @@ function seed(){
 
   /* 2. Compras de ejemplo + entradas Kardex + CxP */
   const p1Ts=now-4*dayMs;
-  const p1Lines=[
-    {code:'7501001',desc:'Castrol GTX Aceite 20W-50 Mineral 1 L',qty:24,cost:3.35,sub:r2(24*3.35)},
-    {code:'7501002',desc:'Castrol GTX Aceite 20W-50 Mineral Galón 4 L',qty:8,cost:12.60,sub:r2(8*12.60)}
-  ];
+  const p1Lines=window.POS_SEED_OPERATIONS.initialPurchaseLines.map(line=>({...line,sub:r2(line.qty*line.cost)}));
   p1Lines.forEach(l=>{
     const p=prod(l.code),sold=soldQty[l.code]||0;
     addKardex({ts:p1Ts,code:l.code,type:'COMPRA',dir:'IN',doc:'COM-00000201',party:S.suppliers[0].name+' (Fac. Prov. F-88412)',qty:l.qty,stockAfter:r2(p.stock+sold),cost:l.cost,user:'Mariela G.'});
