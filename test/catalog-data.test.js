@@ -111,3 +111,20 @@ test('las etiquetas cambiarias conservan tipos, clases y nombres visibles', asyn
   const html = await readFile(path.join(root, 'index.html'), 'utf8');
   assert.ok(html.indexOf('<script src="/currency-options.js"></script>') < html.indexOf('<script src="/main.js"></script>'));
 });
+
+test('los datos iniciales conservan sus 44 productos y orden de carga', async () => {
+  const result = await evaluatePublicData(
+    'seed-data.js',
+    'window.POS_SEED_FACTORY((...args) => args)',
+    [],
+    { window: {} }
+  );
+  assert.equal(result.length, 44, 'debe conservar todos los productos iniciales');
+  assert.equal(result[0][0], '7501001');
+  assert.equal(result[0][1], 'Aceite 20W-50 Mineral 1 L');
+  assert.equal(result[43][0], '7509003');
+  assert.equal(result[43][1], 'Bandeja Recolectora de Aceite 15 L');
+
+  const html = await readFile(path.join(root, 'index.html'), 'utf8');
+  assert.ok(html.indexOf('<script src="/seed-data.js"></script>') < html.indexOf('<script src="/main.js"></script>'));
+});
