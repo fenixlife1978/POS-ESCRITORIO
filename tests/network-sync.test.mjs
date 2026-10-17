@@ -198,8 +198,8 @@ test('SQLite valida integridad antes de guardar y mantiene respaldo recuperable'
 
 
 test('el mapeo del POS y la lista blanca del servidor aceptan exactamente las mismas colecciones', () => {
-  const mapping = [...operationOptions.matchAll(/Object\\.freeze\\(\\['([^']+)','[^']+'\\]\\)/g)].map(match => match[1]);
-  const allowedBlock = electron.match(/const allowedCollections = new Set\\(\\[([^\\]]+)\\]\\)/);
+  const mapping = [...operationOptions.matchAll(/Object\.freeze\(\['([^']+)','[^']+'\]\)/g)].map(match => match[1]);
+  const allowedBlock = electron.match(/const allowedCollections = new Set\(\[([^\]]+)\]\)/);
   assert.ok(allowedBlock, 'el servidor debe declarar explícitamente su lista blanca');
   const allowed = [...allowedBlock[1].matchAll(/'([^']+)'/g)].map(match => match[1]);
 
