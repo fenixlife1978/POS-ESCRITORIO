@@ -7,6 +7,7 @@ const preload = readFileSync(new URL('../electron/preload.cjs', import.meta.url)
 const ui = readFileSync(new URL('../public/access.js', import.meta.url), 'utf8');
 const pos = readFileSync(new URL('../public/main.js', import.meta.url), 'utf8');
 const options = readFileSync(new URL('../public/pos-options.js', import.meta.url), 'utf8');
+const operationOptions = readFileSync(new URL('../public/operation-options.js', import.meta.url), 'utf8');
 
 test('el ejecutable implementa un servidor LAN con puerto configurable', () => {
   assert.match(electron, /http\.createServer/);
@@ -88,8 +89,8 @@ test('el servidor recibe operaciones idempotentes y detecta colisiones de secuen
 
 test('el POS convierte nuevos registros operativos en eventos de la cola local', () => {
   assert.match(pos, /OPERATION_COLLECTIONS/);
-  assert.match(pos, /\['sales','sale'\]/);
-  assert.match(pos, /\['purchases','purchase'\]/);
+  assert.match(operationOptions, /\['sales','sale'\]/);
+  assert.match(operationOptions, /\['purchases','purchase'\]/);
   assert.match(pos, /captureNewOperations\(\)/);
   assert.match(pos, /networkCreateOperation\(/);
   assert.match(pos, /primeOperationBaseline\(\)/);
@@ -144,7 +145,7 @@ test('Cashea no inventa una aprobación ni afirma conexión oficial inexistente'
 });
 
 test('las liquidaciones CASHEA se encolan y se aceptan al sincronizar cajas', () => {
-  assert.match(pos, /\['casheaLiquidaciones','cashea-settlement'\]/);
+  assert.match(operationOptions, /\['casheaLiquidaciones','cashea-settlement'\]/);
   assert.match(electron, /'casheaLiquidaciones'/);
   assert.match(electron, /allowedCollections\.has\(collection\)/);
 });
