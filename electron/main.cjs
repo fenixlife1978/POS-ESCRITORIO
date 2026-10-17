@@ -447,7 +447,7 @@ function registerIpc() {
 function createWindow() {
   const win = new BrowserWindow({
     width: 1280, height: 800, minWidth: 900, minHeight: 600,
-    title: 'POS El Pistón - Sistema de Punto de Venta e Inventario',
+    title: 'SIFER 360 - Sistema de Punto de Venta e Inventario',
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
@@ -473,7 +473,7 @@ app.whenReady().then(async () => {
   createWindow();
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 }).catch(error => {
-  dialog.showErrorBox('No se pudo iniciar POS El Pistón', error && error.message ? error.message : String(error));
+  dialog.showErrorBox('No se pudo iniciar SIFER 360', error && error.message ? error.message : String(error));
   app.quit();
 });
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
