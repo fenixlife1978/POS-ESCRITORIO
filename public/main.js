@@ -56,39 +56,11 @@ function svgBarcode(text){
 }
 
 /* ---------- motivos de conteo y ajuste de inventario ---------- */
-const MOTIVOS=[
-  'Conteo físico periódico',
-  'Diferencia de inventario / cuadre',
-  'Merma / derrame / evaporación',
-  'Producto dañado o averiado',
-  'Producto vencido',
-  'Error de despacho / facturación',
-  'Error de recepción de compra',
-  'Sobrante encontrado en almacén',
-  'Muestra / consumo interno taller',
-  'Hurto / extravío'
-];
+const MOTIVOS=window.POS_OPTIONS.MOTIVOS;
 
 /* ---------- datos de ejemplo con Departamento, Categoría, Subcategoría, SKU, U.M., Costo e I.V.A. ---------- */
-const UM_OPTIONS=[
-  {id:'und',name:'Unidad (und)'},
-  {id:'L',name:'Litro (L)'},
-  {id:'gal',name:'Galón (gal)'},
-  {id:'kg',name:'Kilogramo (kg)'},
-  {id:'g',name:'Gramo (g)'},
-  {id:'m',name:'Metro (m)'},
-  {id:'par',name:'Par (par)'},
-  {id:'jgo',name:'Juego / Kit (jgo)'},
-  {id:'caja',name:'Caja (caja)'},
-  {id:'pz',name:'Pieza (pz)'}
-];
-const TAX_OPTIONS=[
-  {type:'G',rate:16,name:'Gravado 16 % (G)',tag:'16%',cls:''},
-  {type:'R',rate:8,name:'Reducido 8 % (R)',tag:'8% Red.',cls:'red'},
-  {type:'A',rate:31,name:'Adicional / Suntuario 31 % (A)',tag:'31% Adic.',cls:'adic'},
-  {type:'E',rate:0,name:'Exento 0 % (E)',tag:'Exento (0%)',cls:'ex'},
-  {type:'NS',rate:0,name:'No Sujeto 0 % (NS)',tag:'No Suj. (0%)',cls:'ex'}
-];
+const UM_OPTIONS=window.POS_OPTIONS.UM_OPTIONS;
+const TAX_OPTIONS=window.POS_OPTIONS.TAX_OPTIONS;
 function prodTax(p){
   return (p&&p.tax)?p.tax:{type:'G',rate:16,igtf:true,percRate:0,codeSeniat:'GRAV-16'};
 }
@@ -5077,14 +5049,7 @@ function finalize(st,amts,isCred,cDays,refs,payEl){
   showSaleCompletion(sale);
 }
 
-const TICKET_FONTS=[
-  {id:'ibm',name:'Térmica POS 80mm (IBM Plex Mono)',css:'"IBM Plex Mono",Consolas,"Liberation Mono",monospace'},
-  {id:'jetbrains',name:'Térmica Alta Nitidez (JetBrains Mono)',css:'"JetBrains Mono",Consolas,monospace'},
-  {id:'courier',name:'Térmica Fiscal Clásica (Courier Prime / Courier New)',css:'"Courier Prime","Courier New",Courier,monospace'},
-  {id:'roboto',name:'Térmica Condensada Epson/Bixolon (Roboto Mono)',css:'"Roboto Mono","Lucida Console",Consolas,monospace'},
-  {id:'inconsolata',name:'Térmica Compacta Tirilla (Inconsolata / Lucida)',css:'"Inconsolata","Lucida Console",Consolas,monospace'},
-  {id:'sans',name:'Térmica Comercial Moderna (Segoe UI / Tahoma Tabular)',css:'"Segoe UI",Tahoma,Verdana,sans-serif'}
-];
+const TICKET_FONTS=window.POS_OPTIONS.TICKET_FONTS;
 function getTicketFontCss(id){
   const f=TICKET_FONTS.find(x=>x.id===id)||TICKET_FONTS[0];
   return f.css;
