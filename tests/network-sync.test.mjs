@@ -197,6 +197,18 @@ test('SQLite valida integridad antes de guardar y mantiene respaldo recuperable'
 });
 
 
+test('la fusión del servidor conserva todas las colecciones operativas del snapshot del POS', () => {
+  const mergeBlock = electron.match(/function mergeStateRecords\\(base, incoming\\) \\{[\\s\\S]*?const arrays = new Set\\(\\[([^\\]]+)\\]\\)/);
+  assert.ok(mergeBlock, 'el servidor debe fusionar explícitamente las colecciones tipo array');
+  const mergedCollections = [...mergeBlock[1].matchAll(/'([^']+)'/g)].map(match => match[1]);
+  for (const collection of [
+    'sales', 'purchases', 'cxc', 'cxp', 'cortesZ', 'kardex', 'counts', 'held',
+    'casheaMovimientos', 'casheaLiquidaciones', 'cambiosDivisas', 'retencionesIva', 'lotesSudeban'
+  ]) {
+    assert.ok(mergedCollections.includes(collection), 'la sincronización no debe reemplazar datos de ' + collection + ' por el snapshot de una sola caja');
+  }
+});
+
 test('el mapeo del POS y la lista blanca del servidor aceptan exactamente las mismas colecciones', () => {
   const mapping = [...operationOptions.matchAll(/Object\.freeze\(\['([^']+)','[^']+'\]\)/g)].map(match => match[1]);
   const allowedBlock = electron.match(/const allowedCollections = new Set\(\[([^\]]+)\]\)/);
