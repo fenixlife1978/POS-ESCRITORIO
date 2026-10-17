@@ -241,6 +241,8 @@ test('la fusión LAN compara correctamente versiones ISO y numéricas sin resuci
     { sales: [{ id: 'F-2', ts: 300, status: 'new' }] }
   );
   assert.equal(numericMerged.sales[0].status, 'new', 'una versión numérica más reciente debe prevalecer');
+  const combined = helpers.mergeStateRecords({ movimientosCaja: [{ id: 'MOV-1', cashbox: '01', amount: 10 }] }, { movimientosCaja: [{ id: 'MOV-1', cashbox: '02', amount: 20 }] });
+  assert.equal(combined.movimientosCaja.length, 2, 'las dos cajas deben conservar sus movimientos aunque coincida el ID');
 });
 
 test('la fusión del servidor conserva todas las colecciones operativas del snapshot del POS', () => {
@@ -248,7 +250,7 @@ test('la fusión del servidor conserva todas las colecciones operativas del snap
   assert.ok(mergeBlock, 'el servidor debe fusionar explícitamente las colecciones tipo array');
   const mergedCollections = [...mergeBlock[1].matchAll(/'([^']+)'/g)].map(match => match[1]);
   for (const collection of [
-    'sales', 'purchases', 'cxc', 'cxp', 'cortesZ', 'kardex', 'counts', 'held',
+    'sales', 'purchases', 'cxc', 'cxp', 'cortesZ', 'kardex', 'counts', 'held', 'movimientosCaja',
     'casheaMovimientos', 'casheaLiquidaciones', 'cambiosDivisas', 'retencionesIva', 'lotesSudeban'
   ]) {
     assert.ok(mergedCollections.includes(collection), 'la sincronización no debe reemplazar datos de ' + collection + ' por el snapshot de una sola caja');
