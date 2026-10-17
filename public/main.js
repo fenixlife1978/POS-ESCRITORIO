@@ -699,15 +699,23 @@ let networkSyncTimer=null,networkSyncBusy=false,networkLastStatus='local';
 let operationBaseline = null;
 let operationCaptureBusy = false;
 const OPERATION_COLLECTIONS = window.POS_OPERATION_COLLECTIONS;
-function operationIdentity(item,index){
-  if(!item||typeof item!=='object')return String(index)+':'+JSON.stringify(item);
+const BOX_SCOPED_OPERATION_COLLECTIONS = new Set(['sales','cxc','cortesZ','openings','movements','returns','voids']);
+function operationEntityId(item,collection){
+  if(!item||typeof item!=='object')return '';
   const id=item.id??item.uuid??item.eventId??item.no??item.number??item.ctrlNo??item.code;
-  return id===undefined?String(index)+':'+JSON.stringify(item):String(id);
+  if(id===undefined||id===null)return '';
+  const box=BOX_SCOPED_OPERATION_COLLECTIONS.has(collection)?String(item.cashbox||'sin-caja')+':':'';
+  return box+String(id);
+}
+function operationIdentity(item,index,collection){
+  if(!item||typeof item!=='object')return String(index)+':'+JSON.stringify(item);
+  const id=operationEntityId(item,collection);
+  return id===''?String(index)+':'+JSON.stringify(item):id;
 }
 function primeOperationBaseline(){
   const snap=stateSnapshot();
   operationBaseline={};
-  for(const [key] of OPERATION_COLLECTIONS) operationBaseline[key]=new Set((Array.isArray(snap[key])?snap[key]:[]).map(operationIdentity));
+  for(const [key] of OPERATION_COLLECTIONS) operationBaseline[key]=new Set((Array.isArray(snap[key])?snap[key]:[]).map((item,index)=>operationIdentity(item,index,key)));
 }
 async function captureNewOperations(){
   if(operationCaptureBusy||!window.posDesktop||typeof window.posDesktop.networkCreateOperation!=='function')return;
@@ -719,9 +727,9 @@ async function captureNewOperations(){
       const items=Array.isArray(snap[key])?snap[key]:[];
       const seen=operationBaseline[key]||new Set();
       for(let i=0;i<items.length;i++){
-        const item=items[i],identity=operationIdentity(item,i);
+        const item=items[i],identity=operationIdentity(item,i,key);
         if(seen.has(identity))continue;
-        const entityId=String((item ? (item.id??item.uuid??item.eventId??item.no??item.number??item.ctrlNo??item.code) : undefined) ?? identity);
+        const entityId=operationEntityId(item,key)||identity;
         await window.posDesktop.networkCreateOperation({
           eventType,entityType:key,entityId,occurredAt:(Number.isFinite(Number(item.ts))?new Date(Number(item.ts)):new Date(item.createdAt||Date.now())).toISOString(),
           payload:{record:item,sourceCollection:key,deviceCashbox:String(item.cashbox||snap.cfg?.caja||'01')}
