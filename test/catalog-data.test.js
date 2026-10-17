@@ -7,11 +7,11 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-async function evaluatePublicData(file, expression, dependencies = []) {
+async function evaluatePublicData(file, expression, dependencies = [], context = {}) {
   const sources = await Promise.all(
     [...dependencies, file].map(name => readFile(path.join(root, 'public', name), 'utf8'))
   );
-  return runInNewContext(`${sources.join('\n')}\n${expression}`, {});
+  return runInNewContext(`${sources.join('\n')}\n${expression}`, context);
 }
 
 test('el mapa OEM se carga como datos no vacíos', async () => {
@@ -45,4 +45,24 @@ test('la matriz de vehículos y los tipos de componentes conservan su estructura
   assert.ok(result.components.length > 10, 'debe conservar los tipos de repuestos');
   assert.ok(result.models.every(v => v.make && v.model && v.years && Array.isArray(v.engines)));
   assert.ok(result.components.every(v => v.name && v.dept && v.cat && v.subcat));
+});
+
+
+test('las opciones estáticas del POS se cargan antes de main.js y conservan sus valores', async () => {
+  const result = await evaluatePublicData(
+    'pos-options.js',
+    'window.POS_OPTIONS',
+    [],
+    { window: {} }
+  );
+  assert.equal(result.MOTIVOS.length, 10);
+  assert.equal(result.UM_OPTIONS.length, 10);
+  assert.equal(result.TAX_OPTIONS.length, 5);
+  assert.equal(result.TICKET_FONTS.length, 6);
+  assert.ok(result.UM_OPTIONS.some(v => v.id === 'und'));
+  assert.ok(result.TAX_OPTIONS.some(v => v.type === 'E' && v.rate === 0));
+  assert.ok(result.TICKET_FONTS.some(v => v.id === 'ibm'));
+
+  const html = await readFile(path.join(root, 'index.html'), 'utf8');
+  assert.match(html, /<script src="\\/pos-options\\.js"><\\/script>[\\s\\S]*?<script src="\\/main\\.js"><\\/script>/);
 });
