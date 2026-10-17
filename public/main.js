@@ -2776,10 +2776,7 @@ function inventoryDlg(){
 function comprasDlg(initialTab){
   let tab=initialTab||'new';
   let supIdx=0;
-  let pLines=[
-    {code:'7501008',qty:12,cost:4.85,price:7.50},
-    {code:'7504004',qty:10,cost:3.45,price:5.40}
-  ];
+  let pLines=window.POS_SEED_OPERATIONS.purchaseFormDefaults.map(line=>({...line}));
   let cond='Crédito', creditDays=15, applyIva=true, paidInit=0, payMethod='Transferencia Bs.';
 
   const el=h('<div class="form"><div class="tabs"><button class="tab" data-tab="new">Registrar Compra de Mercancía</button><button class="tab" data-tab="hist">Historial de Compras</button><button class="tab" data-tab="sup">Directorio de Proveedores</button></div><div id="compView"></div></div>');
