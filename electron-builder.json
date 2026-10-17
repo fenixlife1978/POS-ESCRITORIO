@@ -1,6 +1,6 @@
 {
   "appId": "com.elpiston.pos",
-  "productName": "POS El Pistón",
+  "productName": "SIFER 360",
   "directories": {
     "output": "dist-exe"
   },
@@ -18,6 +18,6 @@
     ]
   },
   "portable": {
-    "artifactName": "pos-el-piston-portable.exe"
+    "artifactName": "sifer-360-portable.exe"
   }
 }
