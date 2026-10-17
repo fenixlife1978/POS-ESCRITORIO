@@ -198,7 +198,7 @@ test('SQLite valida integridad antes de guardar y mantiene respaldo recuperable'
 
 
 test('la fusión del servidor conserva todas las colecciones operativas del snapshot del POS', () => {
-  const mergeBlock = electron.match(/function mergeStateRecords\\(base, incoming\\) \\{[\\s\\S]*?const arrays = new Set\\(\\[([^\\]]+)\\]\\)/);
+  const mergeBlock = electron.match(/function mergeStateRecords\(base, incoming\) \{[\s\S]*?const arrays = new Set\(\[([^\]]+)\]\)/);
   assert.ok(mergeBlock, 'el servidor debe fusionar explícitamente las colecciones tipo array');
   const mergedCollections = [...mergeBlock[1].matchAll(/'([^']+)'/g)].map(match => match[1]);
   for (const collection of [
