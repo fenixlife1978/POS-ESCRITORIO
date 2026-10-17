@@ -20,6 +20,10 @@ if (core.split(marker).length !== 2) {
   throw new Error('No se encontró exactamente una marca de arranque en public/main.js');
 }
 const fragments = modules.map(name => readFileSync(join(publicDir, name), 'utf8')).join('\n\n');
-const bundle = core.replace(marker, fragments + '\n\n' + marker);
+// Use a replacer callback: POS source contains `
+writeFileSync(outputFile, bundle, 'utf8');
+console.log('POS bundle generado:', outputFile, '(' + bundle.length + ' caracteres; ' + modules.length + ' módulos funcionales)');
+` sequences that String.replace would otherwise expand.
+const bundle = core.replace(marker, () => fragments + '\n\n' + marker);
 writeFileSync(outputFile, bundle, 'utf8');
 console.log('POS bundle generado:', outputFile, '(' + bundle.length + ' caracteres; ' + modules.length + ' módulos funcionales)');
