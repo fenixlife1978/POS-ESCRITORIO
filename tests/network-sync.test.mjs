@@ -208,6 +208,9 @@ test('los movimientos físicos de caja se guardan, se restauran y se incluyen en
   const loadEnd = pos.indexOf('\nfunction ', loadStart + 20);
   assert.ok(loadStart >= 0 && loadEnd > loadStart, 'debe existir la restauración del estado');
   assert.match(pos.slice(loadStart, loadEnd), /S\.movimientosCaja=Array\.isArray\(d\.movimientosCaja\)/);
+  const loadBody = pos.slice(loadStart, loadEnd);
+  assert.ok(loadBody.indexOf('S.sales=Array.isArray(d.sales)?d.sales:S.sales') < loadBody.indexOf('S.sales.forEach(x=>'), 'las ventas restauradas deben normalizar su caja después de cargarse');
+  assert.ok(loadBody.indexOf('if(Array.isArray(d.cxc))S.cxc=d.cxc') < loadBody.indexOf('S.cxc.forEach(x=>'), 'los saldos CxC restaurados deben normalizar su caja después de cargarse');
 });
 
 test('la identidad de operaciones LAN separa facturas de cajas distintas con el mismo número', () => {
