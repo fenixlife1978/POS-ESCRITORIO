@@ -3034,58 +3034,9 @@ const MASTER_CURATED_CATALOG = [
 ];
 
 /* Matriz combinatoria automotriz para consulta de los 2.500.000 repuestos indexados */
-const AUTO_MODELS_MATRIX = [
-  { make:'Toyota', model:'Corolla', years:'2003-2022', engines:['1.6','1.8','2.0'], oemKey:'corolla' },
-  { make:'Toyota', model:'Yaris', years:'2000-2021', engines:['1.3','1.5'], oemKey:'yaris' },
-  { make:'Toyota', model:'Hilux', years:'1998-2024', engines:['2.7 Gasolina','2.4 D4D','3.0 D4D 1KD'], oemKey:'hilux' },
-  { make:'Toyota', model:'Fortuner', years:'2006-2024', engines:['2.7','4.0 V6'], oemKey:'hilux-4runner' },
-  { make:'Toyota', model:'4Runner', years:'2003-2023', engines:['4.0 V6 1GR-FE','4.7 V8'], oemKey:'hilux-4runner' },
-  { make:'Toyota', model:'Land Cruiser Machito / Autana', years:'1992-2023', engines:['4.5 1FZ-FE','4.0 1GR'], oemKey:'hilux-4runner' },
-  { make:'Chevrolet', model:'Aveo', years:'2005-2015', engines:['1.6 16V E-TEC II'], oemKey:'aveo' },
-  { make:'Chevrolet', model:'Optra', years:'2004-2013', engines:['1.8 Limited','1.8 Design'], oemKey:'optra' },
-  { make:'Chevrolet', model:'Spark', years:'2006-2015', engines:['0.8','1.0'], oemKey:'aveo' },
-  { make:'Chevrolet', model:'Corsa', years:'1996-2007', engines:['1.3','1.4','1.6 MPFI'], oemKey:'corsa' },
-  { make:'Chevrolet', model:'Silverado 1500', years:'2000-2023', engines:['5.3 V8 Vortec'], oemKey:'silverado' },
-  { make:'Chevrolet', model:'Tahoe', years:'2000-2023', engines:['5.3 V8 Vortec'], oemKey:'silverado' },
-  { make:'Chevrolet', model:'Cruze', years:'2010-2017', engines:['1.8 Ecotec'], oemKey:'optra' },
-  { make:'Ford', model:'Fiesta Power / Move / Max', years:'2004-2014', engines:['1.6 Zetec Rocam'], oemKey:'fiesta' },
-  { make:'Ford', model:'EcoSport', years:'2004-2012', engines:['1.6 Rocam','2.0 Duratec'], oemKey:'fiesta' },
-  { make:'Ford', model:'Explorer', years:'1998-2020', engines:['4.0 V6','4.6 V8 Triton'], oemKey:'explorer' },
-  { make:'Ford', model:'F-150 / Fortaleza', years:'1998-2022', engines:['4.6 V8','5.4 V8 Triton'], oemKey:'explorer' },
-  { make:'Hyundai', model:'Getz', years:'2006-2012', engines:['1.3','1.6 Alpha'], oemKey:'getz' },
-  { make:'Hyundai', model:'Accent', years:'1998-2014', engines:['1.3','1.5','1.6'], oemKey:'getz' },
-  { make:'Hyundai', model:'Tucson', years:'2005-2018', engines:['2.0 Beta','2.7 V6'], oemKey:'getz' },
-  { make:'Hyundai', model:'Elantra', years:'2001-2016', engines:['1.6','1.8','2.0'], oemKey:'getz' },
-  { make:'Kia', model:'Rio Stylus / JB', years:'2002-2015', engines:['1.5','1.6'], oemKey:'getz' },
-  { make:'Kia', model:'Sportage', years:'2005-2018', engines:['2.0','2.7 V6'], oemKey:'getz' },
-  { make:'Nissan', model:'Tiida', years:'2007-2015', engines:['1.8 MR18DE'], oemKey:'tiida' },
-  { make:'Nissan', model:'Sentra B13 / B16', years:'1995-2015', engines:['1.6 GA16DE','2.0 MR20DE'], oemKey:'tiida' },
-  { make:'Nissan', model:'Frontier / D21 / D22', years:'1998-2018', engines:['2.4 KA24DE','2.5 Diésel'], oemKey:'tiida' },
-  { make:'Chery', model:'Arauca', years:'2012-2017', engines:['1.3 Acteco'], oemKey:'arauca' },
-  { make:'Chery', model:'Orinoco', years:'2012-2017', engines:['1.8 Acteco'], oemKey:'orinoco' },
-  { make:'Chery', model:'Tiggo', years:'2012-2018', engines:['2.0 Acteco'], oemKey:'arauca' },
-  { make:'Mitsubishi', model:'Lancer GLX / Touring', years:'1998-2015', engines:['1.6 4G18','2.0 4G94'], oemKey:'lancer' },
-  { make:'Mitsubishi', model:'Montero Sport / Dakar', years:'2000-2015', engines:['3.0 V6 6G72','3.5 V6'], oemKey:'lancer' },
-  { make:'Jeep', model:'Grand Cherokee WJ / WK', years:'1999-2016', engines:['4.0','4.7 V8','5.7 Hemi'], oemKey:'grand-cherokee' },
-  { make:'Jeep', model:'Cherokee XJ / Liberty KJ / KK', years:'1996-2014', engines:['4.0 High Output','3.7 V6'], oemKey:'grand-cherokee' }
-];
+/* AUTO_MODELS_MATRIX se carga desde /catalog-automotive-data.js. */
 
-const COMPONENT_TYPES = [
-  { name:'Filtro de Aceite de Motor', dept:'Filtros y Mantenimiento', cat:'Filtros', subcat:'Filtro de Aceite', unit:'und', oemSuffix:'filtro-aceite', brandPref:'Millard / WIX / Web' },
-  { name:'Filtro de Aire de Motor', dept:'Filtros y Mantenimiento', cat:'Filtros', subcat:'Filtro de Aire', unit:'und', oemSuffix:'filtro-aire', brandPref:'Web / WIX / Millard' },
-  { name:'Filtro de Combustible / Gasolina', dept:'Filtros y Mantenimiento', cat:'Filtros', subcat:'Filtro de Combustible', unit:'und', oemSuffix:'filtro-gasolina', brandPref:'AC Delco / WIX' },
-  { name:'Pastillas de Freno Delanteras', dept:'Frenos y Suspensión', cat:'Frenos', subcat:'Pastillas de Freno', unit:'jgo', oemSuffix:'pastillas', brandPref:'Bendix / Wagner / Hi-Q' },
-  { name:'Discos de Freno Delanteros Ventilados', dept:'Frenos y Suspensión', cat:'Frenos', subcat:'Discos de Freno', unit:'und', oemSuffix:'discos-freno', brandPref:'Fremax / Bendix' },
-  { name:'Bujías de Encendido (Cobre / Iridium)', dept:'Eléctrico y Encendido', cat:'Encendido y eléctrico', subcat:'Bujías', unit:'und', oemSuffix:'bujia', brandPref:'NGK / Denso / Bosch' },
-  { name:'Bobina de Encendido', dept:'Eléctrico y Encendido', cat:'Encendido y eléctrico', subcat:'Bobinas de Encendido', unit:'und', oemSuffix:'bobina', brandPref:'Denso / Delphi / Bosch' },
-  { name:'Muñón / Rótula Inferior de Suspensión', dept:'Frenos y Suspensión', cat:'Suspensión y dirección', subcat:'Muñones y Rótulas', unit:'und', oemSuffix:'munon', brandPref:'555 / CTR / Moog' },
-  { name:'Terminal de Dirección Externo', dept:'Frenos y Suspensión', cat:'Suspensión y dirección', subcat:'Terminales de Dirección', unit:'und', oemSuffix:'terminal', brandPref:'555 / CTR / 555 Sankei' },
-  { name:'Amortiguador Delantero a Gas', dept:'Frenos y Suspensión', cat:'Suspensión y dirección', subcat:'Amortiguadores', unit:'und', oemSuffix:'amortiguador', brandPref:'KYB / Monroe / Gabriel' },
-  { name:'Correa de Distribución / Tiempo', dept:'Accesorios y Taller', cat:'Correas y accesorios', subcat:'Correas de Tiempo', unit:'und', oemSuffix:'correa-dist', brandPref:'Gates / Dayco / Continental' },
-  { name:'Bomba de Agua con Empacadura', dept:'Accesorios y Taller', cat:'Bombas y partes de motor', subcat:'Bombas de Agua', unit:'und', oemSuffix:'bomba-agua', brandPref:'Aisin / GMB / Gates' },
-  { name:'Kit de Embrague (Plato, Disco y Collarín)', dept:'Lubricantes y Fluidos', cat:'Transmisión y diferencial', subcat:'Kits de Embrague', unit:'kit', oemSuffix:'kit-embrague', brandPref:'Aisin / Valeo / LuK' },
-  { name:'Termostato Completo con Empacadura', dept:'Accesorios y Taller', cat:'Bombas y partes de motor', subcat:'Termostatos', unit:'und', oemSuffix:'termostato', brandPref:'MotoRad / Tama' }
-];
+/* COMPONENT_TYPES se carga desde /catalog-automotive-data.js. */
 
 /* Buscador de Catálogo Maestro indexado (+2.500.000 repuestos) */
 function searchMasterCatalog(query, limit = 20) {
