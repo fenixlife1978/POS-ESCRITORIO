@@ -6,6 +6,7 @@ const electron = readFileSync(new URL('../electron/main.cjs', import.meta.url), 
 const preload = readFileSync(new URL('../electron/preload.cjs', import.meta.url), 'utf8');
 const ui = readFileSync(new URL('../public/access.js', import.meta.url), 'utf8');
 const pos = readFileSync(new URL('../public/main.js', import.meta.url), 'utf8');
+const options = readFileSync(new URL('../public/pos-options.js', import.meta.url), 'utf8');
 
 test('el ejecutable implementa un servidor LAN con puerto configurable', () => {
   assert.match(electron, /http\.createServer/);
@@ -150,7 +151,7 @@ test('las liquidaciones CASHEA se encolan y se aceptan al sincronizar cajas', ()
 
 test('cobros expone efectivo, Zelle, pago móvil, transferencia, tarjeta, Biopago y Cashea', () => {
   for (const method of ['efUSD','efBs','zelle','pmovil','transf','punto','biopago','cashea']) {
-    assert.match(pos, new RegExp("id:'" + method + "'"));
+    assert.match(options, new RegExp("id:'" + method + "'"));
   }
   assert.match(pos, /id="pm-'\+m\.id\+'" data-m="'\+m\.id\+'/);
   assert.match(pos, /const pays=METHODS\.filter\(m=>amts\[m\.id\]>0\)/);
