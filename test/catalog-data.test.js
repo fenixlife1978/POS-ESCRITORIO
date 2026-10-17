@@ -296,7 +296,7 @@ test('todos los módulos estáticos coexisten en el orden real del navegador', a
     readFile(path.join(root, 'public', modulePath.slice(1)), 'utf8')
   ));
   const result = runInNewContext(
-    sources.join('\\n') + '\\n' + `({
+    sources.join('\n') + '\n' + `({
       oemCount: Object.keys(VERIFIED_OEM_MAP).length,
       masterCount: MASTER_CURATED_CATALOG.length,
       vehicleCount: AUTO_MODELS_MATRIX.length,
